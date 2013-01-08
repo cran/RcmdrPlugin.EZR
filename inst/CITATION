@@ -1,0 +1,11 @@
+ citHeader("To cite the 'RcmdrPlugin.EZR' package in publications use:")
+ 
+  bibentry(
+     bibtype = "Article",
+     title = "Investigation of the freely available easy-to-use software {EZR} for medical statistics.",
+     author = as.person("Yoshinobu Kanda [aut]"),
+     year = "2013",
+     journal = "Bone Marrow Transplantation",
+     url = "http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf",
+     textVersion="Kanda, Y. (2013). Investigation of the freely available easy-to-use software {EZR} for medical statistics. Bone Marrow Transplantation, advance online publication, December 3, 2012; doi:10.1038/bmt.2012.244"
+  )
