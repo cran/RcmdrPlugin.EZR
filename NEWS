@@ -1,6 +1,6 @@
 Changes to Version 1.11
 
-  o Updated print.ci.summary() and stackcuminc() for "Cumulative incidence of competing events" and "Stacked cumulative incidences" for compatability with the new version (2.2-4) of "cmprsk" package.
+  o Updated print.ci.summary() and stackcuminc() for "Cumulative incidence of competing events" and "Stacked cumulative incidences" for compatability with new version (2.2-4) of "cmprsk" package.
 
   o Small changes to multiple regression and logistic regression models (to show variance inflation factors).
 
@@ -8,6 +8,3 @@ Changes to Version 1.11
 
   o Bug fix in "Dot chart" (The number of grouping variable should be 0 or 1).
 
-Version 1.10
-
-  o Initial version to CRAN.

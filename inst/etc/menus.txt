@@ -214,7 +214,7 @@
     item    HelpMenu        command         "Introduction to the R Commander"               browseManual                ""          				""
     item    HelpMenu        command         "Help on active data set (if available)"        helpDataSet                 "activeDataSetP()"          ""
     item    HelpMenu        command         "About Rcmdr"                                   helpAboutCommander          ""          				""
-    item	HelpMenu		command			"EZR help"										EZRhelp				""							"packageAvailable('RcmdrPlugin.EZR')"
+    item	HelpMenu		command			"EZR help"										EZRhelp					""							""
     item	HelpMenu		command			"EZR version"									EZRVersion				""							""
 	
 #Add some of thr original Rcmdr functions

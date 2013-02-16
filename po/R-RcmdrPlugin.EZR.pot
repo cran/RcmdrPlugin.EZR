@@ -4252,6 +4252,9 @@ msgstr ""
 msgid "2. Adding Statmed.R, the main script of EZR written by Y.Kanda to //Rcmdr//etc."
 msgstr ""
 
+msgid "2. Adding EZR.R, the main script of EZR written by Y.Kanda to //Rcmdr//etc."
+msgstr ""
+
 msgid "2. Adding StatmedOSX.R, the main script of EZR written by Y.Kanda to //Rcmdr//etc."
 msgstr ""
 
