@@ -28,14 +28,14 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat(gettext(domain="R-RcmdrPlugin.EZR","Conditions for redistribution are also the same with R and R commander.", "\n"))
 #cat(gettext(domain="R-RcmdrPlugin.EZR","Changes made from the original R commander include", "\n"))
 #cat(gettext(domain="R-RcmdrPlugin.EZR","1. Replacing Rcmdr-menus.txt in //Rcmdr//etc with a file of the same name for EZR (menu file of R commander).", "\n"))
-#cat(gettext(domain="R-RcmdrPlugin.EZR","2. Adding Statmed.R, the main script of EZR written by Y.Kanda to //Rcmdr//etc.", "\n"))
+#cat(gettext(domain="R-RcmdrPlugin.EZR","2. Adding EZR.R, the main script of EZR written by Y.Kanda to //Rcmdr//etc.", "\n"))
 #cat(gettext(domain="R-RcmdrPlugin.EZR","3. Replacing R-Rcmdr.mo in //Rcmdr//po//ja//LC_MESSAGES with a file of the same name for EZR (for translation in EZR).", "\n"))
 #cat(gettext(domain="R-RcmdrPlugin.EZR","4. Replacing R-Rcmdr.po in //Rcmdr//po//ja//LC_MESSAGES with a file of the same name for EZR (for translation in EZR).", "\n"))
 #cat(gettext(domain="R-RcmdrPlugin.EZR","5. Replacing Rcmdr in //Rcmdr//R with a file of the same name, minimally modified for EZR.", "\n"))
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.10", "\n")
+cat("   Version 1.11", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -1285,6 +1285,7 @@ summary.ci <- function (object, ..., ci, res, event=1, time=0){
 
 print.ci.summary <- function(x, ..., ci, res){
 	ngroups <- length(ci$n)
+	if (is.null(ci$surv)) ci$surv <- 1-ci$prev	#added from EZR ver 1.11 
 	nevents <- length(ci$surv[1,])
 	start <- 1
 	for (i in 1:ngroups){
@@ -2184,6 +2185,7 @@ stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), atrisk=1, xl
 		time <- c(time, rep(ci$time[i], 2))
 	}
 	time <- c(time, rep(max, 2))	
+	if (is.null(ci$surv)) ci$surv <- 1-ci$prev	#added from EZR ver 1.11 
 	ci$surv <- 1-ci$surv
 	y <- rep(0, num)
 	for (i in 1:length(ci$time)){	
@@ -4897,9 +4899,17 @@ dialog.values <- getDialog("StatMedGraphOptions", defaults)
 		putDialog("StatMedGraphOptions", list(window.size=size, window.type=type, lwd=lwd, las=las, family=font, cex=cex))
         closeDialog()
 		if (size=="Medium"){
-#			window.type <<- type
-#			assign("window.type", type, envir=.GlobalEnv)
-			justDoIt(paste("window.type <- ", type, sep=""))
+			switch(type,
+#				"width=7, height=7" = window.type <<- "width=10.5, height=10.5",
+#				"width=9, height=6" = window.type <<- "width=13.5, height=9",
+#				"width=6, height=9" = window.type <<- "width=9, height=13.5"
+#				"width=7, height=7" = assign("window.type", "width=10.5, height=10.5", envir=.GlobalEnv),
+#				"width=9, height=6" = assign("window.type", "width=13.5, height=9", envir=.GlobalEnv),
+#				"width=6, height=9" = assign("window.type", "width=9, height=13.5", envir=.GlobalEnv)
+				"width=7, height=7" = justDoIt('window.type <- "width=7, height=7"'),
+				"width=9, height=6" = justDoIt('window.type <- "width=9, height=6"'),
+				"width=6, height=9" = justDoIt('window.type <- "width=6, height=9"')
+				)	
 		}
 		if (size=="Large"){
 			switch(type,
@@ -5651,7 +5661,8 @@ currentFields$subset <- dialog.values$subset
 currentModel <- TRUE
 	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Strip Chart"))
     variablesFrame <- tkframe(top)
-	groupBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Factors (pick zero or more)"), selectmode="multiple", listHeight=15, initialSelection=varPosn(dialog.values$group, "all"))
+    groupBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Grouping variable(pick 0 or 1)"), listHeight=15, 
+	initialSelection=varPosn(dialog.values$group, "all"))
 	responseBox <- variableListBox(variablesFrame, Numeric(), title=gettext(domain="R-RcmdrPlugin.EZR","Response Variable (pick one)"), listHeight=15, initialSelection=varPosn(dialog.values$response, "numeric"))
 	checkBoxes(frame="logy", boxes=c("logy"),initialValues=dialog.values$logy,labels=gettext(domain="R-RcmdrPlugin.EZR",c("Log y-axis")))
     StatMedSubsetBox(model=TRUE)  
@@ -5686,8 +5697,7 @@ putDialog("StatMedStripChart", list(group=groups, response=response, logy=logy, 
 			doItAndPrint(paste("dummyX <- rep(0, length(", .subDataSet, "$", response, "))"))		
 			doItAndPrint(paste("dot.plot(dummyX, ", .subDataSet, "$", response, logflag, ', xlab="", ylab="', response, '")', sep=""))			
 		} else {
-			groupNames <- paste(groups, collapse="*")
-			doItAndPrint(paste("dot.plot(", .subDataSet, "$", groupNames, ", ", .subDataSet, "$", response, logflag, ', xlab="', groupNames, '", ylab="', response, '")', sep=""))
+			doItAndPrint(paste("dot.plot(", .subDataSet, "$", groups, ", ", .subDataSet, "$", response, logflag, ', xlab="', groups, '", ylab="', response, '")', sep=""))
 		}
 		activateMenus()
 		tkfocus(CommanderWindow())
@@ -7668,6 +7678,8 @@ putDialog("StatMedLinearRegression", list(x=x, y=y, wald=wald, actmodel=actmodel
 # 		assign(modelValue, justDoIt(command), envir = .GlobalEnv)
 		doItAndPrint(paste(modelValue, " <- ", command, sep = ""))
         doItAndPrint(paste("summary(", modelValue, ")", sep=""))
+        doItAndPrint(paste("vif(", modelValue, ")", sep=""))
+		logger("###variance inflation factors")
 		if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
 		if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
 			command <- paste("TempDF <- with(", ActiveDataSet(), ", ", ActiveDataSet(), "[complete.cases(", paste(x, collapse=","), "),])", sep="")
@@ -9186,6 +9198,8 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 #        assign(modelValue, justDoIt(command), envir=.GlobalEnv)
         doItAndPrint(paste(modelValue, " <- ", command, sep=""))
         doItAndPrint(paste("summary(", modelValue, ")", sep=""))
+        doItAndPrint(paste("vif(", modelValue, ")", sep=""))
+		logger("###variance inflation factors")
 		doItAndPrint(paste("odds <- data.frame(exp( summary(", modelValue, ")$coef[,1:2] %*% rbind(c(1,1,1), 1.96*c(0,-1,1))))", sep=""))
 		doItAndPrint(paste("odds <- cbind(odds, summary(", modelValue, ")$coefficients[,4])", sep=""))
 		doItAndPrint("odds <- signif(odds, digits=3)")
@@ -12959,8 +12973,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.10", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","January 10, 2013"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.11", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","February 16, 2013"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -13042,11 +13056,18 @@ StatMedcloseCommander <- function(ask=TRUE, ask.save=ask){
 
 
 EZRhelp <- function(){
+	flag <- 0
+	for(i in search()) if(i=="package:RcmdrPlugin.EZR")flag <- 1
+	if(flag==0){
+		doItAndPrint('browseURL(paste(file.path(.path.package(package="Rcmdr"), "doc"), "/", "EZRmanual.html", sep=""))')
+	}else{
 		doItAndPrint("help(EZR)")
+	}
 }
 
+
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.10", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.11", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
