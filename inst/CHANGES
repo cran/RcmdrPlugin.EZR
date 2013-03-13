@@ -1,6 +1,10 @@
+Changes to Version 1.12
+
+  o Move optmatch package from "Depends:" to "Suggests:", because the package has a license which restricts to academic use. Descriptions with regard to the usage restriction of the packages were added to the DESCRIPTION file.
+
 Changes to Version 1.11
 
-  o Updated print.ci.summary() and stackcuminc() for "Cumulative incidence of competing events" and "Stacked cumulative incidences" for compatability with the new version (2.2-4) of "cmprsk" package.
+  o Updated print.ci.summary() and stackcuminc() for "Cumulative incidence of competing events" and "Stacked cumulative incidences" for compatability with the new version (2.37-2) of "survival" package.
 
   o Small changes to multiple regression and logistic regression models (to show variance inflation factors).
 

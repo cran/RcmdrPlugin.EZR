@@ -1,14 +1,13 @@
 Package: RcmdrPlugin.EZR
 Type: Package
 Title: R Commander Plug-in for the EZR (Easy R) Package
-Version: 1.11
-Date: 2013-02-16
+Version: 1.12
+Date: 2013-03-13
 Author: Yoshinobu Kanda
 Maintainer: Yoshinobu Kanda <ycanda-tky@umin.ac.jp>
 Depends: R (>= 2.13), Rcmdr (>= 1.8.0), abind, aod, aplpack, clinfun,
-        cmprsk, foreign, meta, metatest, multcomp, mvtnorm, optmatch,
-        pROC
-Suggests: RODBC
+        cmprsk, foreign, meta, metatest, multcomp, mvtnorm, pROC
+Suggests: optmatch, RODBC
 Description: EZR (Easy R) adds a variety of statistical functions,
         including survival analyses, ROC analyses, metaanalyses, sample
         size calculation, and so on, to the R commander. EZR enables
@@ -36,16 +35,20 @@ Copyright: The functionos in EZR package were programmed by Y. Kanda,
         jonckheere.test(), ph2simon() and ph2single() were derived from
         clinfun package. Functions of meta-analysis were derived from
         meta and metatest packages. Functions of matched-pair analysis
-        were derived from optmatch package. Functions of
-        receiver-operating characteristics curve analyses were derived
-        from pROC package. Many dialog functions in EZR were modified
-        from the corresponding functions in Rcmdr package and
-        RcmdrPlugin.survivalT package.
+        were derived from optmatch package, and its license restricts
+        to academic use. See
+        http://cran.r-project.org/web/packages/optmatch/LICENSE for
+        details. The package must be installed before performing
+        matched-pair analysis, assuming the user is covered by the
+        license. Functions of receiver-operating characteristics curve
+        analyses were derived from pROC package. Many dialog functions
+        in EZR were modified from the corresponding functions in Rcmdr
+        package and RcmdrPlugin.survivalT package.
 License: GPL (>= 2)
 URL:
         http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf
         http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html
-Packaged: 2013-02-22 04:01:15 UTC; Yoshinobu_Kanda
+Packaged: 2013-03-13 03:20:28 UTC; Yoshinobu_Kanda
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2013-02-22 08:23:34
+Date/Publication: 2013-03-13 13:35:26
