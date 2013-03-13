@@ -1,8 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><title>R: Rcmdr Plug-In Package for the EZR (Easy R especially for...</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta http-equiv="Content-Style-Type" content="text/css">
-<meta name="GENERATOR" content="IBM WebSphere Studio Homepage Builder Version 14.0.7.0 for Windows">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" type="text/css" href="R.css">
 </head><body>
 
@@ -34,11 +32,11 @@ Type: </td><td align="left"> Package</td>
 </tr>
 <tr>
  <td align="left">
-Version: </td><td align="left">1.11</td>
+Version: </td><td align="left"> 1.12</td>
 </tr>
 <tr>
  <td align="left">
-Date: </td><td align="left">2013-02-16</td>
+Date: </td><td align="left"> 2013-03-13</td>
 </tr>
 <tr>
  <td align="left">
@@ -59,11 +57,11 @@ License: </td><td align="left"> GPL (&gt;= 2)</td>
 <h3>Installation of EZR</h3>
 
 
-<p>RcmdrPlugin.EZR should be installed after the installation of Rcmdr and the other packages that EZR depends on (clinfun, cmprsk, meta, metatest, multcomp, mvtnorm, optmatch, pROC, and aod packages). This can be easily done by copying and pasting the following command to the R console window after &quot; &gt; &quot;.<br><br>
+<p>RcmdrPlugin.EZR should be installed after the installation of Rcmdr and the other packages that Rcmdr or EZR depends on. Packagees that are required by Rcmdr can be installed at the first start-up of R commander. Packages required by EZR can be easily installed at the same time with the installation of EZR by copying and pasting the following command to the R console window after &quot; &gt; &quot;.<br><br>
 <code>install.packages(pkgs="RcmdrPlugin.EZR", dependencies=TRUE)</code><br><br>
 EZR is platform-independent, but only the Windows version of EZR can import Excel, Access, and dBase data set. This function requires &quot;RODBC&quot; package to be installed.<br><br>
 After installation, R commander can be started by the command, <code>library(Rcmdr)</code> from the R console. EZR can be loaded by selecting RcmdrPlugin.EZR from the &quot;Tools&quot; &gt; &quot;Load Rcmdr plug-in(s)&quot; menu. Answer &quot;Yes&quot; to &quot;Restart now?&quot;.<br><br>
-In windows, EZR plugin package will be loaded when R commander is started, if the following sentence is added to the Rprofile.site file in etc folder in the R folder (C:\Program Files\R\R-X.XX.X\etc).<br><br>
+On Windows, EZR plugin package will be loaded when R commander is started, if the following sentence is added to the Rprofile.site file in etc folder in the R folder (C:\Program Files\R\R-X.XX.X\etc).<br><br>
 <code>options(Rcmdr=list(plugins="RcmdrPlugin.EZR"))</code><br><br>
 In addition, if the following phrase is added to the command in &quot;Target:&quot; column on the &quot;Shortcut&quot; tab of the &quot;Property&quot; of &quot;R&quot; shorcut on the desktop (which can be opened by right-clicking on the shortcut), R commander will start at the same time with launching R.<br><br>
 <code>R_DEFAULT_PACKAGES="Rcmdr"</code><br><br>
@@ -125,7 +123,7 @@ ROC curve analysis for quantitative test<br>
 Compare two ROC curves<br>
 Cronbach's alpha coefficient for reliability<br><br>
 <EM>For matched-pair analysis</EM><br><br>
-Extract matched controls<br>
+Extract matched controls (This function relys on optmatch package and is limietd to academic use.)<br>
 Mantel-Haenzel test for matched proportions<br>
 Conditional logistic regression for matched-pair analysis<br>
 Stratified Cox proportional hazard regression for matched-pair analysis<br><br>
