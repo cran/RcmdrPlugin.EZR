@@ -12,13 +12,11 @@ Rcmdr Plug-In Package for the EZR (Easy R especially for medical statistics)
 
 <h3>Description</h3>
 
-
 <p>This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in <EM>Bone Marrow Transplantation</EM> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: <a href="http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf">http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf</a>). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: <a href="https://www.chugaiigaku.jp/modules/shop/index.php?main_page=product_info&amp;products_id=1241">https://www.chugaiigaku.jp/modules/shop/index.php?main_page=product_info&amp;products_id=1241</a>)
 </p>
 
 
 <h3>Details</h3>
-
 
 
 <table summary="Rd table">
@@ -32,11 +30,11 @@ Type: </td><td align="left"> Package</td>
 </tr>
 <tr>
  <td align="left">
-Version: </td><td align="left"> 1.12</td>
+Version: </td><td align="left"> 1.20</td>
 </tr>
 <tr>
  <td align="left">
-Date: </td><td align="left"> 2013-03-13</td>
+Date: </td><td align="left"> 2013-11-01</td>
 </tr>
 <tr>
  <td align="left">
@@ -56,7 +54,6 @@ License: </td><td align="left"> GPL (&gt;= 2)</td>
 
 <h3>Installation of EZR</h3>
 
-
 <p>RcmdrPlugin.EZR should be installed after the installation of Rcmdr and the other packages that Rcmdr or EZR depends on. Packagees that are required by Rcmdr can be installed at the first start-up of R commander. Packages required by EZR can be easily installed at the same time with the installation of EZR by copying and pasting the following command to the R console window after &quot; &gt; &quot;.<br><br>
 <code>install.packages(pkgs="RcmdrPlugin.EZR", dependencies=TRUE)</code><br><br>
 EZR is platform-independent, but only the Windows version of EZR can import Excel, Access, and dBase data set. This function requires &quot;RODBC&quot; package to be installed.<br><br>
@@ -71,7 +68,6 @@ The default data folder can be changed by right-clicking on this &quot;R&quot; s
 
 
 <h3>EZR statistical functions</h3>
-
 
 <p>EZR includes following statistical functions.<br><br>
 <EM>For discrete variables</EM><br><br>
@@ -180,7 +176,6 @@ Effect plots<br><br>
 
 <h3>Basic operations in EZR</h3>
 
-
 <p>These EZR functions can be started by point-and-click access using the items on the menu bar. See <code>EZRdialogs</code> for details. R commander automatically creates and executes corresponding R commands that appear in the &quot;Script window&quot;. Results are shown in the &quot;Output window&quot;. If any errors or warnings are noted, messages will appear in the &quot;Message window&quot;. The created commands can be saved by selecting &quot;File&quot; &gt; &quot;Save script&quot; on the menu bar. The output can be saved by selecting &quot;File&quot; &gt; &quot;Save output&quot;. By saving the commands, users can reproduce the analyses and can also share the procedure with the other investigators.<br><br>
 The following EZR functions can be executed by typing the commands in the &quot;Script window&quot; and clicking on the &quot;Submit&quot; button.<br><br>
 Following functions are built to create a formatted table for presentation.<br><br>
@@ -197,13 +192,11 @@ If &quot;filename&quot; is omitted, the formatted table will be copied to the cl
 
 <h3>Translations</h3>
 
-
 <p>EZR comes with translations from English into Japanese.
 </p>
 
 
 <h3>Author(s)</h3>
-
 
 <p>Yoshinobu Kanda &lt;ycanda-tky@umin.ac.jp&gt;<br>
 Maintainer: Yoshinobu Kanda &lt;ycanda-tky@umin.ac.jp&gt;
@@ -211,7 +204,6 @@ Maintainer: Yoshinobu Kanda &lt;ycanda-tky@umin.ac.jp&gt;
 
 
 <h3>References</h3>
-
 
 <p>Its complete manual is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: <a href="https://www.chugaiigaku.jp/modules/shop/index.php?main_page=product_info&amp;products_id=1241">https://www.chugaiigaku.jp/modules/shop/index.php?main_page=product_info&amp;products_id=1241</a>), but a report that introduced the investigation of EZR was published in <EM>Bone Marrow Transplantation</EM> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below.
 </p>

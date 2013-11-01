@@ -1,3 +1,4 @@
-import(tcltk, stats)
+import(stats, Rcmdr)
+importFrom(tcltk, tkbutton, tkget)
 exportPattern("^[^\\.]")
 

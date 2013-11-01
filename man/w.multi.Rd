@@ -12,11 +12,11 @@ Creates a formatted table for presentation and outputs to a file or clipboard.
 }
 
 \usage{
-w.multi(table = cox.table, filename = "clipboard", CI = 0, signif = 0)
-w.twoway(table = Fisher.summary.table, filename = "clipboard")
-w.ttest(table = summary.ttest, filename = "clipboard")
-w.survival(table = km.summary.table, filename = "clipboard")
-w.ci(table = ci.summary.table, filename = "clipboard")
+w.multi(table = cox.table, filename = "clipboard", CI = 0, signif = 0, en = 1)
+w.twoway(table = Fisher.summary.table, filename = "clipboard", en = 1)
+w.ttest(table = summary.ttest, filename = "clipboard", en = 1)
+w.survival(table = km.summary.table, filename = "clipboard", en = 1)
+w.ci(table = ci.summary.table, filename = "clipboard", en = 1)
 }
 
 \arguments{
@@ -24,6 +24,7 @@ w.ci(table = ci.summary.table, filename = "clipboard")
 \item{filename}{a filename for output. If omitted, a formatted table is copied to the clipboard.}
 \item{CI}{If 0, confidence intervals are shown in parentheses.}
 \item{signif}{Number of significant digits.}
+\item{en}{If 1, creat a table in English.}
 }
 
 \details{

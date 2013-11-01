@@ -51,12 +51,14 @@
 \alias{step.p.cox}
 \alias{step.p.coxtd}
 \alias{step.p.crr}
+\alias{step.AIC.crr}
+\alias{crrAIC}
 \alias{step.p.glm}
 \alias{step.p.lm}
 \alias{stsplit}
 \alias{summary.ci}
 \alias{summary.km}
-\alias{summary.table}
+\alias{summary.table.twoway}
 \alias{summary.table.MH}
 \alias{trim.col.na}
 \alias{waldtest}
@@ -73,8 +75,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.12\cr
-Date: \tab 2013-03-13\cr
+Version: \tab 1.20\cr
+Date: \tab 2013-11-01\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }

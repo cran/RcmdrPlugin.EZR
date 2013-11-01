@@ -1,3 +1,17 @@
+Changes to Version 1.20
+
+  o Changed dialogue design and added apply button for Rcmdr ver 2.0-0.
+
+  o Changed the method to set the breakpoints between histogram cells from "Sturges" to "Scott". Made a new function, hist2(), to fix a bug of hist().
+
+  o Changed the scripts to draw cumulative incidece function from using "etype" option to using "mstate" option, and at the same time, updated stackcuminc() for "Stacked cumulative incidences" for compatability with new version (2.37-2) of "survival" package.
+
+  o Added stepwise selection function based on AIC and BIC in Fine-Gray proportinal hazard regression.
+
+  o Enabled importing Excel files in EZR on OSX and on 64bit Windows using XLConnect package. 
+
+  o Added car package in "Suggests:" and require(car) in EZR.R, since this package has been moved from "Depends:" to "Suggests:" in the Rcmdr package.
+
 Changes to Version 1.12
 
   o Move optmatch package from "Depends:" to "Suggests:", because the package has a license which restricts to academic use. Descriptions with regard to the usage restriction of the packages were added to the DESCRIPTION file.
