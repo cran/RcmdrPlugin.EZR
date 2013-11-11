@@ -1,13 +1,14 @@
 Package: RcmdrPlugin.EZR
 Type: Package
 Title: R Commander Plug-in for the EZR (Easy R) Package
-Version: 1.12
-Date: 2013-03-13
+Version: 1.20
+Date: 2013-11-01
 Author: Yoshinobu Kanda
 Maintainer: Yoshinobu Kanda <ycanda-tky@umin.ac.jp>
-Depends: R (>= 2.13), Rcmdr (>= 1.8.0), abind, aod, aplpack, clinfun,
-        cmprsk, foreign, meta, metatest, multcomp, mvtnorm, pROC
-Suggests: optmatch, RODBC
+Depends: R (>= 3.00)
+Imports: Rcmdr (>= 2.0.0)
+Suggests: abind, aod, aplpack, car, clinfun, cmprsk, foreign, meta,
+        metatest, multcomp, mvtnorm, optmatch, pROC, RODBC, XLConnect
 Description: EZR (Easy R) adds a variety of statistical functions,
         including survival analyses, ROC analyses, metaanalyses, sample
         size calculation, and so on, to the R commander. EZR enables
@@ -48,7 +49,7 @@ License: GPL (>= 2)
 URL:
         http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf
         http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html
-Packaged: 2013-03-13 03:20:28 UTC; Yoshinobu_Kanda
+Packaged: 2013-11-11 10:07:53 UTC; Yoshinobu_Kanda
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2013-03-13 13:35:26
+Date/Publication: 2013-11-11 11:24:01

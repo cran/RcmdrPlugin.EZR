@@ -2,17 +2,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2013-01-11 12:20+0900\n"
-"Last-Translator: \n"
+"PO-Revision-Date: 2013-11-11 11:36+0900\n"
+"Last-Translator: Yoshinobu Kanda <ycanda-tky@umin.ac.jp>\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Japanese\n"
-"X-Poedit-Country: JAPAN\n"
+"Language: ja_JP\n"
+"X-Generator: Poedit 1.5.7\n"
 
 msgid "KMeans Clustering"
-msgstr "ｋ平均クラスタリング"
+msgstr "k平均クラスタリング"
 
 msgid "Variables (pick one or more)"
 msgstr "変数 (１つ以上選択)"
@@ -436,11 +436,11 @@ msgstr ""
 "Minitab データセットが長さの異なる要素を含んでいます\n"
 "データセットを変換できません．"
 
-msgid "Import Stata Data Set"
-msgstr "Stataデータセットのインポート"
+msgid "Import STATA Data Set"
+msgstr "STATAデータセットのインポート"
 
-msgid "{\"All Files\" {\"*\"}} {\"Stata datasets\" {\".dta\" \".DTA\"}}"
-msgstr "{\"全てのファイル\" {\"*\"}} {\"Stataデータセット\" {\".dta\" \".DTA\"}}"
+msgid "{\"STATA datasets\" {\".dta\" \".DTA\"}} {\"All Files\" {\"*\"}}"
+msgstr "{\"STATAデータセット\" {\".dta\" \".DTA\"}} {\"全てのファイル\" {\"*\"}}"
 
 msgid "Convert dates to R format"
 msgstr "datesをR形式に変換"
@@ -683,7 +683,7 @@ msgstr ""
 "水準数(%d)*対比数(%d)とは等しくありません"
 
 msgid "Contrast matrix is not of full column rank"
-msgstr "対比行列が full column rankではない"
+msgstr "対比行列が 列フルランクではない"
 
 msgid "Contrast names must be unique"
 msgstr "対比の名前はユニークに付けてください"
@@ -710,7 +710,7 @@ msgid "Upper tail"
 msgstr "上側確率"
 
 msgid "Normal Probabilities"
-msgstr "正規確率"
+msgstr "正規分布の確率"
 
 msgid "No values specified."
 msgstr "値が指定されていません．"
@@ -719,7 +719,7 @@ msgid "Variable value(s)"
 msgstr "変数の値"
 
 msgid "t Quantiles"
-msgstr "ｔ 分布の分位点"
+msgstr "ｔ分布の分位点"
 
 msgid "Degrees of freedom not specified."
 msgstr "自由度を指定していません．"
@@ -728,7 +728,7 @@ msgid "Degrees of freedom"
 msgstr "自由度"
 
 msgid "t Probabilities"
-msgstr "ｔ 分布の確率"
+msgstr "ｔ分布の確率"
 
 msgid "Chi-Squared Quantiles"
 msgstr "カイ２乗分布の分位点"
@@ -963,7 +963,7 @@ msgid "<auto>"
 msgstr "<auto>"
 
 msgid "Frequency counts"
-msgstr "頻度の計算"
+msgstr "頻度"
 
 msgid "Percentages"
 msgstr "パーセント"
@@ -1125,24 +1125,21 @@ msgstr "y 軸のラベル"
 msgid "Plot legend (position with mouse click)"
 msgstr "凡例の表示 (位置をマウスで指定)"
 
-msgid "Plot legend"
-msgstr "凡例の表示"
-
 msgid "Quantile-Comparison (QQ) Plot"
 msgstr "QQプロット"
 
 msgid "df for t must be a positive number."
-msgstr "ｔ分布の自由度は正の値でなければならない．"
+msgstr "ｔ分布の自由度は正の値である必要があります．"
 
 msgid "df for chi-square must be a positive number."
-msgstr "カイ２乗分布の自由度は正の値でなければならない．"
+msgstr "カイ２乗分布の自由度は正の値である必要があります．"
 
 msgid ""
 "numerator and denominator \n"
 "df for F must be positive numbers."
 msgstr ""
 "F分布の分子と分母の\n"
-"自由度は正の値でなければならない．"
+"自由度は正の値である必要があります．"
 
 msgid "Identify observations with mouse"
 msgstr "マウスでデータ情報を表示"
@@ -1390,7 +1387,7 @@ msgstr ""
 "が、行の数 (%d) *列の数 (%d)と異なっています．"
 
 msgid "Hypothesis matrix is not of full row rank."
-msgstr "仮説行列が、full row rank ではありません．"
+msgstr "仮説行列が、行フルランクではありません．"
 
 msgid ""
 "Number of valid entries in rhs vector (%d)\n"
@@ -1494,9 +1491,6 @@ msgstr "...に基づく検定"
 
 msgid "Confidence Level:"
 msgstr "信頼水準："
-
-msgid "Confidence level"
-msgstr "信頼水準"
 
 msgid "Rcmdr Version"
 msgstr "Rcmdrのバージョン"
@@ -1623,14 +1617,17 @@ msgstr "質的変数を選択してください．"
 msgid "Two-sided"
 msgstr "両側"
 
-msgid "One-sided"
-msgstr "片側"
-
 msgid "Difference < 0"
 msgstr "差 < 0"
 
 msgid "Difference > 0"
 msgstr "差 > 0"
+
+msgid "Yes"
+msgstr "Yes"
+
+msgid "No"
+msgstr "No"
 
 msgid "Assume equal variances?"
 msgstr "等分散と考えますか?"
@@ -1790,7 +1787,7 @@ msgid ""
 "There are %d variables in the data set %s.\n"
 "Do you want to proceed?"
 msgstr ""
-"データセット %s に %d 個の変数があります．\n"
+"There are %d variables in the data set %s.\n"
 "続けますか?"
 
 msgid "Numerical Summaries"
@@ -2128,8 +2125,8 @@ msgstr "SPSSデータセットから..."
 msgid "from Minitab data set..."
 msgstr "Minitabデータセットから..."
 
-msgid "from Stata data set..."
-msgstr "Stataデータセットから..."
+msgid "from STATA data set..."
+msgstr "STATAデータセットから..."
 
 msgid "Import data"
 msgstr "データのインポート"
@@ -2261,7 +2258,7 @@ msgid "Kruskal-Wallis test..."
 msgstr "クラスカル－ウォリスの検定..."
 
 msgid "Scale reliability..."
-msgstr "スケールの信頼性..."
+msgstr "尺度の信頼性..."
 
 msgid "Principal-components analysis..."
 msgstr "主成分分析..."
@@ -2453,16 +2450,16 @@ msgid "Plot normal distribution..."
 msgstr "正規分布を描く..."
 
 msgid "t distribution"
-msgstr "t 分布"
+msgstr "ｔ分布"
 
 msgid "t quantiles..."
-msgstr "ｔ 分布の分位点..."
+msgstr "ｔ分布の分位点..."
 
 msgid "t probabilities..."
-msgstr "t 分布の確率..."
+msgstr "ｔ分布の確率..."
 
 msgid "Plot t distribution..."
-msgstr "t 分布を描く..."
+msgstr "ｔ分布を描く..."
 
 msgid "Chi-squared distribution"
 msgstr "カイ２乗分布"
@@ -2525,25 +2522,25 @@ msgid "Tools"
 msgstr "ツール"
 
 msgid "Commander help"
-msgstr "Commander のヘルプ"
+msgstr "Rコマンダーのヘルプ"
 
 msgid "Introduction to the R Commander"
 msgstr "R コマンダー入門"
 
 msgid "About Rcmdr"
-msgstr "Rcmdr について"
+msgstr "Rコマンダーについて"
 
 msgid "df ="
 msgstr "df ="
 
-## messages added to Rcmdr version 1.1-1
+# # messages added to Rcmdr version 1.1-1
 msgid "There is no current RGL graphics device."
 msgstr "最新の RGL グラフィックスデバイスがありません"
 
 msgid "3D graph"
 msgstr "３次元グラフ"
 
-## messages added to Rcmdr version 1.1-6
+# # messages added to Rcmdr version 1.1-6
 msgid " contains non-standard variable names:\n"
 msgstr "標準的でない変数名を含んでいます：\n"
 
@@ -2576,22 +2573,22 @@ msgstr "Excel または Access，dBase のデータセットから..."
 
 # probability distributions
 msgid "Standard deviation must be positive."
-msgstr "標準偏差は正の値でなくてはだめです．"
+msgstr "標準偏差は正の値である必要があります．"
 
 msgid "Degrees of freedom must be positive."
-msgstr "自由度は正の値でなくてはだめです．"
+msgstr "自由度は正の値である必要があります．"
 
 msgid "Numerator degrees of freedom must be positive."
-msgstr "分子の自由度が正の値でありません．"
+msgstr "分子の自由度が正の値ではありません．"
 
 msgid "Denominator degrees of freedom must be positive."
-msgstr "分母の自由度が正の値でありません．"
+msgstr "分母の自由度が正の値ではありません．"
 
 msgid "Exponential Distribution"
 msgstr "指数分布"
 
 msgid "Rate must be positive."
-msgstr "比率は正の値でないとだめです．"
+msgstr "比率は正の値である必要があります．"
 
 msgid "Rate"
 msgstr "比率"
@@ -2705,7 +2702,7 @@ msgid "Weibull Probabilities"
 msgstr "ワイブル分布の確率"
 
 msgid "Gumbel Distribution"
-msgstr "ガンベル分布"
+msgstr "グンベル分布"
 
 msgid "Shape (log shape)"
 msgstr "形状パラメータ（対数）"
@@ -2714,10 +2711,10 @@ msgid "Scale (log scale)"
 msgstr "尺度パラメータ（対数）"
 
 msgid "Gumbel Probabilities"
-msgstr "ガンベル分布の確率"
+msgstr "グンベル分布の確率"
 
 msgid "Probability of success must be between 0 and 1."
-msgstr "成功の確率は０から１の範囲にしてください．"
+msgstr "成功の確率は０から１の範囲内にある必要があります．"
 
 msgid "Poisson Quantiles"
 msgstr "ポアソン分布の分位点"
@@ -2819,7 +2816,7 @@ msgid "Add to Data Set:"
 msgstr "データセットに追加する："
 
 msgid "Sample from t Distribution"
-msgstr "ｔ 分布からのサンプル"
+msgstr "ｔ分布からのサンプル"
 
 msgid "tSamples"
 msgstr "tSamples"
@@ -2885,7 +2882,7 @@ msgid "WeibullSamples"
 msgstr "WeibullSamples"
 
 msgid "Sample from Gumbel Distribution"
-msgstr "ガンベル分布からのサンプル"
+msgstr "グンベル分布からのサンプル"
 
 msgid "GumbelSamples"
 msgstr "GumbelSamples"
@@ -3056,19 +3053,19 @@ msgid "Sample from Weibull distribution..."
 msgstr "ワイブル分布からのサンプル..."
 
 msgid "Gumbel distribution"
-msgstr "ガンベル分布"
+msgstr "グンベル分布"
 
 msgid "Gumbel quantiles..."
-msgstr "ガンベル分布の分位点..."
+msgstr "グンベル分布の分位点..."
 
 msgid "Gumbel probabilities..."
-msgstr "ガンベル分布の確率..."
+msgstr "グンベル分布の確率..."
 
 msgid "Plot Gumbel distribution..."
-msgstr "ガンベル分布を描く..."
+msgstr "グンベル分布を描く..."
 
 msgid "Sample from Gumbel distribution..."
-msgstr "ガンベル分布からのサンプル..."
+msgstr "グンベル分布からのサンプル..."
 
 msgid "Sample from binomial distribution..."
 msgstr "２項分布からのサンプル..."
@@ -3344,7 +3341,7 @@ msgstr "統計量を選択してください．"
 msgid "Variable (pick one or more)"
 msgstr "変数（１つ以上選択）"
 
-## messages added to Rcmdr version 1.3-0
+# # messages added to Rcmdr version 1.3-0
 # handling plug-ins
 msgid "Load Plugins"
 msgstr "プラグインのロード"
@@ -3460,6 +3457,9 @@ msgstr "を強制的にデータフレームに変換しました"
 
 msgid "the dataset %s is no longer available"
 msgstr "データセット %s は利用できません"
+
+msgid "the model %s is no longer available"
+msgstr "モデル  %s は利用できません"
 
 # message added to version 1.3-10
 msgid "The Commander GUI is launched only in interactive sessions"
@@ -3797,18 +3797,253 @@ msgstr "エスケープキーで終了"
 msgid "Start R help system"
 msgstr "Rヘルプシステムの開始"
 
-# missing from the catalog
-msgid "Layout"
-msgstr "レイアウト"
+# messages added to version 1.6-4
+#  to correct order of file extensions
+msgid "{\"All Files\" {\"*\"}} {\"Script Files\" {\".R\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"Script Files\" {\".R\"}}"
 
+msgid "{\"All Files\" {\"*\"}} {\"Output Files\" {\".txt\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"Output Files\" {\".txt\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"Text Files\" {\".txt\" \".TXT\" \".dat\" \".DAT\" \".csv\" \".CSV\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"Text Files\" {\".txt\" \".TXT\" \".dat\" \".DAT\" \".csv\" \".CSV\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"SPSS portable files\" {\".por\" \".POR\"}} {\"SPSS save files\" {\".sav\" \".SAV\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"SPSS portable files\" {\".por\" \".POR\"}} {\"SPSS save files\" {\".sav\" \".SAV\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"Minitab portable files\" {\".mtp\" \".MTP\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"Minitab portable files\" {\".mtp\" \".MTP\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"STATA datasets\" {\".dta\" \".DTA\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"STATA datasets\" {\".dta\" \".DTA\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"MS Access database\" {\".mdb\" \".MDB\"}} {\"MS Access 2007 database\" {\".accdb\" \".ACCDB\"}} {\"dBase-like file\" {\".dbf\" \".DBF\"}} {\"MS Excel 2007 file\" {\".xlsx\" \".XLSX\"}} {\"MS Excel file\" {\".xls\" \".XLS\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"MS Access database\" {\".mdb\" \".MDB\"}} {\"MS Access 2007 database\" {\".accdb\" \".ACCDB\"}} {\"dBase-like file\" {\".dbf\" \".DBF\"}} {\"MS Excel 2007 file\" {\".xlsx\" \".XLSX\"}} {\"MS Excel file\" {\".xls\" \".XLS\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"R Data Files\" {\".RData\" \".rda\" \".Rda\" \".RDA\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"R Data Files\" {\".RData\" \".rda\" \".Rda\" \".RDA\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"PNG Files\" {\".png\" \".PNG\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"PNG Files\" {\".png\" \".PNG\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"JPEG Files\" {\".jpg\" \".JPG\" \".jpeg\" \".JPEG\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"JPEG Files\" {\".jpg\" \".JPG\" \".jpeg\" \".JPEG\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"PDF Files\" {\".pdf\" \".PDF\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"PDF Files\" {\".pdf\" \".PDF\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"Postscript Files\" {\".ps\" \".PS\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"Postscript Files\" {\".ps\" \".PS\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"Encapsulated Postscript Files\" {\".eps\" \".EPS\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"Encapsulated Postscript Files\" {\".eps\" \".EPS\"}}"
+
+# messages added to version 1.7-0
+msgid "Reset"
+msgstr "リセット"
+
+msgid "Coefficient of Variation"
+msgstr "変動係数"
+
+msgid "Skewness"
+msgstr "歪度"
+
+msgid "Kurtosis"
+msgstr "尖度"
+
+msgid "Type 1"
+msgstr "タイプ１"
+
+msgid "Type 2"
+msgstr "タイプ２"
+
+msgid "Type 3"
+msgstr "タイプ３"
+
+msgid "Missing Data"
+msgstr "欠測値"
+
+msgid "Use complete cases"
+msgstr "完全なケースの利用"
+
+msgid "Use pairwise-complete cases"
+msgstr "対での完全なケースの利用"
+
+# messages added to version 1.7-4
+msgid "Component scores are not available when subset is specified."
+msgstr "部分集合を指定した場合，主成分得点を利用できない．"
+
+msgid "Factor scores are not available when subset is specified."
+msgstr "部分集合を指定した場合，因子得点を利用できない．"
+
+# messages added to version 1.8-0
+msgid "Confirmatory Factor Analysis"
+msgstr "検証的因子分析"
+
+msgid "Fewer than 2 variables selected to load on factor."
+msgstr "因子に付加する変数の数が2より少ない．"
+
+msgid "Define factor"
+msgstr "因子の定義"
+
+msgid ""
+"Select variables\n"
+"loading on factor"
+msgstr ""
+"因子が負荷する\n"
+"変数の選択"
+
+msgid "Covariance"
+msgstr "共分散"
+
+msgid "Correlation"
+msgstr "相関"
+
+msgid "Matrix to Analyze"
+msgstr "分析する行列"
+
+msgid "Correlated"
+msgstr "斜交"
+
+msgid "Orthogonal"
+msgstr "直交"
+
+msgid "Factor Correlations"
+msgstr "因子の相関"
+
+msgid "There are too many factors."
+msgstr "因子数が多い．"
+
+msgid "Identifying Constraints"
+msgstr "一意性のための制約"
+
+msgid "Factor variances set to 1"
+msgstr "因子分散を1に設定"
+
+msgid "First loading on each factor set to 1"
+msgstr "各因子の最初の負荷量を1に設定"
+
+msgid "Confirmatory factor analysis..."
+msgstr "検証的因子分析..."
+
+# messages added to version 1.8-1
+# the following messages were omitted from version 1.8-0
+msgid "Robust standard errors"
+msgstr "ロバスト標準誤差"
+
+msgid "No factors defined."
+msgstr "因子が定義されていない．"
+
+# message added to version 1.8-2
+msgid "Default-font size (points)"
+msgstr "デフォルトのフォントサイズ（ポイント）"
+
+# message added to version 1.8-4
+msgid "data set edit error."
+msgstr "データセットの編集エラー"
+
+# messages added to version 1.9-0
+msgid "Identify Outliers"
+msgstr "外れ値の特定"
+
+msgid "Automatically"
+msgstr "自動的に"
+
+msgid "With mouse"
+msgstr "マウスで"
+
+msgid "Width"
+msgstr "幅"
+
+msgid "Height"
+msgstr "高さ"
+
+msgid "[disabled]"
+msgstr "[disabled]"
+
+msgid "inches"
+msgstr "インチ"
+
+msgid "inch"
+msgstr "インチ"
+
+msgid "cm"
+msgstr "センチメートル"
+
+msgid "pixels"
+msgstr "ピクセル"
+
+msgid "Units"
+msgstr "単位"
+
+msgid "Fixed aspect ratio (height:width)"
+msgstr "固定縦横比（高さ:幅）"
+
+msgid "Resolution"
+msgstr "分解能"
+
+msgid "from SAS xport file..."
+msgstr "SASのエクスポートファイルから..."
+
+msgid "Data Set Name"
+msgstr "データセット名"
+
+msgid "Select Dataset"
+msgstr "データセットの選択"
+
+msgid "Datasets in file (pick one)"
+msgstr "ファイル内のデータセット（1つ選択）"
+
+msgid "{\"All Files\" {\"*\"}} {\"SAS xport files\" {\".xpt\" \".XPT\" \".xport\" \".XPORT\"}}"
+msgstr "{\"All Files\" {\"*\"}} {\"SAS xport files\" {\".xpt\" \".XPT\" \".xport\" \".XPORT\"}}"
+
+msgid ""
+"Convert variable names\n"
+"to lower case"
+msgstr ""
+"変数名を\n"
+"小文字に変換"
+
+msgid "from Excel file..."
+msgstr "エクセルファイルから..."
+
+msgid "Import Excel Data Set"
+msgstr "エクセルデータセットのインポート"
+
+msgid "{\"All Files\" {\"*\"}} {\"MS Excel 2007 file\" {\".xlsx\" \".XLSX\"}} {\"MS Excel file\" {\".xls\" \".XLS\"}}"
+msgstr "{\"All Files\" {\"*\"}} {\"MS Excel 2007 file\" {\".xlsx\" \".XLSX\"}} {\"MS Excel file\" {\".xls\" \".XLS\"}}"
+
+msgid "Interquartile Range"
+msgstr "四分位範囲"
+
+msgid "Interquartile range"
+msgstr "四分位範囲"
+
+msgid "Lines"
+msgstr "折れ線"
+
+msgid "Choose at least one of points or lines."
+msgstr "少なくとも一つの点または線を選択"
+
+msgid "Plot Type (one or both)"
+msgstr "線"
+
+# messages added to version 1.9-1 (missing from 1.9-0)
+msgid "Plot legend"
+msgstr "凡例のプロット"
+
+# the following were missing from Xyplot()
 msgid "Conditions '|' (pick zero or more)"
 msgstr "条件 '|' (０個以上選択)"
 
 msgid "Groups 'groups=' (pick zero or more)"
 msgstr "グループ 'groups=' (０個以上選択)"
 
-msgid "Different panels for different y~x combinations"
-msgstr "異なる y~x の組み合わせに対して異なるパネルを利用"
+msgid "Different panels for different y ~ x combinations"
+msgstr "異なる y~x の組合せに対して異なるパネルを利用"
+
+msgid "Layout"
+msgstr "レイアウト"
 
 msgid "number of columns:"
 msgstr "列数："
@@ -3816,7 +4051,392 @@ msgstr "列数："
 msgid "number of rows:"
 msgstr "行数："
 
-#EZR menus
+# messages added to version 2.0-0
+msgid "Plot Options"
+msgstr "プロットのオプション"
+
+msgid "Plot Labels"
+msgstr "ラベルを表示"
+
+msgid "Graph title"
+msgstr "グラフのタイトル"
+
+msgid "Plot Labels and Points"
+msgstr "ラベルと点を表示"
+
+msgid "Apply"
+msgstr "適用"
+
+msgid "Pairwise p-values"
+msgstr "ペアワイズのp値"
+
+msgid "Observations to Use"
+msgstr "ノンパラメトリック密度推定"
+
+msgid "Complete observations"
+msgstr "欠測値を含まない観測値"
+
+msgid "Pairwise-complete observations"
+msgstr "完全対の観測値"
+
+msgid "R Script"
+msgstr "Rスクリプト"
+
+msgid "Output"
+msgstr "出力"
+
+msgid "R Commander website"
+msgstr "Rコマンダーのウェブサイト"
+
+msgid "R website"
+msgstr "Rのウェブサイト"
+
+msgid "Using R Markdown"
+msgstr "Rマークダウンを利用する"
+
+msgid "Table"
+msgstr "表"
+
+# point identification in graphs (additional messages)
+msgid "Interactively with mouse"
+msgstr "マウスでインターラクティブに"
+
+msgid "Do not identify"
+msgstr "確認しない"
+
+msgid "number of points to identify must be an integer"
+msgstr "確認する点の数は整数でないといけない"
+
+msgid "Number of points to identify"
+msgstr "確認する点の数"
+
+msgid ""
+"Number of points to identify  \n"
+"in each panel and group "
+msgstr ""
+"各パネルとグループにおける\n"
+"識別したい点の数"
+
+msgid "Added-Variable Plots"
+msgstr "偏回帰プロット"
+
+msgid "Component+Residual Plots"
+msgstr "偏残差プロット"
+
+msgid "Influence Plot"
+msgstr "影響プロット"
+
+# support for R Markdown and knitr
+msgid "Generate HTML report"
+msgstr "HTMLレポートの作成"
+
+msgid "Generate PDF report"
+msgstr "PDFレポートの作成"
+
+msgid "R Markdown"
+msgstr "Rマークダウン"
+
+msgid "knitr Document"
+msgstr "knitrドキュメント"
+
+msgid "Open R Markdown file..."
+msgstr "Rマークダウンファイルを保存..."
+
+msgid "Open knitr file..."
+msgstr "knitrファイルを保存..."
+
+msgid "Save R Markdown file..."
+msgstr "Rマークダウンファイルを保存..."
+
+msgid "Save knitr file..."
+msgstr "knitrファイルの保存"
+
+msgid "Save knitr file?"
+msgstr "knitrファイルを保存しますか？"
+
+msgid "Save current Rmd file?"
+msgstr "現在のRnwファイルを保存しますか？"
+
+msgid "Save current Rnw file?"
+msgstr "現在のRnwファイルを保存しますか？"
+
+msgid "Save R Markdown file as..."
+msgstr "名前をつけてRマークダウンファイルを保存"
+
+msgid "Save knitr file as..."
+msgstr "名前をつけてknitrファイルを保存"
+
+msgid "R Markdown file saved to"
+msgstr "Rマークダウンファイルを次に保存"
+
+msgid "knitr file saved to"
+msgstr "knitrファイルを次に保存"
+
+msgid "{\"All Files\" {\"*\"}} {\"R Markdown Files\" {\".Rmd\" \".rmd\"}}"
+msgstr "{\"All Files\" {\"*\"}} {\"R Markdown Files\" {\".Rmd\" \".rmd\"}}"
+
+msgid "{\"All Files\" {\"*\"}} {\"knitr Files\" {\".Rmd\" \".rmd\" \".Snw\" \".snw\"}}"
+msgstr "{\"All Files\" {\"*\"}} {\"knitr Files\" {\".Rmd\" \".rmd\" \".Snw\" \".snw\"}}"
+
+msgid ""
+"Delete previously created knitr\n"
+"graphics files (recommended)?"
+msgstr ""
+"前に作成したknitrグラフィックスファイル\n"
+"を削除？（推奨）"
+
+# setting and saving options
+msgid "Ask to exit Commander"
+msgstr "終了時に確認する"
+
+msgid "Ask to save documents on exit"
+msgstr "終了時にドキュメントの保存を確認する"
+
+msgid "Quit R on exit"
+msgstr "終了時にRも終了"
+
+msgid "Number messages"
+msgstr "メッセージの数"
+
+msgid "Retain messages"
+msgstr "メッセージを保持"
+
+msgid "Use R Markown"
+msgstr "Rマークダウンを利用"
+
+msgid "Use knitr"
+msgstr "knitrの利用"
+
+msgid "Select file"
+msgstr "ファイルの選択"
+
+msgid "R Markdown template file"
+msgstr "Rマークダウン・テンプレートファイル"
+
+msgid "R knitr template file"
+msgstr "Rのknitrテンプレートファイル"
+
+msgid "Suppress icon images"
+msgstr "アイコンイメージを表示しない"
+
+msgid "Retain dialog selections"
+msgstr "ダイアログの選択を保持"
+
+msgid "Use rgl package"
+msgstr "rglパッケージを利用"
+
+msgid "Dialog text font size (points)"
+msgstr "ダイアログの記号のフォントの大きさ（ポイント）"
+
+msgid "Script and output font size (points)"
+msgstr "スクリプトと出力のフォントの大きさ（ポイント）"
+
+msgid "Dialog font"
+msgstr "ダイアログのフォント"
+
+msgid "Script and output font"
+msgstr "スクリプトと出力のフォント"
+
+msgid "Script text color"
+msgstr "スクリプトの文字色"
+
+msgid "Command text color"
+msgstr "コマンドの文字色"
+
+msgid "Output text color"
+msgstr "出力の文字色"
+
+msgid "Error text color"
+msgstr "エラーの文字色"
+
+msgid "Warning text color"
+msgstr "警告の文字色"
+
+msgid "Dialog subtitles text color"
+msgstr "ダイアログのサブタイトルの色"
+
+msgid "Script window width (characters)"
+msgstr "スクリプトウィンドウの幅（文字数）"
+
+msgid "Script window height (lines)"
+msgstr "スクリプトウィンドウの高さ（行）"
+
+msgid "Output window height (lines)"
+msgstr "出力ウインドウの高さ（行）"
+
+msgid "Messages window height (lines)"
+msgstr "メッセージウインドウの高さ（行）"
+
+msgid "Fonts"
+msgstr "フォント"
+
+msgid "Other Options"
+msgstr "他のオプション"
+
+msgid "Save Commander Options"
+msgstr "コマンダーオプションの保存"
+
+msgid "R Profile saved to"
+msgstr "Rプロファイルを次に保存"
+
+msgid "The following commands will be saved in the file .Rprofile."
+msgstr "次のコマンドは .Rprofileファイルに保存されます．"
+
+msgid "You may edit this file before saving it."
+msgstr "保存する前にこのファイルを編集することができます．"
+
+msgid "Save Rcmdr options..."
+msgstr "Rcmdrオプションの保存..."
+
+# density estimate dialog
+msgid "Nonparametric Density Estimate"
+msgstr "ノンパラメトリック密度推定"
+
+msgid "Gaussian"
+msgstr "ガウシアン"
+
+msgid "Epanechnikov"
+msgstr "エパネチニコフ"
+
+msgid "Tukey biweight"
+msgstr "テューキーのバイウェイト"
+
+msgid "Kernel Function"
+msgstr "カーネル関数"
+
+msgid "Bandwidth"
+msgstr "バンド幅"
+
+msgid "Multiply bandwidth by"
+msgstr "バンド幅を拡大"
+
+msgid "Density estimate..."
+msgstr "密度推定..."
+
+msgid "Bandwidth must be <auto> or a positive number"
+msgstr "バンド幅は<auto>か正の数でないといけません"
+
+# index plot dialog
+msgid "Style of plot"
+msgstr "プロットのスタイル"
+
+# export data set dialog
+msgid "Write variable names"
+msgstr "変数名を表示"
+
+msgid "Write row names"
+msgstr "行名を書く"
+
+msgid "Quotes around character values"
+msgstr "記号に引用符をつける"
+
+# numerical summaries dialog
+msgid "Quantiles:"
+msgstr "分位数："
+
+# for splines and polynomials in model formulas
+msgid "spline requires a numeric variable"
+msgstr "スプラインには数値変数が必要です"
+
+msgid "cannot select more than one variable"
+msgstr "2つ以上の変数を選択できません"
+
+msgid "polynomial requires a numeric variable"
+msgstr "多項式には数値変数が必要です"
+
+msgid "B-spline\n"
+msgstr "B-スプライン\n"
+
+msgid ""
+"natural\n"
+"spline"
+msgstr ""
+"自然\n"
+"スプライン"
+
+msgid ""
+"orthogonal\n"
+"polynomial"
+msgstr ""
+"直交\n"
+"多項式"
+
+msgid ""
+"raw\n"
+"polynomial"
+msgstr ""
+"通常の\n"
+"多項式"
+
+msgid "Model Formula"
+msgstr "モデル式"
+
+msgid "Operators (click to formula):  "
+msgstr "オペレータ（クリックして入力）"
+
+msgid ""
+"Splines/Polynomials:\n"
+"(select variable and click)"
+msgstr ""
+"スプライン/多項式：\n"
+"（変数を選択してクリック）"
+
+msgid "df for splines:"
+msgstr "スプラインの自由度："
+
+msgid "deg. for polynomials:"
+msgstr "多項式の次数 :"
+
+# messages added to version 2.0-1
+# messages related to editing/processing R Markdown and knitr documents
+msgid "R Commander Editor"
+msgstr "Rコマンダーのエディタ"
+
+msgid "Edit R Markdown document"
+msgstr "Rマークダウン文書の編集"
+
+msgid "Edit knitr document"
+msgstr "knitr文書の編集"
+
+msgid "Remove last Markdown command block"
+msgstr "マークダウンコマンドの最後のブロックの削除"
+
+msgid "Remove last knitr command block"
+msgstr "knitrコマンドの最後のブロックの削除"
+
+msgid "Remove last command block"
+msgstr "最後のコマンドブロックの削除"
+
+msgid "Exit editor"
+msgstr "エディタの終了"
+
+msgid "Editor help"
+msgstr "エディタのヘルプ"
+
+msgid ""
+"Delete previously created R Markdown\n"
+"graphics files (recommended)?"
+msgstr ""
+"前に作成したRマークダウン\n"
+"グラフィックスファイルを削除しますか（推奨）？"
+
+msgid "Discard edits?"
+msgstr "編集を破棄しますか？"
+
+# support for back-to-back stem-and-leaf displays
+msgid "Plot back-to-back by:"
+msgstr "層別の背中合わせプロット"
+
+msgid "Plot back-to-back"
+msgstr "背中合わせにプロット"
+
+msgid "Save document"
+msgstr "文書を保存"
+
+msgid "Save document and exit?"
+msgstr "文書を保存して終了？"
+
+########## for EZR ##########
 msgid "New data set"
 msgstr "新しいデータセットを作成する(直接入力)"
 
@@ -4237,6 +4857,9 @@ msgstr "EZR on R commander を起動します。"
 msgid "Use the EZR window."
 msgstr "操作はEZRのウィンドウで行ってください。"
 
+msgid "Use the R commander window."
+msgstr "操作はRコマンダーのウィンドウで行ってください。"
+
 msgid "EZR comes with ABSOLUTELY NO WARRANTY just like R itself."
 msgstr "EZRはRと同様に「完全に無保証」です。"
 
@@ -4571,16 +5194,10 @@ msgid "Sample size"
 msgstr "サンプルサイズ"
 
 msgid "Confidence interval"
-msgstr "信頼水準"
+msgstr "信頼区間"
 
 msgid "Create a variable converting outliers to NA"
 msgstr "外れ値をNAに変換した変数を作成する"
-
-msgid "No"
-msgstr "いいえ"
-
-msgid "Yes"
-msgstr "はい"
 
 msgid "Grouping variable (pick one)"
 msgstr "比較する群 (1つ選択)"
@@ -4796,7 +5413,7 @@ msgid "Time when TD covariate changes from 1 to 0(pick one)"
 msgstr "時間依存性変数が1から0に戻るまでの期間(0～1つ選択)"
 
 msgid "Peto-Peto-Wilcoxon"
-msgstr "Peto&Peto一般化Wilcoxon"
+msgstr "Peto-Peto-Wilcoxon"
 
 msgid "Upper right"
 msgstr "右上・縦並び"
@@ -4828,8 +5445,23 @@ msgstr "月を年に変換"
 msgid "Post-hoc test (when only one grouping variable picked)"
 msgstr "Post-hoc検定(比較する群が1つの場合)"
 
+msgid ""
+"Post-hoc test\n"
+"(when only one grouping\n"
+"variable picked)"
+msgstr ""
+"Post-hoc検定\n"
+"(比較する群が1つの場合)"
+
 msgid "Post-hoc test (one event to show, one grouping variable)"
 msgstr "Post-hoc検定(比較する群が1つで図示するイベントを指定した場合)"
+
+msgid ""
+"Post-hoc test (one event to show,\n"
+"one grouping variable)"
+msgstr ""
+"Post-hoc検定(比較する群が1つで\n"
+"図示するイベントを指定した場合)"
 
 msgid "Show censoring marks"
 msgstr "打ち切りをマークで表示する"
@@ -4952,10 +5584,10 @@ msgid "Pretest probability"
 msgstr "テスト前確率(0-1)"
 
 msgid "Sensitivity"
-msgstr "感度(0-1)"
+msgstr "感度"
 
 msgid "Specificity"
-msgstr "特異度(0-1)"
+msgstr "特異度"
 
 msgid "Test1 (+)"
 msgstr "検査1陽性"
@@ -5108,7 +5740,7 @@ msgid "Survival rate in group 2"
 msgstr "グループ2の生存率 (0.0-1.0)"
 
 msgid "Variable to identify studies (pick 0 or 1)"
-msgstr "研究の名前を示すの変数(0～1つ選択)"
+msgstr "研究の名前を示す変数(0～1つ選択)"
 
 msgid "Number of events in test group"
 msgstr "テスト群のイベント発生数を示す変数(1つ選択)"
@@ -5209,12 +5841,345 @@ msgstr "Y軸下限"
 msgid "Y axis upper limit"
 msgstr "Y軸上限"
 
-msgid "Reset"
-msgstr "選択解除"
-
 msgid "Save active dataset?"
 msgstr "アクティブデータセットを保存?"
 
 msgid "EZR help"
 msgstr "EZRのヘルプ"
+
+msgid "Open R Markdown file"
+msgstr "マークダウンファイルを開く"
+
+msgid "Save R Markdown file"
+msgstr "マークダウンファイルを上書き保存する"
+
+msgid "Save R Markdown file as"
+msgstr "マークダウンファイルを名前を付けて保存する"
+
+msgid "Show basic diagnostic plots"
+msgstr "基本的診断プロットを表示する"
+
+msgid "Plot martingale residuals"
+msgstr "マルチンゲール残差をプロットする"
+
+msgid "Total"
+msgstr "総計"
+
+msgid "Point estimates and"
+msgstr "点推定と"
+
+msgid "CIs:"
+msgstr "信頼区間"
+
+msgid "Apparent prevalence"
+msgstr "検査の陽性率"
+
+msgid "True prevalence"
+msgstr "真の有病率"
+
+msgid "Positive predictive value"
+msgstr "陽性的中率"
+
+msgid "Negative predictive value"
+msgstr "陰性的中率"
+
+msgid "Diagnstic accuracy"
+msgstr "診断精度"
+
+msgid "Likelihood ratio of a positive test"
+msgstr "陽性尤度比"
+
+msgid "Likelihood ratio of a negative test"
+msgstr "陰性尤度比"
+
+msgid "Probability :"
+msgstr "比率         :"
+
+msgid "% confidence interval :"
+msgstr "% 信頼区間              :"
+
+msgid "Difference :"
+msgstr "比率の差     :"
+
+msgid "Ratio :"
+msgstr "比率の比     :"
+
+msgid "vectors must be same length"
+msgstr "ベクトルは同じ長さでなければなりません"
+
+msgid "Identify data"
+msgstr "値"
+
+msgid "as an outlier. (Smirnov-Grubbs p-value="
+msgstr "を外れ値と同定しました。　(Smirnov-Grubbs検定P値="
+
+msgid "No outliers were identified."
+msgstr "外れ値は同定されませんでした。"
+
+msgid "survival rate"
+msgstr "指定時点の生存率"
+
+msgid "median survival"
+msgstr "生存期間中央値"
+
+msgid "medianCI"
+msgstr "95%信頼区間"
+
+msgid "95% CI"
+msgstr "95%信頼区間"
+
+msgid "-----Remove"
+msgstr "-----変数"
+
+msgid "from the model. (p="
+msgstr "をモデルから除外しました。 (P値="
+
+msgid "by Wald test)"
+msgstr "Wald検定による)"
+
+msgid "-----All variables were removed from the model."
+msgstr "-----すべての変数がモデルから除外されました。"
+
+msgid "-----Final model"
+msgstr "-----最終モデル"
+
+msgid "odds ratio"
+msgstr "オッズ比"
+
+msgid "Estimation"
+msgstr "推定値"
+
+msgid "Lower 95%CI"
+msgstr "95%信頼区間下限"
+
+msgid "Upper 95%CI"
+msgstr "95%信頼区間上限"
+
+msgid "Lower CI"
+msgstr "信頼区間下限"
+
+msgid "Upper CI"
+msgstr "信頼区間上限"
+
+msgid "p.value"
+msgstr "P値"
+
+msgid "Hazard ratio"
+msgstr "ハザード比"
+
+msgid "Overall p value for"
+msgstr "因子全体のP値"
+
+msgid "Chi square"
+msgstr "カイ二乗値"
+
+msgid "DF"
+msgstr "自由度"
+
+msgid "p-value"
+msgstr "P値"
+
+msgid "Estimated"
+msgstr "計算結果"
+
+msgid "Assumptions"
+msgstr "仮定"
+
+msgid "P in the population"
+msgstr "想定する比率"
+
+msgid "Alternative P"
+msgstr "比較する比率"
+
+msgid "Alpha"
+msgstr "αエラー"
+
+msgid "Power"
+msgstr "検出力"
+
+msgid "Required sample size"
+msgstr "必要サンプルサイズ"
+
+msgid "P"
+msgstr "想定する比率"
+
+msgid "P0 (not worth studying further)"
+msgstr "P0 (閾値奏功率)"
+
+msgid "P1 (worth studying further)"
+msgstr "P1 (期待奏功率)"
+
+msgid "Delta"
+msgstr "意味のある差"
+
+msgid "(Follow-up duration for P1, P2)"
+msgstr "P1、P2の観察期間"
+
+msgid "Enrollment duration"
+msgstr "登録期間"
+
+msgid "Total study duration"
+msgstr "全研究期間"
+
+msgid "N2/N1"
+msgstr "N2とN1のサンプルサイズの比"
+
+msgid "sd"
+msgstr "標準偏差"
+
+msgid "%CI"
+msgstr "%信頼区間"
+
+msgid "correlation coefficient"
+msgstr "相関係数"
+
+msgid "one-sided"
+msgstr "片側検定"
+
+msgid "two-sided"
+msgstr "両側検定"
+
+msgid "Estimate"
+msgstr "回帰係数推定値"
+
+msgid "Std. Error"
+msgstr "標準誤差"
+
+msgid "t value"
+msgstr "t統計量"
+
+msgid "Pr(>|t|)"
+msgstr "P値"
+
+msgid "F test"
+msgstr "F検定"
+
+msgid "Bartlett test"
+msgstr "Bartlett検定"
+
+msgid "Fisher.p.value"
+msgstr "Fisher検定のP値"
+
+msgid "Chisq.p.value"
+msgstr "カイ２乗検定のP値"
+
+msgid "kappa"
+msgstr "Kappa係数"
+
+msgid "mcnemar"
+msgstr "McNemar検定"
+
+msgid "est"
+msgstr "点推定値"
+
+msgid "lower"
+msgstr "信頼区間下限"
+
+msgid "upper"
+msgstr "信頼区間上限"
+
+msgid "test.statistic"
+msgstr "統計検定量"
+
+msgid "df"
+msgstr "自由度"
+
+msgid "Factor"
+msgstr "変数"
+
+msgid "Group"
+msgstr "グループ"
+
+msgid "incidence"
+msgstr "発生率"
+
+msgid "median time"
+msgstr "発生までの期間の中央値"
+
+msgid "n"
+msgstr "サンプル数"
+
+msgid "mean +- SD"
+msgstr "平均 ± 標準偏差"
+
+msgid "Event"
+msgstr "イベント番号"
+
+msgid "McNemar's test"
+msgstr "McNemar検定"
+
+msgid "Cochran's Q test"
+msgstr "Cochran Q 検定"
+
+msgid "Spearman's rank correlation coefficient"
+msgstr "Spearmanの順位相関係数"
+
+msgid "Area under the curve"
+msgstr "曲線下面積"
+
+msgid "Alpha reliability"
+msgstr "α信頼性係数"
+
+msgid "Standardized alpha"
+msgstr "標準化信頼性係数"
+
+msgid "Reliability deleting each item in turn:"
+msgstr "一つ一つの要素を順に除外した場合の信頼性係数"
+
+msgid "Deleted item"
+msgstr "除外要素"
+
+msgid "r(item, total)"
+msgstr "除外要素とその他の要素の合計との相関係数"
+
+msgid "# r: if the number of response is equal to or fewer than r, the treatment is rejected."
+msgstr "# r: 成功サンプル数が r 以下だった場合には治療を棄却する。"
+
+msgid "# r1, n1: numbers in the first stage, r, n: total numbers in the study."
+msgstr "# r1, n2は第1ステージのサンプルサイズ、r, nは全体のサンプルサイズを表す。"
+
+msgid "Current model:"
+msgstr "現在のモデル"
+
+msgid "Next model:"
+msgstr "新しいモデル"
+
+msgid "action"
+msgstr "増減"
+
+msgid "-----Variable"
+msgstr "-----変数"
+
+msgid "removed from the model."
+msgstr "をモデルから除外しました。"
+
+msgid "added to the model."
+msgstr "をモデルに加えました。"
+
+msgid "rowPercents(.Table) # Row Percentages"
+msgstr "rowPercents(.Table) # 行のパーセント表示"
+
+msgid "colPercents(.Table) # Column Percentages"
+msgstr "colPercents(.Table) # 列のパーセント表示"
+
+msgid "totPercents(.Table) # Percentage of Total"
+msgstr "totPercents(.Table) # 全体のパーセント表示"
+
+msgid ")  # counts for"
+msgstr ")  # 頻度分布　変数:"
+
+msgid "from Excel data set"
+msgstr "Excelのデータをインポート"
+
+msgid "# Shapiro-Wilk test can be performed only when the sample size is less than 5000. (Sample size ="
+msgstr "# サンプル数が5000以下の場合のみShapiro-Wilk検定の結果も表示されます。　(サンプル数 ="
+
+msgid "Quantile-comparison plot"
+msgstr "QQプロット"
+
+msgid "5. Minimally modifying Commander.R in Rcmdr package."
+msgstr "5. RcmdrパッケージのCommander.Rファイルにわずかな修正を加えました。"
+
+msgid "Save R Markdown file?"
+msgstr "Rマークダウンファイルを保存しますか？"
 

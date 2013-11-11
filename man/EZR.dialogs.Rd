@@ -33,6 +33,7 @@
 \alias{StatMedFriedman}
 \alias{StatMedGraphOptions}
 \alias{StatMedGroupsBox}
+\alias{StatMedQQPlot}
 \alias{StatMedHistogram}
 \alias{StatMedImportMinitab}
 \alias{StatMedImportRODBCtable}

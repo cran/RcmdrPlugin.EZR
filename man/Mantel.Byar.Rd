@@ -8,7 +8,8 @@ Performs Mantel-Byar test for comparison of survival data with a time-dependent 
 }
 
 \usage{
-Mantel.Byar(Group = TempTD$covariate_td, Event = TempTD$endpoint_td, StartTime = TempTD$start_td, StopTime = TempTD$stop_td, method = c("SAS", "Tominaga"))
+Mantel.Byar(Group = TempTD$covariate_td, Event = TempTD$endpoint_td, 
+StartTime = TempTD$start_td, StopTime = TempTD$stop_td, method = c("SAS", "Tominaga"))
 }
 
 \arguments{
