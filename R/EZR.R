@@ -15,8 +15,15 @@
 
 require("datasets")
 require("car") 
+require("methods")
 window.type <- "width=7, height=7"
-par.option <- 'lwd=1, las=1, family="sans", cex=1'
+par.option <- 'lwd=1, las=1, family="sans", cex=1, mgp=c(3.0,1,0)'
+#The first parameter of mpg defines the distance between axis and axis labels.
+#This number is changed to 2.5 only for survival plots to avoid overlapping 
+#with "Number at risk".
+
+par.lwd <- "lwd=1"
+par.cex <- "1"
 
 #assign("window.type", "width=7, height=7", envir=.GlobalEnv)
 #assign("par.option", 'lwd=1, las=1, family="sans", cex=1', envir=.GlobalEnv)
@@ -33,11 +40,11 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat(gettext(domain="R-RcmdrPlugin.EZR","2. Adding EZR.R, the main script of EZR written by Y.Kanda to //Rcmdr//etc.", "\n"))
 #cat(gettext(domain="R-RcmdrPlugin.EZR","3. Replacing R-Rcmdr.mo in //Rcmdr//po//ja//LC_MESSAGES with a file of the same name for EZR (for translation in EZR).", "\n"))
 #cat(gettext(domain="R-RcmdrPlugin.EZR","4. Replacing R-Rcmdr.po in //Rcmdr//po//ja//LC_MESSAGES with a file of the same name for EZR (for translation in EZR).", "\n"))
-#cat(gettextRcmdr("5. Minimally modifying Commander.R in Rcmdr package.", "\n"))
+#cat(gettext(domain="R-RcmdrPlugin.EZR","5. Minimally modifying Commander.R in Rcmdr package.", "\n"))
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.20", "\n")
+cat("   Version 1.21", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -2442,7 +2449,7 @@ logrank.trend <- function(survdiff.res, W = 1:length(survdiff.res[[1]])){
 }
 
 
-stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), atrisk=1, xlab=NULL, main=""){
+stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), xlab=NULL, ylab=NULL, atrisk=1, main=""){
 	num <- length(levels(factor(event)))
 	max <- max(timetoevent, na.rm=TRUE)
 
@@ -2502,7 +2509,7 @@ stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), atrisk=1, xl
 
 	for(i in 1:num){
 		if (i==1) {
-			plot(ci, fun="event", col=0, bty="l", ylab="Cumulative incidence", xlim=xlim, ylim=ylim, xlab=xlab, main=main)
+			plot(ci, fun="event", col=0, bty="l", xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, main=main)
 			if(atrisk==1){
 				xticks <- axTicks(1)
 				n.atrisk <- nrisk(ci, xticks)			
@@ -3389,14 +3396,19 @@ listLMModels <- function(envir=.GlobalEnv, ...) {
 
 StatMedLoadDataSet <- function() {
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Load data set"), "#####", sep=""))
+#	file <- tclvalue(tkgetOpenFile(filetypes=
+#							gettext(domain="R-RcmdrPlugin.EZR",'{"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}} {"All Files" {"*"}}')))	
 	file <- tclvalue(tkgetOpenFile(filetypes=
-				gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"R Data Files" {".rda" ".Rda" ".RDA" ".RData"}}')))
+							gettextRcmdr('{"All Files" {"*"}} {"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}}')))
 	if (file == "") return()
+	setBusyCursor()
+	on.exit(setIdleCursor())
 	command <- paste('load("', file,'")', sep="")
 	dsname <- justDoIt(command)
 	logger(command)
 	if (class(dsname)[1] !=  "try-error") activeDataSet(dsname)
 	tkfocus(CommanderWindow())
+
 }
 	
 	
@@ -3553,7 +3565,7 @@ StatMedImportSPSS <- function() {
 			}
 		}
 		file <- tclvalue(tkgetOpenFile(
-				filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"SPSS files" {".sav" ".SAV" ".por" ".POR"}} ')))
+				filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"SPSS files" {".sav" ".SAV" ".por" ".POR"}}')))
 		if (file == "") {
 			tkfocus(CommanderWindow())
 			return()
@@ -3612,7 +3624,7 @@ StatMedImportMinitab <- function() {
 			}
 		}
 		file <- tclvalue(tkgetOpenFile(
-				filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Minitab portable files" {".mtp" ".MTP"}} ')))
+				filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Minitab portable files" {".mtp" ".MTP"}}')))
 		if (file == "") {
 			tkfocus(CommanderWindow())
 			return()
@@ -3728,7 +3740,7 @@ StatMedImportSTATA <- function() {
 StatMedLoadWorkspace <- function() {
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Load work space file"), "#####", sep=""))
 	file <- tclvalue(tkgetOpenFile(filetypes=
-				gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"R Data Files" {".RData"}}')))
+				gettext(domain="R-RcmdrPlugin.EZR",'{"R Data Files" {".RData"}} {"All Files" {"*"}}')))
 	if (file == "") return()
 	command <- paste('load("', file,'")', sep="")
 	dsname <- justDoIt(command)
@@ -3784,7 +3796,7 @@ StatMedImportRODBCtable <- function(){
 			}
 		}
 		File <- tclvalue(tkgetOpenFile(filetypes = gettext(domain="R-RcmdrPlugin.EZR",
-					'{"All Files" {"*"}} {"MS Access database" {*.mdb ".MDB"}} {"MS Access 2007 database" {*.accdb ".ACCDB"}} {"dBase-like file" {*.dbf ".DBF"}} {"MS Excel file" {*.xls ".XLS" *.xlsx ".XLSX"}} '
+					'{"All Files" {"*"}} {"MS Access database" {*.mdb ".MDB"}} {"MS Access 2007 database" {*.accdb ".ACCDB"}} {"dBase-like file" {*.dbf ".DBF"}} {"MS Excel file" {*.xls ".XLS" *.xlsx ".XLSX"}}'
 					)))
 		if(File == ""){
 			tkfocus(CommanderWindow())
@@ -3851,6 +3863,86 @@ StatMedImportRODBCtable <- function(){
 	tkgrid(buttonsFrame, columnspan="2", sticky="w")
 	tkgrid.configure(entryDsname, sticky="w")
 	dialogSuffix(rows=2, columns=2, focus=entryDsname)
+}
+
+
+StatMedImportExcel <- function(){
+    Library("XLConnect")
+	Library("methods")
+    initializeDialog(title = gettextRcmdr("Import Excel Data Set"))
+    dsname <- tclVar(gettextRcmdr("Dataset"))
+    entryDsname <- ttkentry(top, width = "35", textvariable = dsname)
+    onOK <- function(){
+        closeDialog()
+	setBusyCursor()
+	on.exit(setIdleCursor())
+        dsnameValue <- trim.blanks(tclvalue(dsname))
+        if(dsnameValue == ""){
+            errorCondition(recall = StatMedImportExcel,
+                           message = gettextRcmdr("You must enter the name of a data set."))
+            return()
+        }
+        if(!is.valid.name(dsnameValue)){
+            errorCondition(recall = StatMedImportExcel,
+                           message = paste('"', dsnameValue, '" ',
+                                           gettextRcmdr("is not a valid name."), sep = ""))
+            return()
+        }
+        if(is.element(dsnameValue, listDataSets())){
+            if("no" == tclvalue(checkReplace(dsnameValue, gettextRcmdr("Data set")))){
+                StatMedImportExcel()
+                return()
+            }
+        }
+#        File <- tclvalue(tkgetOpenFile(filetypes = gettextRcmdr(
+#            '{"All Files" {"*"}} {{"MS Excel file" {".xls" ".XLS"}} "MS Excel 2007 file" {".xlsx" ".XLSX"}}'
+#        ), parent=CommanderWindow()))
+        File <- tclvalue(tkgetOpenFile(filetypes = gettextRcmdr(
+            '{"All Files" {"*"}} {"MS Excel 2007 file" {".xlsx" ".XLSX"}} {"MS Excel file" {".xls" ".XLS"}}'
+        ), parent=CommanderWindow()))
+        if(File == ""){
+            tkfocus(CommanderWindow())
+            return()
+        }
+        command <- paste('loadWorkbook("', File, '")', sep="")
+        doItAndPrint(paste(".Workbook <- ", command, sep=""))
+        worksheets <- getSheets(.Workbook)
+        if(length(worksheets)>1)
+            worksheet <- tk_select.list(worksheets,
+                                        title = gettextRcmdr("Select one table"))
+        else
+            worksheet <- worksheets
+        if(worksheet == ""){
+            errorCondition(message=gettextRcmdr("No table selected"))
+            return()
+        }
+        command <- paste('readWorksheet(.Workbook, "', worksheet, '")', sep="")
+        logger(paste(dsnameValue, " <- ", command, sep=""))
+        result <- justDoIt(command)
+        if (class(result)[1] !=  "try-error"){
+            gassign(dsnameValue, result)
+        }
+        logger("remove(.Workbook)")
+        justDoIt("remove(.Workbook, envir=.GlobalEnv)")
+        if (class(result)[1] !=  "try-error"){
+            factors <- sapply(get(dsnameValue, envir=.GlobalEnv), is.character)
+            if (any(factors)){
+                factors <- which(factors)
+                command <- paste(dsnameValue, "[, c(", paste(factors, collapse=", "), 
+                                 ")] <- lapply(", dsnameValue, "[, c(", 
+                                 paste(factors, collapse=", "), "), drop=FALSE], as.factor)",
+                                 sep="")
+                doItAndPrint(command)
+            }
+            activeDataSet(dsnameValue)
+        }
+    }
+    OKCancelHelp(helpSubject="readWorksheet")
+    tkgrid(labelRcmdr(top, text=gettextRcmdr("Enter name of data set:  ")),
+           entryDsname, sticky="e")
+    tkgrid(buttonsFrame, columnspan="2", sticky="w")
+    tkgrid.configure(entryDsname, sticky="w")
+    dialogSuffix(focus=entryDsname)
 }
 
 
@@ -5182,7 +5274,7 @@ StatMedChrToFactor <- function(){
 
 
 StatMedGraphOptions <- function(){
-defaults <- list(window.size="Medium", window.type="width=7, height=7", lwd="1", las="1", family="sans", cex="1.25")
+defaults <- list(window.size="Medium", window.type="width=7, height=7", lwd="1", las="1", family="sans", cex="1")
 dialog.values <- getDialog("StatMedGraphOptions", defaults)
     initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Graph settings"))
     optionsFrame <- tkframe(top)	
@@ -5254,9 +5346,14 @@ dialog.values <- getDialog("StatMedGraphOptions", defaults)
 		
 #		par.option <<- paste("lwd=", lwd, ", las=", las, ', family="', font, '", cex=', cex, sep="")
 #		assign("par.option", paste("lwd=", lwd, ", las=", las, ', family="', font, '", cex=', cex, sep=""), envir=.GlobalEnv)
-		par.option <- paste("lwd=", lwd, ", las=", las, ', family="', font, '", cex=', cex, sep="")
+		par.option <- paste("lwd=", lwd, ", las=", las, ', family="', font, '", cex=', cex, ", mgp=c(3.0,1,0)", sep="")
 		justDoIt(paste("par.option <- '", par.option, "'", sep=""))
 		par.option <- get("par.option", envir=.GlobalEnv)
+
+		par.lwd <- paste("lwd=", lwd, sep="")
+		justDoIt(paste("par.lwd <- '", par.lwd, "'", sep=""))
+		justDoIt(paste("par.cex <- '", cex, "'", sep=""))
+		
 		doItAndPrint(paste("par(", par.option, ")", sep=""))
 		doItAndPrint('plot(sin, xlim=c(0,10), main="Sample")')
 		tkfocus(CommanderWindow())
@@ -5322,6 +5419,7 @@ StatMedSetPalette <- function() {
         tclvalue(.Tcl(paste("tk_chooseColor", .Tcl.args(title = "Select a Color",
             initialcolor=initialcolor, parent=parent))))
         }
+	Library("tcltk")
     initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Graph detailed colors"))
     hexcolor <- colorConverter(toXYZ = function(hex,...) {
         rgb <- t(col2rgb(hex))/255
@@ -6292,6 +6390,7 @@ currentModel <- TRUE
 	initial.group <- dialog.values$initial.group
 	.linesByGroup <- if (dialog.values$initial.lines.by.group == 1) TRUE else FALSE
 	.groups <- if (is.null(initial.group)) FALSE else initial.group
+	Library("tcltk")
 	initializeDialog(title = gettext(domain="R-RcmdrPlugin.EZR","Scatterplot"))
 	.numeric <- Numeric()
 	variablesFrame <- tkframe(top)
@@ -6448,6 +6547,7 @@ currentModel <- TRUE
 		cex.lab <- if (cex.lab == 1) 
 					""
 				else paste(", cex.lab=", cex.lab, sep = "")
+        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 		if (.groups == FALSE) {
 			doItAndPrint(paste("scatterplot(", y, "~", x, log, 
 							", reg.line=", line, ", smooth=", smooth, ", spread=", 
@@ -6506,6 +6606,7 @@ StatMedScatterPlotMatrix <- function () {
 	initial.group <- dialog.values$initial.group
 	.linesByGroup <- if (dialog.values$initial.lines.by.group == 1) TRUE else FALSE
 	.groups <- if (is.null(initial.group)) FALSE else initial.group
+	Library("tcltk")
 	initializeDialog(title = gettext(domain="R-RcmdrPlugin.EZR","Scatterplot Matrix"))
 	variablesBox <- variableListBox(top, Numeric(), title = gettext(domain="R-RcmdrPlugin.EZR","Select variables (three or more)"), 
 			selectmode = "multiple", listHeight=10, initialSelection = varPosn (dialog.values$initial.variables, "numeric"))
@@ -6547,6 +6648,7 @@ StatMedScatterPlotMatrix <- function () {
 						initial.group=if (.groups == FALSE) NULL else .groups,
 						initial.lines.by.group=if (.linesByGroup) 1 else 0, subset=tclvalue(subsetVariable)))
 		.activeDataSet <- ActiveDataSet()
+        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 		if (.groups == FALSE) {
 			command <- paste("scatterplotMatrix(~", paste(variables, 
 							collapse = "+"), ", reg.line=", line, ", smooth=", 
@@ -7116,7 +7218,7 @@ putDialog("StatMedFTest", list(group=group, response=response, confidence=level,
 		
     tkgrid(getFrame(responseBox), labelRcmdr(variablesFrame, text="    "), getFrame(groupBox), sticky="nw")
     tkgrid(variablesFrame, sticky="w")
-    groupsLabel(groupsBox=groupBox)
+#    groupsLabel(groupsBox=groupBox)
     tkgrid(labelRcmdr(confidenceFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Confidence Level:  "), fg="blue"), confidenceField, sticky="w")
     tkgrid(alternativeFrame, sticky="w")
     tkgrid(confidenceFrame, sticky="w")
@@ -7174,7 +7276,7 @@ putDialog("StatMedBartlett", list(group=group, response=response, subset = tclva
     OKCancelHelp(helpSubject="bartlett.test", apply="StatMedBartlett", reset="StatMedBartlett")
     tkgrid(getFrame(responseBox), labelRcmdr(variablesFrame, text="    "), getFrame(groupBox), sticky="nw")
     tkgrid(variablesFrame, sticky="w")
-    groupsLabel(groupsBox=groupBox)
+#    groupsLabel(groupsBox=groupBox)
     tkgrid(subsetFrame, sticky="w")
     tkgrid(buttonsFrame, sticky="w")
     dialogSuffix(rows=5, columns=1)
@@ -7381,7 +7483,7 @@ putDialog("StatMedPairedTtest", list(xBox=x, yBox=y, confidence=level, alternati
 StatMedANOVA <- function(){
 		Library("multcomp")
 		Library("abind")
-defaults <- list(group=NULL, response=NULL, pairwise=0, dunnett=0, bonferroni=0, holm=0, actmodel=0, graph="bar", subset = "")
+defaults <- list(group=NULL, response=NULL, variances="TRUE", pairwise=0, dunnett=0, bonferroni=0, holm=0, actmodel=0, graph="bar", subset = "")
 dialog.values <- getDialog("StatMedANOVA", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -7432,6 +7534,7 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
 			}
 			group <- getSelection(groupBox)			
 			response <- getSelection(responseBox)
+			variances <- as.character(tclvalue(variancesVariable))
 			graph <- as.character(tclvalue(graphVariable))
 			pairwise <- tclvalue(pairwiseVariable)
 			dunnett <- tclvalue(dunnettVariable)
@@ -7450,7 +7553,7 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
 			}
 			
 
-putDialog("StatMedANOVA", list(group=group, response=response, pairwise=pairwise, dunnett=dunnett, bonferroni=bonferroni, holm=holm, actmodel=actmodel, graph=graph, subset=tclvalue(subsetVariable)))
+putDialog("StatMedANOVA", list(group=group, response=response, variances=variances, pairwise=pairwise, dunnett=dunnett, bonferroni=bonferroni, holm=holm, actmodel=actmodel, graph=graph, subset=tclvalue(subsetVariable)))
 
 			closeDialog()
 			if (length(group) == 0){
@@ -7469,9 +7572,11 @@ putDialog("StatMedANOVA", list(group=group, response=response, pairwise=pairwise
 			doItAndPrint("group.sds <- NULL")
 			doItAndPrint("group.p <- NULL")
 			for (i in 1:nvar) {
-				command <- paste(modelValue, " <- aov(", response, " ~ factor(", group[i], "), data=", .activeDataSet, subset, ", na.action=na.omit)", sep="")
-				justDoIt(command)
-				logger(command)
+				if(variances=="TRUE"){
+					command <- paste(modelValue, " <- aov(", response, " ~ factor(", group[i], "), data=", .activeDataSet, subset, ", na.action=na.omit)", sep="")
+					justDoIt(command)
+					logger(command)
+				}
 #		    	assign(modelValue, justDoIt(command), envir=.GlobalEnv)			
 #				doItAndPrint(paste("numSummary(", subset1, .activeDataSet, subset2, "$", response, " , groups=", subset1, .activeDataSet, subset2, "$", group[i], ', statistics=c("mean", "sd"))', sep=""))					
 				if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
@@ -7490,12 +7595,12 @@ putDialog("StatMedANOVA", list(group=group, response=response, pairwise=pairwise
 				justDoIt(command)
 				}
 				if (graph == "bar"){
-				doItAndPrint('
-				error.bar <- function(x, y, upper, lower=upper, length=0.1,...){
-				if(length(x) != length(y) | length(y) !=length(lower) | length(lower) != length(upper))
-					stop("vectors must be same length")
-					arrows(x,y+upper, x, y-lower, angle=90, code=3, length=length, ...)
-				}')
+				doItAndPrint(
+'error.bar <- function(x, y, upper, lower=upper, length=0.1,...){
+if(length(x) != length(y) | length(y) !=length(lower) | length(lower) != length(upper))
+	stop("vectors must be same length")
+	arrows(x,y+upper, x, y-lower, angle=90, code=3, length=length, ...)
+}')
 				doItAndPrint(paste("bar.means <- tapply(", subset1, ActiveDataSet(), subset2, "$", response, ", factor(", subset1, ActiveDataSet(), subset2, "$", group[i], "), mean, na.rm=TRUE)", sep=""))
 				doItAndPrint(paste("bar.sds <- tapply(", subset1, ActiveDataSet(), subset2, "$", response, ", factor(", subset1, ActiveDataSet(), subset2, "$", group[i], "), sd, na.rm=TRUE)", sep=""))
 				doItAndPrint(paste('barx <- barplot(bar.means, ylim=c(ifelse(min(bar.means, na.rm=TRUE)>0, 0, min(bar.means-bar.sds, na.rm=TRUE)*1.2), max(bar.means+bar.sds, na.rm=TRUE)*1.2), xlab="', group[i], '", ylab="', response, '", axis.lty=1)',sep=""))
@@ -7506,30 +7611,33 @@ putDialog("StatMedANOVA", list(group=group, response=response, pairwise=pairwise
 				doItAndPrint(paste('group.names <- c(group.names, "', group[i], "=", group.levels[j], '")', sep=""))
 				doItAndPrint(paste("group.means <- c(group.means, bar.means[", j, "])", sep=""))
 				doItAndPrint(paste("group.sds <- c(group.sds, bar.sds[", j, "])", sep=""))
-				if (j == 1){
+				if (j == 1 & variances=="TRUE"){
 					doItAndPrint(paste("res <- summary(lm(", response, " ~ factor(", group[i], "), data=", .activeDataSet, subset, "))", sep=""))
 					doItAndPrint('group.p <- c(group.p, signif(pf(res$fstatistic[1], res$fstatistic[2], res$fstatistic[3], lower.tail=FALSE), digits=3))')
 					doItAndPrint("remove(res)")
+				} else if(j == 1 & variances=="FALSE"){
+					doItAndPrint(paste("res <- oneway.test(", response, " ~ factor(", group[i], "), data=", .activeDataSet, subset, ", var.equal=FALSE)", sep=""))
+					doItAndPrint('group.p <- c(group.p, signif(res$p.value, digits=3))')				
 				} else {
 					doItAndPrint('group.p <- c(group.p, "")')	
 				}
 				}	
-				doItAndPrint(paste("summary(", modelValue, ")", sep=""))				
+				if(variances=="TRUE") doItAndPrint(paste("summary(", modelValue, ")", sep=""))				
 			}
 			doItAndPrint("summary.anova <- data.frame(mean=group.means, sd=group.sds, p.value=group.p)")
 			doItAndPrint("rownames(summary.anova) <- group.names")
 			doItAndPrint('colnames(summary.anova) <- gettext(domain="R-RcmdrPlugin.EZR",colnames(summary.anova))')
 			doItAndPrint("summary.anova")	
 #			doItAndPrint("remove(summary.anova)")				
-			if (bonferroni == 1 && nvar == 1){
+			if (bonferroni == 1 && nvar == 1 && variances=="TRUE"){
 					dataSet=ActiveDataSet()
-					doItAndPrint(paste("pairwise.t.test(", subset1, dataSet, subset2, "$", response, ", ", subset1, dataSet, subset2, "$", group, ', p.adj="bonferroni")', sep=""))
+					doItAndPrint(paste("pairwise.t.test(", subset1, dataSet, subset2, "$", response, ", ", subset1, dataSet, subset2, "$", group, ", var.equal=", variances, ', p.adj="bonferroni")', sep=""))
 			}
-			if (holm == 1 && nvar == 1){
+			if (holm == 1 && nvar == 1 && variances=="TRUE"){
 					dataSet=ActiveDataSet()
-					doItAndPrint(paste("pairwise.t.test(", subset1, dataSet, subset2, "$", response, ", ", subset1, dataSet, subset2, "$", group, ', p.adj="holm")', sep=""))
+					doItAndPrint(paste("pairwise.t.test(", subset1, dataSet, subset2, "$", response, ", ", subset1, dataSet, subset2, "$", group, ", var.equal=", variances, ', p.adj="holm")', sep=""))
 			}
-			if (pairwise == 1 && nvar == 1) {
+			if (pairwise == 1 && nvar == 1 && variances=="TRUE") {
 				if (eval(parse(text=paste("length(levels(factor(", subset1, .activeDataSet, subset2, "$", group, "))) < 3"))))
 					Message(message=gettext(domain="R-RcmdrPlugin.EZR","Factor has fewer than 3 levels; pairwise comparisons omitted."),
 						type="warning")
@@ -7553,7 +7661,7 @@ putDialog("StatMedANOVA", list(group=group, response=response, pairwise=pairwise
 #					remove(.Pairs, envir=.GlobalEnv)
 				}
 			}
-			if (dunnett == 1 && nvar == 1){
+			if (dunnett == 1 && nvar == 1 && variances=="TRUE"){
 					doItAndPrint(paste("group.factor <- factor(", subset1, .activeDataSet, subset2, "$", group, ")", sep=""))
 					command <- paste("res <- aov(", response, " ~ group.factor, data=", .activeDataSet, subset, ")", sep="")
 					doItAndPrint(command)
@@ -7569,10 +7677,15 @@ putDialog("StatMedANOVA", list(group=group, response=response, pairwise=pairwise
 		tkgrid(labelRcmdr(variablesFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Click pressing Ctrl key to select multiple variables."), fg="blue"), sticky="w")
 		tkgrid(getFrame(responseBox), labelRcmdr(variablesFrame, text="    "), getFrame(groupBox), sticky="nw")
 		tkgrid(variablesFrame, sticky="w")	
-		radioButtons(name="graph", buttons=c("box", "bar", "point"), values=c("box", "bar", "point"), initialValue=dialog.values$graph,
+		
+		options0Frame <- tkframe(top)
+		radioButtons(options0Frame, name="graph", buttons=c("box", "bar", "point"), values=c("box", "bar", "point"), initialValue=dialog.values$graph,
         labels=gettext(domain="R-RcmdrPlugin.EZR",c("BoxGraph", "BarGraph", "LinePlot")), title=gettext(domain="R-RcmdrPlugin.EZR","Graphs"))
-		tkgrid(graphFrame, sticky="nw")
-#		tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison not performed when more than one grouping variables are picked."), fg="blue"), sticky="w")
+		radioButtons(options0Frame, name="variances", buttons=c("yes", "no"), values=c("TRUE", "FALSE"), initialValue=dialog.values$variances,
+        labels=gettext(domain="R-RcmdrPlugin.EZR",c("Yes (ANOVA)", "No (Welch test)")), title=gettext(domain="R-RcmdrPlugin.EZR","Assume equal variances?"))
+		tkgrid(graphFrame, labelRcmdr(options0Frame, text="    "), variancesFrame, sticky="nw")
+		tkgrid(options0Frame, sticky="nw")
+	#		tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison not performed when more than one grouping variables are picked."), fg="blue"), sticky="w")
 #		tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison (Bonferroni)")), bonferroniCheckBox, sticky="w")
 #		tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison (Holm)")), holmCheckBox, sticky="w")
 #		tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison (Tukey)")), pairwiseCheckBox, sticky="w")
@@ -7580,6 +7693,7 @@ putDialog("StatMedANOVA", list(group=group, response=response, pairwise=pairwise
 #		tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","The first group in alphabetical will be treated as the reference group."), fg="blue"), sticky="w")
 #		tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Keep results as active model for further analyses")), actmodelCheckBox, sticky="w")
 
+tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison and active model keeping not performed for Welch test."), fg="blue"), sticky="w")
 tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison not performed when more than one grouping variables are picked."), fg="blue"), sticky="w")
 		tkgrid(optionsFrame, sticky="w", columnspan=2)
 tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","The first group in alphabetical will be treated as the reference group."), fg="blue"), sticky="w")
@@ -9186,8 +9300,8 @@ putDialog("StatMedPieChart", list(variable=variable, color=color, subset=tclvalu
 
 	
 StatMedEnterTable <- function(){
-#    Library("abind")
     env <- environment()
+    Library("abind")
     initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Enter and analyze two-way table"))
     outerTableFrame <- tkframe(top)
     assign(".tableFrame", tkframe(outerTableFrame), envir=env)
@@ -9351,7 +9465,7 @@ defaults <- list(row=NULL, column=NULL, percents="none", chisq=0, chisqComp=0, e
 dialog.values <- getDialog("StatMedTwoWayTable", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
-
+    Library("abind")
     initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Create two-way table and compare two proportions (Fisher's exact test)"))
     variablesFrame <- tkframe(top)
    .factors <- Variables()
@@ -9843,7 +9957,7 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 
 
 StatMedKaplanMeier  <- function(){
-defaults <- list(event = "", timetoevent = "", group = "", strata = "", test = 0,  line = "color", place = "topright", xscale = "", posthoc = "", censor = 1, ci = 0, separatestrata = 0, atrisk = 0, point = "<none>", xlim = "<auto>", ylim = "<auto>", subset = "")
+defaults <- list(event = "", timetoevent = "", group = "", strata = "", test = 0,  line = "color", place = "topright", xscale = "", posthoc = "", censor = 1, ci = 0, separatestrata = 0, atrisk = 0, point = "<none>", xlim = "<auto>", ylim = "<auto>", xlabel = "<auto>", ylabel = "<auto>", subset = "")
 dialog.values <- getDialog("StatMedKaplanMeier", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -9889,6 +10003,12 @@ currentModel <- TRUE
 	ylimFrame <- tkframe(axis2Frame)
 	ylimVariable <- tclVar(dialog.values$ylim)
 	ylimField <- ttkentry(axis2Frame, width="20", textvariable=ylimVariable)
+	xlabelFrame <- tkframe(axis2Frame)
+	xlabelVariable <- tclVar(dialog.values$xlabel)
+	xlabelField <- ttkentry(axis2Frame, width="20", textvariable=xlabelVariable)
+	ylabelFrame <- tkframe(axis2Frame)
+	ylabelVariable <- tclVar(dialog.values$ylabel)
+	ylabelField <- ttkentry(axis2Frame, width="20", textvariable=ylabelVariable)
 	
   onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Kaplan-Meier survival curve and logrank test"), "#####", sep=""))
@@ -9937,10 +10057,12 @@ currentModel <- TRUE
 		point <- paste(", time=", point, sep="")
 	}
 	test <- as.character(tclvalue(testVariable))
-	line <- tclvalue(lineVariable)
-	if (line=="color") {line <- "col=1:32, lty=1, lwd=1, "; line2 <- "col=1:32, lty=1, lwd=1, "}
-	if (line=="type") {line <- "col=1, lty=1:32, lwd=1, "; line2 <- "col=1, lty=1:32, lwd=1, "}
-	if (line=="width") {line <- "col=1, lty=1, lwd=1:8, "; line2 <- "col=1, lty=1, lwd=1:8, "}
+	line <- tclvalue(lineVariable)	
+	par.lwd <- get("par.lwd", envir=.GlobalEnv)
+	if (line=="color") {line <- paste("col=1:32, lty=1, ", par.lwd, ", ", sep=""); line2 <- paste("col=1:32, lty=1, ", par.lwd, ", ", sep="")}
+	if (line=="type") {line <- paste("col=1, lty=1:32, ", par.lwd, ", ", sep=""); line2 <- paste("col=1, lty=1:32, ", par.lwd, ", ", sep="")}
+	if (line=="width") {line <- paste("col=1, lty=1, ", par.lwd, ":8, ", sep=""); line2 <- paste("col=1, lty=1, ", par.lwd, ":8, ", sep="")}
+	par.cex <- get("par.cex", envir=.GlobalEnv)
 	place <- tclvalue(placeVariable)
 	if(place=="mouse"){
 		place <- "locator(1)"
@@ -9968,13 +10090,25 @@ currentModel <- TRUE
 	} else {
 		ylim <- paste(", ylim=c(", ylim, ")", sep="")
 	}
+	xlabel <- tclvalue(xlabelVariable)
+	ylabel <- tclvalue(ylabelVariable)
+	if (xlabel == "<auto>") {
+		xlabel <- paste(', xlab="', timetoevent, '"', sep="")
+	} else {
+		xlabel <- paste(', xlab="', xlabel, '"', sep="")
+	}
+	if (ylabel == "<auto>") {
+		ylabel <- ', ylab="Probability"'
+	} else {
+		ylabel <- paste(', ylab="', ylabel, '"', sep="")
+	}
 	if (ci==0){
 		conf.int <- "FALSE"
 	}else{
 		conf.int <- "TRUE"	
-		if (line=="col=1:32, lty=1, lwd=1, ") line <- "col=rep(1:32, each=3), lty=1, lwd=1, "
-		if (line=="col=1, lty=1:32, lwd=1, ") line <- "col=1, lty=rep(1:32, each=3), lwd=1, "
-		if (line=="col=1, lty=1, lwd=1:8, ") line <- "col=1, lty=1, lwd=rep(1:8, each=3), "		
+		if (line==paste("col=1:32, lty=1, ", par.lwd, ", ", sep="")) line <- paste("col=rep(1:32, each=3), lty=1, ", par.lwd, ", ", sep="")
+		if (line==paste("col=1, lty=1:32, ", par.lwd, ", ", sep="")) line <- paste("col=1, lty=rep(1:32, each=3), ", par.lwd, ", ", sep="")
+		if (line==paste("col=1, lty=1, ", par.lwd, ":8, ", sep="")) line <- paste("col=1, lty=1, lwd=rep(", substring(par.lwd, nchar(par.lwd),nchar(par.lwd)), ":8, each=3), ", sep="")		
 	}
 	if (censor==0){
 		censor <- ", mark.time=FALSE"
@@ -9983,23 +10117,23 @@ currentModel <- TRUE
 	}
 	dataSet <- activeDataSet()
 	
-putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, group = group, strata = strata, test = test, line = tclvalue(lineVariable), place = tclvalue(placeVariable), xscale = tclvalue(xscaleVariable), posthoc = posthoc, censor = tclvalue(censorVariable), ci = ci, separatestrata = separatestrata, atrisk = atrisk, point = tclvalue(pointVariable), xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), subset = tclvalue(subsetVariable)))
+putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, group = group, strata = strata, test = test, line = tclvalue(lineVariable), place = tclvalue(placeVariable), xscale = tclvalue(xscaleVariable), posthoc = posthoc, censor = tclvalue(censorVariable), ci = ci, separatestrata = separatestrata, atrisk = atrisk, point = tclvalue(pointVariable), xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), xlabel = tclvalue(xlabelVariable), ylabel = tclvalue(ylabelVariable), subset = tclvalue(subsetVariable)))
 
     Library("survival")
     nvar <- length(group)
     if (nvar == 0){
 	command <- paste("km <- survfit(Surv(", timetoevent, ",", event, "==1)~1, data=", ActiveDataSet(), subset, ', na.action = na.omit, conf.type="log-log")', sep="")
 	doItAndPrint(command)
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
 	if (atrisk==0){
-		doItAndPrint(paste('plot(km, xlab="', timetoevent, '", ylab="Probability", bty="l", conf.int=', conf.int, censor, xlim, ylim, xscale, ")", sep=""))
+		doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))
 	} else {
 		doItAndPrint('mar <- par("mar")')
         doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
 		doItAndPrint("par(mar=mar)")
         doItAndPrint("opar <- par(mar = mar)")
         doItAndPrint("on.exit(par(opar))")
-		doItAndPrint(paste('plot(km, xlab="', timetoevent, '", ylab="Probability", bty="l", conf.int=', conf.int, censor, xlim, ylim, xscale, ")", sep=""))	
+		doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))	
         doItAndPrint("xticks <- axTicks(1)")
         doItAndPrint(paste("n.atrisk <- nrisk(km, xticks", xscale2, ")", sep=""))
         doItAndPrint("axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)")
@@ -10022,13 +10156,13 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 		doItAndPrint("legend <- substring(names(km$strata), len+2)")
 		}else{
 			#To remove groups with n=0 by interaction() suggested by Dr. Yoshida		
-		doItAndPrint(paste("legend <- levels(factor(interaction(", sub1, dataSet, sub2, "$", strata, ", ", 	sub1, dataSet, sub2, "$", group[i], ', sep=":")))', sep=""))																																												
+		doItAndPrint(paste("legend <- levels(factor(interaction(", sub1, dataSet, sub2, "$", strata, ", ", 	sub1, dataSet, sub2, "$", group[i], ', sep=":")))', sep=""))
 		strata3 <- paste(strata, " : ", sep="")
 	}
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
 	if (separatestrata == 0){
 		if (atrisk==0){
-			doItAndPrint(paste('plot(km, xlab="', timetoevent, '", ylab="Probability", bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xscale, ")", sep=""))
+			doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))
 			doItAndPrint(paste("legend (", place, ", legend, ", line2, ' box.lty=0, title="', strata3, group[i], '")', sep=""))
 		} else{	
 			doItAndPrint('mar <- par("mar")')
@@ -10037,12 +10171,12 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			doItAndPrint(paste('plot(km, xlab="', timetoevent, '", ylab="Probability", bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xscale, ")", sep=""))
+			doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))
 			doItAndPrint("xticks <- axTicks(1)")
 			doItAndPrint(paste("n.atrisk <- nrisk(km, xticks", xscale2, ")", sep=""))
 			doItAndPrint("for (i in 1:length(km$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")			
 #			doItAndPrint(paste('#for (i in 1:length(km$strata)){for (j in 1:(length(xticks)-1)) {axis(1, at=c(xticks[j]+(xticks[2]-xticks[1])/3, xticks[j+1]-+(xticks[2]-xticks[1])/3), labels=c(" ", " "), line=4.6+i, ', line2, "lwd.ticks=0, tick = TRUE)}}", sep=""))			
-			doItAndPrint("for (i in 1:length(km$strata)){mtext(legend[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i)}")			
+			doItAndPrint(paste("for (i in 1:length(km$strata)){mtext(legend[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i, cex=", par.cex, ")}", sep=""))			
 			doItAndPrint('title(xlab = "Number at risk", line = 3.5, adj = 0)')
 			doItAndPrint(paste("legend (", place, ", legend, ", line2, ' box.lty=0, title="', strata3, group[i], '")', sep=""))
 		}
@@ -10066,7 +10200,7 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 			doItAndPrint("legend <- substring(names(km$strata), len+2)")
 			main <- paste(', main="', strata, "=", stratas[j], '"', sep="")
 			if (atrisk==0){
-				doItAndPrint(paste('plot(km, xlab="', timetoevent, '", ylab="Probability", bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, main, xscale, ")", sep=""))
+				doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, main, xscale, ")", sep=""))
 				doItAndPrint(paste("legend (", place, ", legend, ", line2, 'box.lty=0, title="', strata3, group[i], '")', sep=""))
 			}else{
 				doItAndPrint('mar <- par("mar")')
@@ -10075,12 +10209,12 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 				doItAndPrint("par(mar=mar)")
 				doItAndPrint("opar <- par(mar = mar)")
 				doItAndPrint("on.exit(par(opar))")
-				doItAndPrint(paste('plot(km, xlab="', timetoevent, '", ylab="Probability", bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, main, xscale, ")", sep=""))
+				doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, main, xscale, ")", sep=""))
 				doItAndPrint("xticks <- axTicks(1)")
 				doItAndPrint(paste("n.atrisk <- nrisk(km, xticks", xscale2, ")", sep=""))
 				doItAndPrint("for (i in 1:length(km$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")
 #				doItAndPrint(paste('#for (i in 1:length(km$strata)){for (j in 1:(length(xticks)-1)) {axis(1, at=c(xticks[j]+(xticks[2]-xticks[1])/3, xticks[j+1]-+(xticks[2]-xticks[1])/3), labels=c(" ", " "), line=4.6+i, ', line2, "lwd.ticks=0, tick = TRUE)}}", sep=""))			
-				doItAndPrint("for (i in 1:length(km$strata)){mtext(legend[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i)}")			
+				doItAndPrint(paste("for (i in 1:length(km$strata)){mtext(legend[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i, cex=", par.cex, ")}", sep=""))			
 				doItAndPrint('title(xlab = "Number at risk", line = 3.5, adj = 0)')
 				doItAndPrint(paste("legend (", place, ", legend, ", line2, ' box.lty=0, title="', strata3, group[i], '")', sep=""))			
 			}
@@ -10099,7 +10233,7 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 				doItAndPrint(paste("strata.p <- c(strata.p, signif(pchisq(c(res$chisq), df=length(res$n)-1, lower.tail=FALSE),digits=3))", sep=""))
 				doItAndPrint("remove(res)")
 			}
-			if (j < nstrata) if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			if (j < nstrata) 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
 		}
 		doItAndPrint(paste("strata.data <- data.frame(", strata, "=strata.names, p.value=strata.p)", sep=""))
  		logger("p-value calculated in each strata")
@@ -10152,10 +10286,11 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 	tkgrid(labelRcmdr(pointFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Time point to show survival rate")), pointField,  sticky = "w")
   tkgrid(pointFrame, sticky="w")	
 	tkgrid(labelRcmdr(xlimFrame, text=gettext(domain="R-RcmdrPlugin.EZR","X axis range(Min, Max) Ex: 0, 365")), xlimField, sticky = "w")
-#  tkgrid(xlimFrame, sticky="w")
 	tkgrid(labelRcmdr(ylimFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Y axis range(Min, Max) Ex: 0.8, 1.0")), ylimField, sticky = "w")
-#  tkgrid(ylimFrame, sticky="w")
    tkgrid(xlimFrame, labelRcmdr(axis2Frame, text="  "), ylimFrame, sticky="w")
+	tkgrid(labelRcmdr(xlabelFrame, text=gettext(domain="R-RcmdrPlugin.EZR","X axis lavel")), xlabelField, sticky = "w")
+	tkgrid(labelRcmdr(ylabelFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Y axis lavel")), ylabelField, sticky = "w")
+   tkgrid(xlabelFrame, labelRcmdr(axis2Frame, text="  "), ylabelFrame, sticky="w")
 
 #	tkgrid(tklabel(axisFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Time point to show survival rate")), pointEntry, sticky="w")
 #	tkgrid.configure(pointEntry, sticky="w")
@@ -10475,7 +10610,7 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 
 
 StatMedAdjustedSurvival  <- function(){
-defaults <- list(event = "", timetoevent = "", group = "", adjust = "", line = "color", place = "topright", xscale = "", censor = 1, atrisk = 0, xlim = "<auto>", ylim = "<auto>", subset = "")
+defaults <- list(event = "", timetoevent = "", group = "", adjust = "", line = "color", place = "topright", xscale = "", censor = 1, atrisk = 0, xlim = "<auto>", ylim = "<auto>", xlabel = "<auto>", ylabel = "<auto>", subset = "")
 dialog.values <- getDialog("StatMedAdjustedSurvival", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -10502,7 +10637,14 @@ currentModel <- TRUE
 	ylimFrame <- tkframe(axisFrame)
 	ylimVariable <- tclVar(dialog.values$ylim)
 	ylimField <- ttkentry(axisFrame, width="20", textvariable=ylimVariable)
-  onOK <- function(){
+	xlabelFrame <- tkframe(axisFrame)
+	xlabelVariable <- tclVar(dialog.values$xlabel)
+	xlabelField <- ttkentry(axisFrame, width="20", textvariable=xlabelVariable)
+	ylabelFrame <- tkframe(axisFrame)
+	ylabelVariable <- tclVar(dialog.values$ylabel)
+	ylabelField <- ttkentry(axisFrame, width="20", textvariable=ylabelVariable)
+
+onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Adjusted survival curve"), "#####", sep=""))
     event <- getSelection(eventBox)
     timetoevent <- getSelection(timetoeventBox)
@@ -10536,10 +10678,14 @@ currentModel <- TRUE
 		naexcludeSubdataSet <- paste("subset(", dataSet, ", (", subset, ") & ", sep="")	
 		}
 	line <- tclvalue(lineVariable)
-	if (line=="color") line <- "col=1:32, lty=1, lwd=1, "
-	if (line=="type") line <- "col=1, lty=1:32, lwd=1, "
-	if (line=="width") line <- "col=1, lty=1, lwd=1:8, "
-	if(length(group)==0){line <- "col=1, lty=1, lwd=1, "}
+	
+	par.lwd <- get("par.lwd", envir=.GlobalEnv)
+	if (line=="color") line <- paste("col=1:32, lty=1, ", par.lwd, ", ", sep="")
+	if (line=="type") line <- paste("col=1, lty=1:32, ", par.lwd, ", ", sep="")
+	if (line=="width") line <- paste("col=1, lty=1, ", par.lwd, ":8, ", sep="")
+	par.cex <- get("par.cex", envir=.GlobalEnv)
+	
+	if(length(group)==0){line <- paste("col=1, lty=1, ", par.lwd, ", ", sep="")}
 	place <- tclvalue(placeVariable)
 	if(place=="mouse"){
 		place <- "locator(1)"
@@ -10568,13 +10714,25 @@ currentModel <- TRUE
 	} else {
 		ylim <- paste(", ylim=c(", ylim, ")", sep="")
 	}
+	xlabel <- tclvalue(xlabelVariable)
+	ylabel <- tclvalue(ylabelVariable)
+	if (xlabel == "<auto>") {
+		xlabel <- paste(', xlab="', timetoevent, '"', sep="")
+	} else {
+		xlabel <- paste(', xlab="', xlabel, '"', sep="")
+	}
+	if (ylabel == "<auto>") {
+		ylabel <- ', ylab="Probability"'
+	} else {
+		ylabel <- paste(', ylab="', ylabel, '"', sep="")
+	}
 	if (censor==0){
 		censor <- ", mark.time=FALSE"
 	}else{
 		censor <- ", mark.time=TRUE"	
 	}
 
-putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoevent, group = group, adjust = adjust, line = tclvalue(lineVariable), place = tclvalue(placeVariable), xscale = tclvalue(xscaleVariable), censor = tclvalue(censorVariable), atrisk = atrisk, xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), subset = tclvalue(subsetVariable)))
+putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoevent, group = group, adjust = adjust, line = tclvalue(lineVariable), place = tclvalue(placeVariable), xscale = tclvalue(xscaleVariable), censor = tclvalue(censorVariable), atrisk = atrisk, xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), xlabel = tclvalue(xlabelVariable), ylabel = tclvalue(ylabelVariable), subset = tclvalue(subsetVariable)))
 
     Library("survival")
 	factor <- adjust[1]
@@ -10591,7 +10749,7 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 	command <- paste("coxmodel <- coxph(Surv(", timetoevent, ", ", event, "==1)~ ", factor2, ", data=", subdataSet, ', method="breslow")', sep="")
 	doItAndPrint(command)
 	doItAndPrint("cox <- survfit(coxmodel)")
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
 	if(length(group)==1){	
 			doItAndPrint(paste('len <- nchar("', group, '")', sep=""))
 			doItAndPrint("group.levels <- substring(names(cox$strata[cox$strata>0]), len+2)")
@@ -10604,7 +10762,7 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			command3 <- paste("plot(cox, ", line, 'bty="l", ylab="Probability", xlab="', timetoevent, '"', censor, xlim, 	ylim, xscale, ")", sep="") 
+			command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep="") 
 			doItAndPrint(command3)
 			doItAndPrint("xticks <- axTicks(1)")
 			doItAndPrint(paste("n.atrisk <- nrisk(cox, xticks", xscale2, ")", sep=""))
@@ -10617,18 +10775,18 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			command3 <- paste("plot(cox, ", line, 'bty="l", ylab="Probability", xlab="', timetoevent, '"', censor, xlim, 	ylim, xscale, ")", sep="") 			
+			command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep="") 			
 			doItAndPrint(command3)			
 			doItAndPrint("xticks <- axTicks(1)")
 			doItAndPrint(paste("n.atrisk <- nrisk(cox, xticks", xscale2, ")", sep=""))
 			doItAndPrint("for (i in 1:length(cox$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")
 #			doItAndPrint(paste('#for (i in 1:length(cox$strata)){for (j in 1:(length(xticks)-1)) {axis(1, at=c(xticks[j]+(xticks[2]-xticks[1])/3, xticks[j+1]-+(xticks[2]-xticks[1])/3), labels=c(" ", " "), line=4.6+i, ', line2, "lwd.ticks=0, tick = TRUE)}}", sep=""))			
-			doItAndPrint("for (i in 1:length(cox$strata)){mtext(group.levels[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i)}")			
+			doItAndPrint(paste("for (i in 1:length(cox$strata)){mtext(group.levels[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i, cex=", par.cex, ")}", sep=""))			
 			doItAndPrint('title(xlab = "Number at risk", line = 3.5, adj = 0)')
 #			doItAndPrint(paste("legend (", place, ", legend, ", line, ' box.lty=0, title="', strata3, group[i], '")', sep=""))			
 		}
 	} else {
-		command3 <- paste("plot(cox, ", line, 'bty="l", ylab="Probability", xlab="', timetoevent, '"', censor, xlim, ylim, xscale, ")", sep="") 
+		command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep="") 
 		doItAndPrint(command3)
 	}
 	if(length(group)==1){	
@@ -10656,7 +10814,9 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 	tkgrid(labelRcmdr(ylimFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Y axis range(Min, Max) Ex: 0.8, 1.0")), ylimField, sticky = "w")
 #  tkgrid(ylimFrame, sticky="w")
   tkgrid(xlimFrame, labelRcmdr(axisFrame, text="  "), ylimFrame, sticky="w")
-
+	tkgrid(labelRcmdr(xlabelFrame, text=gettext(domain="R-RcmdrPlugin.EZR","X axis lavel")), xlabelField, sticky = "w")
+	tkgrid(labelRcmdr(ylabelFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Y axis lavel")), ylabelField, sticky = "w")
+   tkgrid(xlabelFrame, labelRcmdr(axisFrame, text="  "), ylabelFrame, sticky="w")
 #	tkgrid(tklabel(axisFrame, text=gettext(domain="R-RcmdrPlugin.EZR","X axis range(Min, Max) Ex: 0, 365")), xlimEntry, sticky="w")
 #	tkgrid.configure(xlimEntry, sticky="w")
 #	tkgrid(tklabel(axisFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Y axis range(Min, Max) Ex: 0.8, 1.0")), ylimEntry, sticky="w")
@@ -10670,7 +10830,7 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 
 
 StatMedCumInc  <- function(){
-defaults <- list(event = "", timetoevent = "", group = "", line = "color", place = "topright", xscale = "", posthoc = "", censor = 1, atrisk = 0, point = "<none>", plotevent = "<all>", xlim = "<auto>", ylim = "<auto>", subset = "")
+defaults <- list(event = "", timetoevent = "", group = "", line = "color", place = "topright", xscale = "", posthoc = "", censor = 1, atrisk = 0, point = "<none>", plotevent = "<all>", xlim = "<auto>", ylim = "<auto>", xlabel = "<auto>", ylabel = "<auto>", subset = "")
 dialog.values <- getDialog("StatMedCumInc", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -10710,7 +10870,12 @@ currentModel <- TRUE
 	ylimFrame <- tkframe(axis2Frame)
 	ylimVariable <- tclVar(dialog.values$ylim)
 	ylimField <- ttkentry(axis2Frame, width="20", textvariable=ylimVariable)
-
+	xlabelFrame <- tkframe(axis2Frame)
+	xlabelVariable <- tclVar(dialog.values$xlabel)
+	xlabelField <- ttkentry(axis2Frame, width="20", textvariable=xlabelVariable)
+	ylabelFrame <- tkframe(axis2Frame)
+	ylabelVariable <- tclVar(dialog.values$ylabel)
+	ylabelField <- ttkentry(axis2Frame, width="20", textvariable=ylabelVariable)
 #	point <- tclVar("<none>")
 #	pointEntry <- ttkentry(axisFrame, width="20", textvariable=point)
 #	plotevent <- tclVar("<all>")
@@ -10754,9 +10919,11 @@ currentModel <- TRUE
 		subset <- paste(", subset=", subset, sep="")
     }
 	line <- tclvalue(lineVariable)
-	if (line=="color") line <- "col=1:32, lty=1, lwd=1"
-	if (line=="type") line <- "col=1, lty=1:32, lwd=1"
-	if (line=="width") line <- "col=1, lty=1, lwd=1:8"
+	par.lwd <- get("par.lwd", envir=.GlobalEnv)
+	if (line=="color") line <- paste("col=1:32, lty=1, ", par.lwd, sep="")
+	if (line=="type") line <- paste("col=1, lty=1:32, ", par.lwd, sep="")
+	if (line=="width") line <- paste("col=1, lty=1, ", par.lwd, ":8", sep="")
+	par.cex <- get("par.cex", envir=.GlobalEnv)
 	point <- tclvalue(pointVariable)
 	if (point == "<none>") {
 		point <- ""
@@ -10810,8 +10977,19 @@ currentModel <- TRUE
 	} else {
 		ylim <- paste(", ylim=c(", ylim, ")", sep="")
 	}
-	
-putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group = group, line = tclvalue(lineVariable), place = tclvalue(placeVariable), xscale = tclvalue(xscaleVariable), posthoc = posthoc, censor = tclvalue(censorVariable), atrisk = atrisk, point = tclvalue(pointVariable), plotevent = tclvalue(ploteventVariable), xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), subset = tclvalue(subsetVariable)))
+	xlabel <- tclvalue(xlabelVariable)
+	ylabel <- tclvalue(ylabelVariable)
+	if (xlabel == "<auto>") {
+		xlabel <- paste(', xlab="', timetoevent, '"', sep="")
+	} else {
+		xlabel <- paste(', xlab="', xlabel, '"', sep="")
+	}
+	if (ylabel == "<auto>") {
+		ylabel <- ', ylab="Cumulative incidence"'
+	} else {
+		ylabel <- paste(', ylab="', ylabel, '"', sep="")
+	}	
+putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group = group, line = tclvalue(lineVariable), place = tclvalue(placeVariable), xscale = tclvalue(xscaleVariable), posthoc = posthoc, censor = tclvalue(censorVariable), atrisk = atrisk, point = tclvalue(pointVariable), plotevent = tclvalue(ploteventVariable), xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), xlabel = tclvalue(xlabelVariable), ylabel = tclvalue(ylabelVariable), subset = tclvalue(subsetVariable)))
 	
     Library("survival")
     Library("cmprsk")
@@ -10867,21 +11045,21 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 		doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", plotline, point, xscale2, ")", sep=""))	
 	}
 	}
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
 	doItAndPrint(paste("compevents <- levels(factor(", subdataSet, "$", event, "))", sep=""))
 	doItAndPrint("nevents <- length(compevents)")
 	doItAndPrint('if (compevents[1]=="0") {compevents <- compevents[2:nevents]; nevents <- nevents - 1}')
 	if (plotline==0){
-		if(eval(parse(text=paste("length(levels(factor(", subdataSet, "$", event, "[", subdataSet, "$", event, ">0])))", sep="")))==1){line <- "col=1, lty=1, lwd=1"}
+		if(eval(parse(text=paste("length(levels(factor(", subdataSet, "$", event, "[", subdataSet, "$", event, ">0])))", sep="")))==1){line <- paste("col=1, lty=1, ", par.lwd, sep="")}
 		if (atrisk==0){
-			doItAndPrint(paste('plot(ci, fun="event", bty="l", ylab="Cumulative incidence", conf.int=FALSE, xlab="', timetoevent, '", ', line, xlim, ylim, censor, xscale, ")", sep=""))
+			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 		} else {
 			doItAndPrint('mar <- par("mar")')
 			doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			doItAndPrint(paste('plot(ci, fun="event", bty="l", ylab="Cumulative incidence", conf.int=FALSE, xlab="', timetoevent, '", ', line, xlim, ylim, censor, xscale, ")", sep=""))
+			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 			doItAndPrint("xticks <- axTicks(1)")
 			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
 			doItAndPrint("axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)")
@@ -10890,14 +11068,14 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 		doItAndPrint(paste("legend(", place, ", compevents, ", line, ', box.lty=0, title="Competing events")', sep=""))
 	}else{
 		if (atrisk==0){
-			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", ylab="Cumulative incidence", lty=1:32, xlab="', timetoevent, '", ', xlim, ylim, censor, xscale, ")", sep=""))
+			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, ', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 		} else {
 			doItAndPrint('mar <- par("mar")')
 			doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", ylab="Cumulative incidence", lty=1:32, xlab="', timetoevent, '", ', xlim, ylim, censor, xscale, ")", sep=""))
+			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, ', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 			doItAndPrint("xticks <- axTicks(1)")
 			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
 			doItAndPrint("axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)")
@@ -10930,7 +11108,7 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 	doItAndPrint(command)
 	doItAndPrint("print.ci.summary(ci=ci, res=res)")
 	}
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
 	doItAndPrint(paste("compevents <- levels(factor(", subdataSet, "$", event, "))", sep=""))
 	doItAndPrint("nevents <- length(compevents)")
 	doItAndPrint('if (compevents[1]=="0") {compevents <- compevents[2:nevents]; nevents <- nevents - 1}')
@@ -10944,12 +11122,14 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 #		doItAndPrint(paste("legend <- levels(factor(", subdataSet, "$", group[i], "))", sep=""))
 		doItAndPrint("legend <- groups")
 	}
+		if (line==paste("col=1, lty=1, ", par.lwd, ":8", sep="") & par.lwd!="lwd=1") doItAndPrint(paste("legendline <- legendline + ", as.integer(substring(par.lwd, nchar(par.lwd),nchar(par.lwd))) - 1, sep=""))
+
 	if (plotline==0){
-			if (line=="col=legendline, lty=1, lwd=1") line <- "col=1:32, lty=1, lwd=1"		#line cvariable changed for legend again changed for plot()
-			if (line=="col=1, lty=legendline, lwd=1") line <- "col=1, lty=1:32, lwd=1"
-			if (line=="col=1, lty=1, lwd=legendline") line <- "col=1, lty=1, lwd=1:32"
+			if (line==paste("col=legendline, lty=1, ", par.lwd, sep="")) line <- paste("col=1:32, lty=1, ", par.lwd, sep="")		#line cvariable changed for legend again changed for plot()
+			if (line==paste("col=1, lty=legendline, ", par.lwd, sep="")) line <- paste("col=1, lty=1:32, ", par.lwd, sep="")
+			if (line=="col=1, lty=1, lwd=legendline") line <- paste("col=1, lty=1, ", par.lwd, ":8", sep="")
 			if (atrisk==0){
-				doItAndPrint(paste('plot(ci, fun="event", bty="l", ylab="Cumulative incidence", xlab="', timetoevent, '", ', line, xlim, ylim, censor, xscale, ")", sep=""))
+				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 #				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))
 			}else{
 				doItAndPrint('mar <- par("mar")')
@@ -10958,21 +11138,21 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 				doItAndPrint("par(mar=mar)")
 				doItAndPrint("opar <- par(mar = mar)")
 				doItAndPrint("on.exit(par(opar))")
-				doItAndPrint(paste('plot(ci, fun="event", bty="l", ylab="Cumulative incidence", xlab="', timetoevent, '", ', line, xlim, ylim, censor, xscale, ")", sep=""))
+				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 				doItAndPrint("xticks <- axTicks(1)")
 				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
 				doItAndPrint("for (i in 1:length(ci$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")
-				doItAndPrint("for (i in 1:length(ci$strata)){mtext(groups[i], side=1, at=-(xticks[2]-xticks[1])/2, line=4+i)}")
+				doItAndPrint(paste("for (i in 1:length(ci$strata)){mtext(groups[i], side=1, at=-(xticks[2]-xticks[1])/2, line=4+i, cex=", par.cex, ")}", sep=""))
 				doItAndPrint('title(xlab = "Number at risk", line = 3.5, adj = 0)')
 #				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))			
 			}
-			if (line=="col=1:32, lty=1, lwd=1") line <- "col=legendline, lty=1, lwd=1"
-			if (line=="col=1, lty=1:32, lwd=1") line <- "col=1, lty=legendline, lwd=1"
-			if (line=="col=1, lty=1, lwd=1:8") line <- "col=1, lty=1, lwd=legendline"
+			if (line==paste("col=1:32, lty=1, ", par.lwd, sep="")) line <- paste("col=legendline, lty=1, ", par.lwd, sep="")
+			if (line==paste("col=1, lty=1:32, ", par.lwd, sep="")) line <- paste("col=1, lty=legendline, ", par.lwd, sep="")
+			if (line==paste("col=1, lty=1, ", par.lwd, ":8", sep="")) line <- "col=1, lty=1, lwd=legendline"
 			doItAndPrint(paste("legend(", place, ", legend, box.lty=0, ", line, ', title="', group[i], ' : Competing events")', sep=""))
 	}else{
 			if (atrisk==0){
-				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ylab="Cumulative incidence", xlab="', timetoevent, '", ', line, xlim, 	ylim, censor, xscale, ")", sep=""))
+				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, 	ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 #				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))
 			}else{
 				doItAndPrint('mar <- par("mar")')
@@ -10981,11 +11161,11 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 				doItAndPrint("par(mar=mar)")
 				doItAndPrint("opar <- par(mar = mar)")
 				doItAndPrint("on.exit(par(opar))")
-				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ylab="Cumulative incidence", xlab="', timetoevent, '", ', line, xlim, ylim, censor, xscale, ")", sep=""))
+				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 				doItAndPrint("xticks <- axTicks(1)")
 				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
 				doItAndPrint("for (i in 1:length(ci$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")
-				doItAndPrint("for (i in 1:length(ci$strata)){mtext(groups[i], side=1, at=-(xticks[2]-xticks[1])/2, line=4+i)}")
+				doItAndPrint(paste("for (i in 1:length(ci$strata)){mtext(groups[i], side=1, at=-(xticks[2]-xticks[1])/2, line=4+i, cex=", par.cex, ")}", sep=""))
 				doItAndPrint('title(xlab = "Number at risk", line = 3.5, adj = 0)')
 #				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))			
 			}
@@ -11048,12 +11228,14 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 	tkgrid(labelRcmdr(ylimFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Y axis range(Min, Max) Ex: 0.8, 1.0")), ylimField, sticky = "w")
 # tkgrid(ylimFrame, sticky="w")
 tkgrid(xlimFrame, labelRcmdr(axis2Frame, text="  "), ylimFrame, sticky="w")
-
+	tkgrid(labelRcmdr(xlabelFrame, text=gettext(domain="R-RcmdrPlugin.EZR","X axis lavel")), xlabelField, sticky = "w")
+	tkgrid(labelRcmdr(ylabelFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Y axis lavel")), ylabelField, sticky = "w")
+   tkgrid(xlabelFrame, labelRcmdr(axis2Frame, text="  "), ylabelFrame, sticky="w")
 #	tkgrid(tklabel(axisFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Code of event to show cumulative incidence rate")), ploteventEntry, sticky="w")
 #	tkgrid.configure(ploteventEntry, sticky="w")
 #	tkgrid(tklabel(axisFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Time point to show cumulative incidence rate")), pointEntry, sticky="w")
 #	tkgrid.configure(pointEntry, sticky="w")
-	tkgrid(labelRcmdr(axisFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Cumulative incidence rate shown only when one event specified"), fg="blue"), sticky="w")
+#	tkgrid(labelRcmdr(axisFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Cumulative incidence rate shown only when one event specified"), fg="blue"), sticky="w")
 #	tkgrid(tklabel(axisFrame, text=gettext(domain="R-RcmdrPlugin.EZR","X axis range(Min, Max) Ex: 0, 365")), xlimEntry, sticky="w")
 #	tkgrid.configure(xlimEntry, sticky="w")
 #	tkgrid(tklabel(axisFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Y axis range(Min, Max) Ex: 0.8, 1.0")), ylimEntry, sticky="w")
@@ -11068,7 +11250,7 @@ tkgrid(xlimFrame, labelRcmdr(axis2Frame, text="  "), ylimFrame, sticky="w")
 
 
 StatMedStackCumInc  <- function(){
-defaults <- list(event = "", timetoevent = "", group = "", atrisk = 0, xlim = "<auto>", ylim = "<auto>", subset = "")
+defaults <- list(event = "", timetoevent = "", group = "", atrisk = 0, xlim = "<auto>", ylim = "<auto>", xlabel = "<auto>", ylabel = "<auto>", subset = "")
 dialog.values <- getDialog("StatMedStackCumInc", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -11091,6 +11273,12 @@ currentModel <- TRUE
 	ylimFrame <- tkframe(plotoptionFrame)
 	ylimVariable <- tclVar(dialog.values$ylim)
 	ylimField <- ttkentry(plotoptionFrame, width="20", textvariable=ylimVariable)
+	xlabelFrame <- tkframe(plotoptionFrame)
+	xlabelVariable <- tclVar(dialog.values$xlabel)
+	xlabelField <- ttkentry(plotoptionFrame, width="20", textvariable=xlabelVariable)
+	ylabelFrame <- tkframe(plotoptionFrame)
+	ylabelVariable <- tclVar(dialog.values$ylabel)
+	ylabelField <- ttkentry(plotoptionFrame, width="20", textvariable=ylabelVariable)
 
 #	xlim <- tclVar("<auto>")
 #	xlimEntry <- ttkentry(plotoptionFrame, width="20", textvariable=xlim)
@@ -11136,8 +11324,20 @@ currentModel <- TRUE
 	} else {
 		ylim <- paste(", ylim=c(", ylim, ")", sep="")
 	}
+	xlabel <- tclvalue(xlabelVariable)
+	ylabel <- tclvalue(ylabelVariable)
+	if (xlabel == "<auto>") {
+		xlabel <- paste(', xlab="', timetoevent, '"', sep="")
+	} else {
+		xlabel <- paste(', xlab="', xlabel, '"', sep="")
+	}
+	if (ylabel == "<auto>") {
+		ylabel <- ', ylab="Probability"'
+	} else {
+		ylabel <- paste(', ylab="', ylabel, '"', sep="")
+	}
 
-putDialog("StatMedStackCumInc", list(event = event, timetoevent = timetoevent, group = group, atrisk = atrisk, xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), subset = tclvalue(subsetVariable)))
+putDialog("StatMedStackCumInc", list(event = event, timetoevent = timetoevent, group = group, atrisk = atrisk, xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), xlabel = tclvalue(xlabelVariable), ylabel = tclvalue(ylabelVariable), subset = tclvalue(subsetVariable)))
 	
     Library("survival")
     Library("cmprsk")
@@ -11145,14 +11345,14 @@ putDialog("StatMedStackCumInc", list(event = event, timetoevent = timetoevent, g
 #    library(cmprsk)
     nvar <- length(group)
     if (nvar == 0){
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
-	doItAndPrint(paste("stackcuminc(", subdataSet, "$", timetoevent, ", ", subdataSet, "$", event, xlim, ylim, ", atrisk=", atrisk, ", xlab='", timetoevent, "')", sep=""))
+	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
+	doItAndPrint(paste("stackcuminc(", subdataSet, "$", timetoevent, ", ", subdataSet, "$", event, xlim, ylim,  xlabel, ylabel, ", atrisk=", atrisk, ")", sep=""))
    } else {
 	groups <- eval(parse(text=paste("levels(factor(", subdataSet, "$", group, "))", sep="")))
 	for (i in groups){
 		sub2dataSet <- paste("subset(", subdataSet, ", ", group, "=='", i, "')", sep="")	
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
-		doItAndPrint(paste("stackcuminc(", sub2dataSet, "$", timetoevent, ", ", sub2dataSet, "$", event, xlim, ylim, ", atrisk=", atrisk, ", xlab='", timetoevent, "', main='", group, " = ", i, "')", sep=""))
+	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
+		doItAndPrint(paste("stackcuminc(", sub2dataSet, "$", timetoevent, ", ", sub2dataSet, "$", event, xlim, ylim,  xlabel, ylabel, ", atrisk=", atrisk, ", main='", group, " = ", i, "')", sep=""))
 	}
    }
     tkfocus(CommanderWindow())
@@ -11171,6 +11371,10 @@ putDialog("StatMedStackCumInc", list(event = event, timetoevent = timetoevent, g
 	tkgrid(labelRcmdr(ylimFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Y axis range(Min, Max) Ex: 0.8, 1.0")), ylimField, sticky = "w")
 #  tkgrid(ylimFrame, sticky="w")
 tkgrid(xlimFrame, labelRcmdr(plotoptionFrame, text="  "), ylimFrame, sticky="w")
+
+	tkgrid(labelRcmdr(xlabelFrame, text=gettext(domain="R-RcmdrPlugin.EZR","X axis lavel")), xlabelField, sticky = "w")
+	tkgrid(labelRcmdr(ylabelFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Y axis lavel")), ylabelField, sticky = "w")
+   tkgrid(xlabelFrame, labelRcmdr(plotoptionFrame, text="  "), ylabelFrame, sticky="w")
 
   #	tkgrid(tklabel(plotoptionFrame, text=gettext(domain="R-RcmdrPlugin.EZR","X axis range(Min, Max) Ex: 0, 365")), xlimEntry, sticky="w")
 #	tkgrid.configure(xlimEntry, sticky="w")
@@ -12126,7 +12330,7 @@ putDialog("StatMedMH", list(group=group, var=var, strata=strata, continuity=cont
     radioButtons(analysisFrame, name="continuity",
         buttons=c("yes", "no"),
         values=c("TRUE", "FALSE"), initialValue=dialog.values$continuity,
-        labels=c("Yes", "No"), title=gettext(domain="R-RcmdrPlugin.EZR","Continuity correction of chi-square test"))
+        labels=gettext(domain="R-RcmdrPlugin.EZR",c("Yes", "No")), title=gettext(domain="R-RcmdrPlugin.EZR","Continuity correction of chi-square test"))
     tkgrid(continuityFrame, sticky="w")
 	tkgrid(analysisFrame, sticky="nw")
 	tkgrid(buttonsFrame, sticky="w")
@@ -13680,8 +13884,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.20", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","November 1, 2013"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.21", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","January 10, 2014"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -13794,7 +13998,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.20", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.21", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -13851,4 +14055,4 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'saveOutput', '.commander.done', 'ci.summary.table', 'cox.table',
 'km.summary.table', 'summary.ttest', 'Fisher.summary.table', 
 'StatMedcloseCommander', 'hist2', 'separatestrata', 'diagnosisVariable',
-'martinVariable', 'res', 'HistEZR', 'QQPlot'))
+'martinVariable', 'res', 'HistEZR', 'QQPlot', '.Workbook', 'par.lwd', 'par.cex'))

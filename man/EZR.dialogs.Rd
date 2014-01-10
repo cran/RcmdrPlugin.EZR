@@ -36,6 +36,7 @@
 \alias{StatMedQQPlot}
 \alias{StatMedHistogram}
 \alias{StatMedImportMinitab}
+\alias{StatMedImportExcel}
 \alias{StatMedImportRODBCtable}
 \alias{StatMedImportSPSS}
 \alias{StatMedImportSTATA}
