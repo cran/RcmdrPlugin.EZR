@@ -39,6 +39,8 @@
 \alias{pairwise.logrank.test}
 \alias{pairwise.pairedt.test}
 \alias{pairwise.prop2.test}
+\alias{par.cex}
+\alias{par.lwd}
 \alias{par.option}
 \alias{pdunnett}
 \alias{print.ci.summary}
@@ -75,8 +77,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.20\cr
-Date: \tab 2013-11-01\cr
+Version: \tab 1.21\cr
+Date: \tab 2014-01-10\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }

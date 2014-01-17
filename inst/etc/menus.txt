@@ -14,7 +14,7 @@
     item    ImportMenu      command         "from Stata data set"                        	StatMedImportSTATA          ""          			"packageAvailable('foreign')"
     item    ImportMenu      command         "from Excel, Access, dBase data set"       		StatMedImportRODBCtable            ""          "WindowsP() && packageAvailable('RODBC') && (.Platform$r_arch == 'i386')"
 #    item    ImportMenu      command         "from Excel, Access, dBase data set"       	StatMedImportRODBCtable     ""          			"(.Platform$OS.type == 'windows') && packageAvailable('RODBC')"	
-    item    ImportMenu      command         "from Excel data set"                            importExcel                 ""      "packageAvailable('XLConnect') && (!WindowsP() | (.Platform$r_arch != 'i386'))"
+    item    ImportMenu      command         "from Excel data set"                           StatMedImportExcel                 ""      "packageAvailable('XLConnect') && (!WindowsP() | (.Platform$r_arch != 'i386'))"
     item    FileMenu        command         "Read data set from an attached package"     	readDataFromPackage         ""          			""
     item    FileMenu        command         "Save active data set"                       	StatMedSaveDataSet          ""						""
 #    item    FileMenu        command         "Export active data set"                     	StatMedExportDataSet        ""    					""

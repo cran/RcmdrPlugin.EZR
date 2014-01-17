@@ -1,3 +1,9 @@
+Changes to Version 1.21
+
+  o Added generalized Welch test.
+
+  o Small bug fixes.
+
 Changes to Version 1.20
 
   o Changed dialogue design and added apply button for Rcmdr ver 2.0-0.
