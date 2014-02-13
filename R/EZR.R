@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.21", "\n")
+cat("   Version 1.22", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -154,32 +154,32 @@ w.multi <- function(table=cox.table, filename="clipboard", CI=0, signif=0, en=1)
 ###Output two-way table to clipboard and files.
 w.twoway <- function(table=Fisher.summary.table, filename="clipboard", en=1){
 
-	rows <- length(table[,1])
-	columns <- length(table)
-	Factor <- substring(row.names(table), 1, regexpr("=", row.names(table))-1)
-	Group <- substring(row.names(table), regexpr("=", row.names(table))+1) 
+        rows <- length(table[,1])
+        columns <- length(table)
+        Factor <- substring(row.names(table), 1, regexpr("=", row.names(table))-1)
+        Group <- substring(row.names(table), regexpr("=", row.names(table))+1) 
 
-	for(i in 1:(rows-1)){
-		j <- 1
-		while(Factor[i]==Factor[i+j]){
-			Factor[i+j] <- ""
-			j <- j + 1
-			if ((i+j)>rows) break
-		}
-	}
+        for(i in 1:(rows-1)){
+                j <- 1
+                while(Factor[i]==Factor[i+j]){
+                        Factor[i+j] <- ""
+                        j <- j + 1
+                        if ((i+j)>rows) break
+                }
+        }
 
-	table <- cbind(Factor, Group, table)
-	rownames(table) <- NULL
-	colnames(table)[3] <- ifelse(en==1, "p.value", gettext(domain="R-RcmdrPlugin.EZR", "p.value"))
-	if (en==0) colnames(table)[1:2] <- gettext(domain="R-RcmdrPlugin.EZR", c("Factor", "Group"))
-	print(table)
-	print(paste("Write to ", filename, sep=""))
+        table <- cbind(Factor, Group, table)
+        rownames(table) <- NULL
+        colnames(table)[length(colnames(table))] <- ifelse(en==1, "p.value", gettextRcmdr( "p.value"))
+        if (en==0) colnames(table)[1:2] <- gettextRcmdr( c("Factor", "Group"))
+        print(table)
+        print(paste("Write to ", filename, sep=""))
  
-	if (filename=="clipboard"){
-		write.table(data.frame(table), "clipboard", sep="\t", row.names=FALSE)
-	} else {
-		write.csv(data.frame(table), file=as.character(filename))
-	}
+        if (filename=="clipboard"){
+                write.table(data.frame(table), "clipboard", sep="\t", row.names=FALSE)
+        } else {
+                write.csv(data.frame(table), file=as.character(filename))
+        }
 }
 
 
@@ -5529,6 +5529,7 @@ StatMedSetPalette <- function() {
 
 	
 StatMedNumericalSummaries <- function(){
+	Library("tcltk")
     initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Numerical Summaries"))
     xBox <- variableListBox(top, Numeric(), selectmode="multiple", title=gettext(domain="R-RcmdrPlugin.EZR","Variables (pick one or more)"), listHeight=15)
     checkBoxes(frame="checkBoxFrame", boxes=c("graph", "mean", "sd"), initialValues=c("0", "1", "1"), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Show graph", "Mean", "Standard Deviation")))
@@ -8117,7 +8118,7 @@ putDialog("StatMedANCOVA", list(group=group, data=data, covariate=covariate, act
 		interaction <- eval(parse(text=paste("signif(Anova(lm(", data, " ~ 1 + factor(", group, ") * ", covariate, ', data=TempDF, na.action=na.omit), type="III")$Pr[4], digits=3)', sep="")))
 		doItAndPrint(paste('cat(gettext(domain="R-RcmdrPlugin.EZR","P value for interaction between grouping variable and covariate is"), ', " ", interaction, ', "\n")', sep=""))
 		if(interaction < 0.05){
-			logger(gettextEcmdr("ANCOVA not performed due to significant interaction between grouping variable and covariate."))
+			logger(gettextRcmdr("ANCOVA not performed due to significant interaction between grouping variable and covariate."))
 		} else {
 			command <- paste(modelValue, " <- lm(", data, " ~ 1 + factor(", group, ") + ", covariate, ", data=TempDF, na.action=na.omit)", sep="")
 			# 		logger(paste(modelValue, " <- ", command, sep = ""))
@@ -13884,8 +13885,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.21", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","January 10, 2014"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.22", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","Feburuary 13, 2014"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -13998,11 +13999,11 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.21", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.22", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
-'TempTD', 'actmodelVariable', 'subsetVariable', 'gettextEcmdr',
+'TempTD', 'actmodelVariable', 'subsetVariable', 
 'subsetFrame', 'oneWayAnova', 'graphVariable', 'pairwiseVariable',
 'dunnettVariable', 'bonferroniVariable', 'holmVariable', 'graphFrame',
 'lineVariable', 'placeVariable', 'censorVariable', 'atriskVariable',
