@@ -12,7 +12,7 @@ Rcmdr Plug-In Package for the EZR (Easy R especially for medical statistics)
 
 <h3>Description</h3>
 
-<p>This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in <EM>Bone Marrow Transplantation</EM> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: <a href="http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf">http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf</a>). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: <a href="https://www.chugaiigaku.jp/modules/shop/index.php?main_page=product_info&amp;products_id=1241">https://www.chugaiigaku.jp/modules/shop/index.php?main_page=product_info&amp;products_id=1241</a>)
+<p>This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in <EM>Bone Marrow Transplantation</EM> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: <a href="http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf">http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf</a>). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: <a href="http://www.chugaiigaku.jp/item/detail.php?id=733">http://www.chugaiigaku.jp/item/detail.php?id=733</a>)
 </p>
 
 
@@ -30,11 +30,11 @@ Type: </td><td align="left"> Package</td>
 </tr>
 <tr>
  <td align="left">
-Version: </td><td align="left"> 1.21</td>
+Version: </td><td align="left"> 1.22</td>
 </tr>
 <tr>
  <td align="left">
-Date: </td><td align="left"> 2014-01-10</td>
+Date: </td><td align="left"> 2014-02-13</td>
 </tr>
 <tr>
  <td align="left">
@@ -54,16 +54,22 @@ License: </td><td align="left"> GPL (&gt;= 2)</td>
 
 <h3>Installation of EZR</h3>
 
-<p>RcmdrPlugin.EZR should be installed after the installation of Rcmdr and the other packages that Rcmdr or EZR depends on. Packagees that are required by Rcmdr can be installed at the first start-up of R commander. Packages required by EZR can be easily installed at the same time with the installation of EZR by copying and pasting the following command to the R console window after &quot; &gt; &quot;.<br><br>
+<p>See <a href="http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html">http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html</a> for detailed information. Briefly, EZR is platform-independent. RcmdrPlugin.EZR should be installed with R commander (Rcmdr) and the other packages that Rcmdr or EZR depends on. Packages required by EZR can be easily installed at the same time with the installation of EZR by copying and pasting the following command to the R console window after &quot; &gt; &quot;.<br><br>
 <code>install.packages(pkgs="RcmdrPlugin.EZR", dependencies=TRUE)</code><br><br>
-EZR is platform-independent, but only the Windows version of EZR can import Excel, Access, and dBase data set. This function requires &quot;RODBC&quot; package to be installed.<br><br>
-After installation, R commander can be started by the command, <code>library(Rcmdr)</code> from the R console. EZR can be loaded by selecting RcmdrPlugin.EZR from the &quot;Tools&quot; &gt; &quot;Load Rcmdr plug-in(s)&quot; menu. Answer &quot;Yes&quot; to &quot;Restart now?&quot;.<br><br>
+After installation, R commander can be started by the command, <code>library(Rcmdr)</code> from the R console. Packagees required by Rcmdr are installed at the first start-up of R commander. EZR can be loaded by selecting RcmdrPlugin.EZR from the &quot;Tools&quot; &gt; &quot;Load Rcmdr plug-in(s)&quot; menu. Answer &quot;Yes&quot; to &quot;Restart now?&quot;.<br><br>
 On Windows, EZR plugin package will be loaded when R commander is started, if the following sentence is added to the Rprofile.site file in etc folder in the R folder (C:\Program Files\R\R-X.XX.X\etc).<br><br>
 <code>options(Rcmdr=list(plugins="RcmdrPlugin.EZR"))</code><br><br>
 In addition, if the following phrase is added to the command in &quot;Target:&quot; column on the &quot;Shortcut&quot; tab of the &quot;Property&quot; of &quot;R&quot; shorcut on the desktop (which can be opened by right-clicking on the shortcut), R commander will start at the same time with launching R.<br><br>
 <code>R_DEFAULT_PACKAGES="Rcmdr"</code><br><br>
 Therefore, if these two options were added, EZR can be started just by double-clicking on the &quot;R&quot; shortcut on the desktop.<br><br>
-The default data folder can be changed by right-clicking on this &quot;R&quot; shortcut on the desktop, selecting &quot;Properties&quot;, and replacing the folder name in the &quot;Start in:&quot; column on the &quot;Shortcut&quot; tab.<br><br>
+In OS X, these can be done by opening the Terminal.app located in the Utilities folder, followed by copying and pasting the following command.<br><br>
+<code>echo "options(Rcmdr=list(plugins='RcmdrPlugin.EZR'))" &gt;&gt; ~/.Rprofile</code><br>
+<code>echo "library(Rcmdr)" &gt;&gt; ~/.Rprofile</code><br>
+<code>echo "local({" &gt;&gt; ~/.Rprofile</code><br>
+<code>echo "old &lt;- getOption('defaultPackages')" &gt;&gt; ~/.Rprofile</code><br>
+<code>echo "options(defaultPackages = c(old, 'Rcmdr'))" &gt;&gt; ~/.Rprofile</code><br>
+<code>echo "})" &gt;&gt; ~/.Rprofile</code><br><br>
+The default data folder of Windows EZR can be changed by right-clicking on this &quot;R&quot; shortcut on the desktop, selecting &quot;Properties&quot;, and replacing the folder name in the &quot;Start in:&quot; column on the &quot;Shortcut&quot; tab.<br><br>
 </p>
 
 
@@ -142,6 +148,7 @@ Bar graph(Frequencies)<br>
 Pie chart(Frequencies)<br>
 Stem-and-leaf display<br>
 Histogram<br>
+QQ plot<br>
 Bar graph(Means)<br>
 Line graph(Means)<br>
 Line graph(Repeated measures)<br>
@@ -205,9 +212,9 @@ Maintainer: Yoshinobu Kanda &lt;ycanda-tky@umin.ac.jp&gt;
 
 <h3>References</h3>
 
-<p>Its complete manual is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: <a href="https://www.chugaiigaku.jp/modules/shop/index.php?main_page=product_info&amp;products_id=1241">https://www.chugaiigaku.jp/modules/shop/index.php?main_page=product_info&amp;products_id=1241</a>), but a report that introduced the investigation of EZR was published in <EM>Bone Marrow Transplantation</EM> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below.
+<p>Its complete manual is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: <a href="http://www.chugaiigaku.jp/item/detail.php?id=733">http://www.chugaiigaku.jp/item/detail.php?id=733</a>), but a report that introduced the investigation of EZR was published in <EM>Bone Marrow Transplantation</EM> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below.
 </p>
-<p>Yoshinobu Kanda (2012).
+<p>Yoshinobu Kanda (2013).
 Investigation of the freely available easy-to-use software EZR for medical statistics.
 <EM>Bone Marrow Transplantation</EM> (Open article, URL: <a href="http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf">http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf</a>).<br><br>
 </p>
