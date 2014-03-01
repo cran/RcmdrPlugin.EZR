@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.22", "\n")
+cat("   Version 1.23", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -110,213 +110,306 @@ HistEZR <- function (x, scale = c("frequency", "percent", "density"), xlab = dep
     invisible(NULL)
 }
 
+
 ###Output the results of multivariate analysis to clipboard and files.
-w.multi <- function(table=cox.table, filename="clipboard", CI=0, signif=0, en=1){
-	table[,4] <- as.numeric(table[,4])
-	if(signif>0){
-		table <-signif(table, digits = signif)
-	}
-	if(signif==0){
-		table[,1] <- floor(table[,1]*100+0.5)/100
-		table[,2] <- floor(table[,2]*100+0.5)/100
-		table[,3] <- floor(table[,3]*100+0.5)/100
-		table[,1] <- formatC(table[,1], format="f", digits=2)
-		table[,2] <- formatC(table[,2], format="f", digits=2)
-		table[,3] <- formatC(table[,3], format="f", digits=2)
-		table[,4] <- signif(as.numeric(table[,4]), digits=2)		
-		table[,4] <- formatC(as.numeric(table[,4]), format="fg")
-	}
-	table2 <- table
-	if (CI==0){
-		table2[,1] <- paste(table[,1], " (", table[,2], "-", table[,3], ")", sep="")
-		table2[,2] <- table[,4]
-		table2 <- table2[,1:2]
-	} 
-	table2 <- cbind(rownames(table2), table2)
-	colnames(table2)[1] <- ifelse(en==1, "Factor", gettext(domain="R-RcmdrPlugin.EZR", "Factor"))
-	rownames(table2) <- NULL
-	if (en==1 & colnames(table2)[2]==gettext(domain="R-RcmdrPlugin.EZR", "Hazard ratio")) colnames(table2)[2] <- "Hazard ratio"
- 	if (en==1 & colnames(table2)[2]==gettext(domain="R-RcmdrPlugin.EZR", "odds")) colnames(table2)[2] <- "odds"
-	if (en==1 & CI==1) colnames(table2)[3:4] <- c("Lower 95%CI", "Upper 95%CI")	
-	if (CI==0) colnames(table2)[3] <- ifelse(en==1, "p.value", gettext(domain="R-RcmdrPlugin.EZR", "p.value"))
-	if (CI==1) colnames(table2)[5] <- ifelse(en==1, "p.value", gettext(domain="R-RcmdrPlugin.EZR", "p.value"))
-	print(table2)
-	print(paste("Write to ", filename, sep=""))
- 
-	if (filename=="clipboard"){
-		write.table(data.frame(table2), "clipboard", sep="\t", row.names=FALSE)
+w.multi <- function (table = cox.table, filename = "clipboard", CI = 0, signif = 0, en = 1) {
+    table[, 4] <- as.numeric(table[, 4])
+    if (signif > 0) {
+        table <- signif(table, digits = signif)
+    }
+    if (signif == 0) {
+        table[, 1] <- floor(table[, 1] * 100 + 0.5)/100
+        table[, 2] <- floor(table[, 2] * 100 + 0.5)/100
+        table[, 3] <- floor(table[, 3] * 100 + 0.5)/100
+        table[, 1] <- formatC(table[, 1], format = "f", digits = 2)
+        table[, 2] <- formatC(table[, 2], format = "f", digits = 2)
+        table[, 3] <- formatC(table[, 3], format = "f", digits = 2)
+        table[, 4] <- signif(as.numeric(table[, 4]), digits = 2)
+        table[, 4] <- formatC(as.numeric(table[, 4]), format = "fg")
+    }
+    table2 <- table
+    if (CI == 0) {
+        table2[, 1] <- paste(table[, 1], " (", table[, 2], "-", 
+            table[, 3], ")", sep = "")
+        table2[, 2] <- table[, 4]
+        table2 <- table2[, 1:2]
+    }
+    table2 <- cbind(rownames(table2), table2)
+    colnames(table2)[1] <- ifelse(en == 1, "Factor", gettext(domain = "R-RcmdrPlugin.EZR", 
+        "Factor"))
+    rownames(table2) <- NULL
+    if (en == 1 & colnames(table2)[2] == gettext(domain = "R-RcmdrPlugin.EZR", 
+        "Hazard ratio")) 
+        colnames(table2)[2] <- "Hazard ratio"
+    if (en == 1 & colnames(table2)[2] == gettext(domain = "R-RcmdrPlugin.EZR", 
+        "odds ratio")) 
+        colnames(table2)[2] <- "Odds ratio"
+    if (en == 1 & CI == 1) 
+        colnames(table2)[3:4] <- c("Lower 95%CI", "Upper 95%CI")
+    if (CI == 0) 
+        colnames(table2)[3] <- ifelse(en == 1, "p.value", gettext(domain = "R-RcmdrPlugin.EZR", 
+            "p.value"))
+    if (CI == 1) 
+        colnames(table2)[5] <- ifelse(en == 1, "p.value", gettext(domain = "R-RcmdrPlugin.EZR", 
+            "p.value"))
+    print(data.frame(table2), quote=FALSE, row.names=FALSE, col.names=TRUE)
+#    print(table2)
+#    print(paste("Write to ", filename, sep = ""))
+    if (filename == "clipboard") {
+        write.table(data.frame(table2), "clipboard", sep = "\t", 
+            row.names = FALSE)
+    }
+    else {
+        write.csv(data.frame(table2), file = as.character(filename), row.names = FALSE)
+    }
+}
+
+
+w.multireg <- function (table = multireg.table, filename = "clipboard", CI = 0, signif = 0, en = 1) {
+    if (signif > 0) {
+        table <- signif(table, digits = signif)
+    }
+    if (signif == 0) {
+        table[, 1] <- floor(table[, 1] * 100 + 0.5)/100
+        table[, 2] <- floor(table[, 2] * 100 + 0.5)/100
+        table[, 3] <- floor(table[, 3] * 100 + 0.5)/100
+        table[, 1] <- formatC(table[, 1], format = "f", digits = 2)
+        table[, 2] <- formatC(table[, 2], format = "f", digits = 2)
+        table[, 3] <- formatC(table[, 3], format = "f", digits = 2)
+        table[, 4] <- signif(as.numeric(table[, 4]), digits = 2)
+        table[, 4] <- formatC(as.numeric(table[, 4]), format = "fg")
+    }
+    table <- cbind(rownames(table), table)
+	if(en==1){
+		colnames(table) <- c("Factor", "Estimate", "Std. Error", "t value", "p.value")
 	} else {
-		write.csv(data.frame(table2), file=as.character(filename))
+		colnames(table) <- gettext(domain = "R-RcmdrPlugin.EZR", c("Factor", "Estimate", "Std. Error", "t value", "p.value"))
 	}
+    rownames(table) <- NULL
+	print(data.frame(table), quote=FALSE, row.names=FALSE, col.names=TRUE)
+#    print(paste("Write to ", filename, sep = ""))
+    if (filename == "clipboard") {
+        write.table(data.frame(table), "clipboard", sep = "\t", 
+            row.names = FALSE)
+    }
+    else {
+        write.csv(data.frame(table), file = as.character(filename), row.names = FALSE)
+    }
 }
 
 
 ###Output two-way table to clipboard and files.
-w.twoway <- function(table=Fisher.summary.table, filename="clipboard", en=1){
+w.twoway <- function (table = Fisher.summary.table, filename = "clipboard", en = 1) {
+    table <- as.matrix(table)
 
-        rows <- length(table[,1])
-        columns <- length(table)
-        Factor <- substring(row.names(table), 1, regexpr("=", row.names(table))-1)
-        Group <- substring(row.names(table), regexpr("=", row.names(table))+1) 
-
-        for(i in 1:(rows-1)){
-                j <- 1
-                while(Factor[i]==Factor[i+j]){
-                        Factor[i+j] <- ""
-                        j <- j + 1
-                        if ((i+j)>rows) break
-                }
+    rows <- length(table[, 1])
+    columns <- length(table)
+    Factor <- substring(row.names(table), 1, regexpr("=", row.names(table)) - 
+        1)
+    Group <- substring(row.names(table), regexpr("=", row.names(table)) + 
+        1)
+    for (i in 1:(rows - 1)) {
+        j <- 1
+        while (Factor[i] == Factor[i + j]) {
+            Factor[i + j] <- ""
+            j <- j + 1
+            if ((i + j) > rows) 
+                break
         }
-
-        table <- cbind(Factor, Group, table)
-        rownames(table) <- NULL
-        colnames(table)[length(colnames(table))] <- ifelse(en==1, "p.value", gettextRcmdr( "p.value"))
-        if (en==0) colnames(table)[1:2] <- gettextRcmdr( c("Factor", "Group"))
-        print(table)
-        print(paste("Write to ", filename, sep=""))
- 
-        if (filename=="clipboard"){
-                write.table(data.frame(table), "clipboard", sep="\t", row.names=FALSE)
-        } else {
-                write.csv(data.frame(table), file=as.character(filename))
-        }
+    }
+    StratifyFactor <- substring(colnames(table), 1, regexpr("=", colnames(table)) - 
+        1)
+    StratifyGroup <- substring(colnames(table), regexpr("=", colnames(table)) + 
+        1)
+    colnames(table) <- StratifyGroup
+    table <- cbind(Factor, Group, table)
+#    rownames(table) <- NULL
+    colnames(table)[length(colnames(table))] <- ifelse(en == 
+        1, "p.value", gettextRcmdr("p.value"))
+    if (en == 0) colnames(table) <- gettext(domain = "R-RcmdrPlugin.EZR", colnames(table))
+    print(data.frame(table), quote=F, row.names = FALSE, col.names = FALSE)
+    ncol <- length(colnames(table))
+    row1 <- colnames(table)
+    row1 <- matrix(row1, ncol=ncol)
+    table <- rbind(row1, table)
+    row0 <- rep(" ", ncol)
+    row0[3] <- StratifyFactor[1]
+    table <- rbind(row0, table)
+#    print(paste("Write to ", filename, sep = ""))
+    if (filename == "clipboard") {
+        write.table(data.frame(table), "clipboard", sep = "\t", 
+            row.names = FALSE, col.names = FALSE)
+    }
+    else {
+        write.table(data.frame(table), file = as.character(filename), sep = ",", row.names = FALSE, col.names = FALSE)
+    }
 }
 
 
 ###Output the results of t-test to clipboard and files.
-w.ttest <- function(table=summary.ttest, filename="clipboard", en=1){
-
-	rows <- length(table[,1])
-	columns <- length(table)
-	Factor <- substring(row.names(table), 1, regexpr("=", row.names(table))-1)
-	Group <- substring(row.names(table), regexpr("=", row.names(table))+1) 
-
-	for(i in 1:(rows-1)){
-		j <- 1
-		while(Factor[i]==Factor[i+j]){
-			Factor[i+j] <- ""
-			j <- j + 1
-			if ((i+j)>rows) break
-		}
-	}
-
-	table[,3] <- as.numeric(as.character(data.frame(table)[,3]))
-	table <- signif(data.frame(table), digits=3)
-	table[,3] <- ifelse(is.na(table[,3]), "", table[,3])
-	table[,1] <- paste(table[,1], " +- ", table[,2], sep="")
-	table <- table[,c(1,3)]
-	colnames(table)[1] <- "mean +- SD"
-
-	table <- cbind(Factor, Group, table)
-	rownames(table) <- NULL
-	colnames(table)[4] <- ifelse(en==1, "p.value", gettext(domain="R-RcmdrPlugin.EZR", "p.value"))
-	if (en==0) colnames(table)[1:3] <- gettext(domain="R-RcmdrPlugin.EZR", c("Factor", "Group", "mean +- SD"))
-	print(table)
-	print(paste("Write to ", filename, sep=""))
- 
-	if (filename=="clipboard"){
-		write.table(data.frame(table), "clipboard", sep="\t", row.names=FALSE)
-	} else {
-		write.csv(data.frame(table), file=as.character(filename))
-	}
+w.ttest <- function (table = summary.ttest, filename = "clipboard", en = 1) {
+    rows <- length(table[, 1])
+    columns <- length(table)
+    Factor <- substring(row.names(table), 1, regexpr("=", row.names(table)) - 
+        1)
+    Group <- substring(row.names(table), regexpr("=", row.names(table)) + 
+        1)
+    for (i in 1:(rows - 1)) {
+        j <- 1
+        while (Factor[i] == Factor[i + j]) {
+            Factor[i + j] <- ""
+            j <- j + 1
+            if ((i + j) > rows) 
+                break
+        }
+    }
+    table[, 3] <- as.numeric(as.character(data.frame(table)[, 
+        3]))
+    table <- signif(data.frame(table), digits = 3)
+    table[, 3] <- ifelse(is.na(table[, 3]), "", table[, 3])
+    table[, 1] <- paste(table[, 1], " +- ", table[, 2], sep = "")
+    table <- table[, c(1, 3)]
+    colnames(table)[1] <- "mean +- SD"
+    table <- cbind(Factor, Group, table)
+    rownames(table) <- NULL
+    colnames(table)[4] <- ifelse(en == 1, "p.value", gettext(domain = "R-RcmdrPlugin.EZR", 
+        "p.value"))
+    if (en == 0) 
+        colnames(table)[1:3] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+            c("Factor", "Group", "mean +- SD"))
+    print(data.frame(table), quote=FALSE, row.names=FALSE)
+#    print(table)
+#    print(paste("Write to ", filename, sep = ""))
+    if (filename == "clipboard") {
+        write.table(data.frame(table), "clipboard", sep = "\t", 
+            row.names = FALSE)
+    }
+    else {
+        write.csv(data.frame(table), file = as.character(filename), row.names = FALSE)
+    }
 }
 
 
-w.survival <- function(table=km.summary.table, filename="clipboard",en=1){
-
-	rows <- length(table[,1])
-	columns <- length(table)
-	Factor <- substring(row.names(table), 1, regexpr("=", row.names(table))-1)
-	Group <- substring(row.names(table), regexpr("=", row.names(table))+1) 
-
-	for(i in 1:(rows-1)){
-		j <- 1
-		while(Factor[i]==Factor[i+j]){
-			Factor[i+j] <- ""
-			j <- j + 1
-			if ((i+j)>rows) break
-		}
-	}
-
-	if(colnames(table)[2]==gettext(domain="R-RcmdrPlugin.EZR","median survival")){
-		table[,2] <- paste(table[,2], " (", table[,3], ")", sep="")
-		table <- table[,c(1,2,4)]
-		if(en==1){
-			colnames(table)[1:3] <- c("n", "median survival", "p.value")
-		} else {
-			colnames(table)[1:3] <- gettext(domain="R-RcmdrPlugin.EZR", c("n", "median survival", "p.value"))
-		}
-	}
-
-	if(colnames(table)[2]==gettext(domain="R-RcmdrPlugin.EZR","survival rate")){
-		table[,2] <- paste(table[,2], " ", table[,3], sep="")
-		table[,4] <- paste(table[,4], " (", table[,5], ")", sep="")
-		table <- table[,c(1,2,4,6)]
-		if(en==1){
-			colnames(table)[1:4] <- c("n", "survival rate", "median survival", "p.value")
-		} else {
-			colnames(table)[1:4] <- gettext(domain="R-RcmdrPlugin.EZR", c("n", "survival rate", "median survival", "p.value"))
-		}
-	}
-
-	table <- cbind(Factor, Group, table)
-	rownames(table) <- NULL	
-	if (en==0) colnames(table)[1:2] <- gettext(domain="R-RcmdrPlugin.EZR", c("Factor", "Group"))
-	print(table)
-	print(paste("Write to ", filename, sep=""))
- 
-	if (filename=="clipboard"){
-		write.table(data.frame(table), "clipboard", sep="\t", row.names=FALSE)
-	} else {
-		write.csv(data.frame(table), file=as.character(filename))
-	}
+w.survival <- function (table = km.summary.table, filename = "clipboard", en = 1) {
+    rows <- length(table[, 1])
+    columns <- length(table)
+    Factor <- substring(row.names(table), 1, regexpr("=", row.names(table)) - 
+        1)
+    Group <- substring(row.names(table), regexpr("=", row.names(table)) + 
+        1)
+    for (i in 1:(rows - 1)) {
+        j <- 1
+        while (Factor[i] == Factor[i + j]) {
+            Factor[i + j] <- ""
+            j <- j + 1
+            if ((i + j) > rows) 
+                break
+        }
+    }
+    if (colnames(table)[2] == gettext(domain = "R-RcmdrPlugin.EZR", 
+        "median survival")) {
+        table[, 2] <- paste(table[, 2], " (", table[, 3], ")", 
+            sep = "")
+        table <- table[, c(1, 2, 4)]
+        if (en == 1) {
+            colnames(table)[1:3] <- c("n", "median survival", 
+                "p.value")
+        }
+        else {
+            colnames(table)[1:3] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+                c("n", "median survival", "p.value"))
+        }
+    }
+    if (colnames(table)[2] == gettext(domain = "R-RcmdrPlugin.EZR", 
+        "survival rate")) {
+        table[, 2] <- paste(table[, 2], " ", table[, 3], sep = "")
+        table[, 4] <- paste(table[, 4], " (", table[, 5], ")", 
+            sep = "")
+        table <- table[, c(1, 2, 4, 6)]
+        if (en == 1) {
+            colnames(table)[1:4] <- c("n", "survival rate", "median survival", 
+                "p.value")
+        }
+        else {
+            colnames(table)[1:4] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+                c("n", "survival rate", "median survival", "p.value"))
+        }
+    }
+    table <- cbind(Factor, Group, table)
+    rownames(table) <- NULL
+    if (en == 0) 
+        colnames(table)[1:2] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+            c("Factor", "Group"))
+    print(table, quote=FALSE, row.names=FALSE, col.names=TRUE)
+#    print(table)
+#    print(paste("Write to ", filename, sep = ""))
+    if (filename == "clipboard") {
+        write.table(data.frame(table), "clipboard", sep = "\t", 
+            row.names = FALSE)
+    }
+    else {
+        write.csv(data.frame(table), file = as.character(filename), row.names = FALSE)
+    }
 }
 
 
-w.ci <- function(table=ci.summary.table, filename="clipboard",en=1){
-
-	rows <- length(table[,1])
-	columns <- length(table)
-	Group_Factor <- substring(row.names(table), regexpr(",", row.names(table))+2)
-	Factor <- substring(Group_Factor, 1, regexpr("=", Group_Factor)-1)
-	Group <- substring(Group_Factor, regexpr("=", Group_Factor)+1) 
-	Event <- substring(row.names(table), 1, regexpr(",", row.names(table))-1)
-	for(i in 1:(rows-1)){
-		j <- 1
-		while(Factor[i]==Factor[i+j]){
-			Factor[i+j] <- ""
-			j <- j + 1
-			if ((i+j)>rows) break
-		}
-	}
-
-	if(colnames(table)[2]==gettext(domain="R-RcmdrPlugin.EZR", "incidence")){
-		table[,2] <- paste(table[,2], " ", table[,3], sep="")
-		table <- table[,c(1,2,4,5)]
-		if(en==1){
-			colnames(table)[1:4] <- c("n", "incidence", "median time", "p.value")
-		} else {
-			colnames(table)[1:4] <- gettext(domain="R-RcmdrPlugin.EZR", c("n", "incidence", "median time", "p.value"))
-		}
-	} else {
-		if(en==1){
-			colnames(table)[1:3] <- c("n", "median time", "p.value")
-		} else {
-			colnames(table)[1:3] <- gettext(domain="R-RcmdrPlugin.EZR", c("n", "median time", "p.value"))
-		}
-	}
-
-	table <- cbind(Factor, Group, Event, table)
-	rownames(table) <- NULL
-	if (en==0) colnames(table)[1:3] <- gettext(domain="R-RcmdrPlugin.EZR", c("Factor", "Group", "Event"))
-	print(table)
-	print(paste("Write to ", filename, sep=""))
- 
-	if (filename=="clipboard"){
-		write.table(data.frame(table), "clipboard", sep="\t", row.names=FALSE)
-	} else {
-		write.csv(data.frame(table), file=as.character(filename))
-	}
+w.ci <- function (table = ci.summary.table, filename = "clipboard", en = 1) {
+    rows <- length(table[, 1])
+    columns <- length(table)
+    Group_Factor <- substring(row.names(table), regexpr(",", 
+        row.names(table)) + 2)
+    Factor <- substring(Group_Factor, 1, regexpr("=", Group_Factor) - 
+        1)
+    Group <- substring(Group_Factor, regexpr("=", Group_Factor) + 
+        1)
+    Event <- substring(row.names(table), 1, regexpr(",", row.names(table)) - 
+        1)
+    for (i in 1:(rows - 1)) {
+        j <- 1
+        while (Factor[i] == Factor[i + j]) {
+            Factor[i + j] <- ""
+            j <- j + 1
+            if ((i + j) > rows) 
+                break
+        }
+    }
+    if (colnames(table)[2] == gettext(domain = "R-RcmdrPlugin.EZR", 
+        "incidence")) {
+        table[, 2] <- paste(table[, 2], " ", table[, 3], sep = "")
+        table <- table[, c(1, 2, 4, 5)]
+        if (en == 1) {
+            colnames(table)[1:4] <- c("n", "incidence", "median time", 
+                "p.value")
+        }
+        else {
+            colnames(table)[1:4] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+                c("n", "incidence", "median time", "p.value"))
+        }
+    }
+    else {
+        if (en == 1) {
+            colnames(table)[1:3] <- c("n", "median time", "p.value")
+        }
+        else {
+            colnames(table)[1:3] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+                c("n", "median time", "p.value"))
+        }
+    }
+    table <- cbind(Factor, Group, Event, table)
+    rownames(table) <- NULL
+    if (en == 0) 
+        colnames(table)[1:3] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+            c("Factor", "Group", "Event"))
+    print(table, quote=FALSE, row.names=FALSE, col.names=TRUE)
+#    print(table)
+#    print(paste("Write to ", filename, sep = ""))
+    if (filename == "clipboard") {
+        write.table(data.frame(table), "clipboard", sep = "\t", 
+            row.names = FALSE)
+    }
+    else {
+        write.csv(data.frame(table), file = as.character(filename), row.names = FALSE)
+    }
 }
 
 
@@ -530,16 +623,8 @@ epi.kappa <- function (dat, conf.level = 0.95)
 }
 
 
-dot.plot <- function(   x,                                              
-                        y,                                              
-                        accu=0,                                         
-                        stp=0,                                          
-                        log.flag=FALSE,                                 
-                        simple=FALSE,                                   
-                        symmetrical=TRUE,                               
-                        ...)                                            
+dot.plot <- function(x, y, accu=0, stp=0, log.flag=FALSE, simple=FALSE, symmetrical=TRUE, ...) {                                           
        #modified from http://aoki2.si.gunma-u.ac.jp/R/dot_plot.html
-{
         OK <- complete.cases(x, y)                                      
         x <- x[OK]
         x <- as.factor(x)
@@ -1423,6 +1508,343 @@ print.ci.summary <- function (x, ..., ci, res) {
 }
 
 
+StatMedTableOne  <- function(){
+    Library("tableone")
+	defaults <- list(group=NULL, cat=NULL, cont=NULL, contnonnormal=NULL, exact="auto", range="TRUE", explain="FALSE", output="clipboard", language="1", subset = "")
+	dialog.values <- getDialog("StatMedTableOne", defaults)
+	currentFields$subset <- dialog.values$subset	
+	currentModel <- TRUE
+	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Summary table of sample characteristics"))
+    groupBox <- variableListBox(top, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Grouping variable(pick 0 or 1)"), listHeight=10, initialSelection=varPosn(dialog.values$group, "all"))
+    variableFrame <- tkframe(top)
+    categoryBox <- variableListBox(variableFrame, Variables(), selectmode="multiple", title=gettext(domain="R-RcmdrPlugin.EZR","Categorical variables"), listHeight=10, initialSelection=varPosn(dialog.values$cat, "all"))
+    contBox <- variableListBox(variableFrame, Variables(), selectmode="multiple", title=gettext(domain="R-RcmdrPlugin.EZR","Continuous variables (normal distribution)"), listHeight=10, initialSelection=varPosn(dialog.values$cont, "all"))
+    contnonnormalBox <- variableListBox(variableFrame, Variables(), selectmode="multiple", title=gettext(domain="R-RcmdrPlugin.EZR","Continuous variables (non-normal distribution)"), listHeight=10, initialSelection=varPosn(dialog.values$contnonnormal, "all"))
+    optionsFrame <- tkframe(top)
+    radioButtons(optionsFrame, name="exact", buttons=c("chisq", "fisher", "auto"), values=c("chisq", "exact", "auto"),
+        initialValue=dialog.values$exact, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Chi-square test with continuity correction", "Fisher's exact test",  "Automatic selection")), title=gettext(domain="R-RcmdrPlugin.EZR","Test for categorical variables"))
+    radioButtons(optionsFrame, name="range", buttons=c("MinMax", "IQR"), values=c("TRUE", "FALSE"),
+        initialValue=dialog.values$range, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Minimum and maximum values", "Interquartile ranges")), title=gettext(domain="R-RcmdrPlugin.EZR","Range for non-normal categorical variables"))			
+    radioButtons(optionsFrame, name="explain", buttons=c("No", "Yes"), values=c("FALSE", "TRUE"),
+        initialValue=dialog.values$explain, labels=gettext(domain="R-RcmdrPlugin.EZR",c("No", "Yes")), title=gettext(domain="R-RcmdrPlugin.EZR","Show explantation for continuous variables"))			
+    options2Frame <- tkframe(top)
+    radioButtons(options2Frame, name="output", buttons=c("Clipboard", "CSVfile"), values=c("clipboard", "CSVfile"),
+        initialValue=dialog.values$output, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Clipboard", "CSV file")), title=gettext(domain="R-RcmdrPlugin.EZR","Output destination"))			
+    radioButtons(options2Frame, name="language", buttons=c("Eng", "Local"), values=c("1", "0"),
+        initialValue=dialog.values$language, labels=gettext(domain="R-RcmdrPlugin.EZR",c("English", "Local")), title=gettext(domain="R-RcmdrPlugin.EZR","Language"))			
+	StatMedSubsetBox(model=TRUE)
+
+	onOK <- function(){
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Summary table of sample characteristics"), "#####", sep=""))
+    group <- getSelection(groupBox)
+    cat <- getSelection(categoryBox)
+    cont <- getSelection(contBox)
+    contnonnormal <- getSelection(contnonnormalBox)
+	exact <- tclvalue(exactVariable)	
+	range <- tclvalue(rangeVariable)	
+	explain <- tclvalue(explainVariable)	
+    output <- tclvalue(outputVariable)
+    language <- tclvalue(languageVariable)
+	dataSet <- activeDataSet()
+    subset <- tclvalue(subsetVariable)
+
+	putDialog("StatMedTableOne", list(group=group, cat=cat, cont=cont, contnonnormal=contnonnormal, exact=exact, range=range, explain=explain, output=output, language=language, subset = tclvalue(subsetVariable)))
+		if(output=="Screen") output <- ""		
+		if(output=="CSVfile") {
+			output <- tclvalue(tkgetSaveFile(filetypes=
+				gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Text Files" {".txt" ".TXT" ".csv" ".CSV"}}'),
+				defaultextension="csv", initialfile=paste("tableone.csv", sep=".")))
+			if (output == "") return()
+		}	
+		if (.Platform$OS.type != 'windows' & output=="clipboard"){
+            errorCondition(recall=StatMedTableOne, message=gettext(domain="R-RcmdrPlugin.EZR","Clipboard can be selected only in Windows."))
+            return()			
+		}
+
+    if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
+        || trim.blanks(subset) == ""){
+		subdataSet <- dataSet
+		}
+    else{
+		subdataSet <- paste("subset(", dataSet, ", ", subset, ")", sep="")
+	}
+	if (length(group==1)){
+		levels <- eval(parse(text=paste("length(levels(factor(", subdataSet, "$", group, ")))", sep="")))	
+	}
+	if (exact=="auto" & length(group)==0) exact <- "exact"
+	if (exact=="auto" & length(group)==1){
+		if (levels>=3){
+			exact <- "chisq"
+		} else{
+			exact <- "exact"
+		}
+	}	
+    if (length(cat)+length(cont)+length(contnonnormal)==0){
+            errorCondition(recall=StatMedTableOne, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable"))
+            return()
+	}
+
+    closeDialog()
+	
+#	doItAndPrint("matCatTable <- NULL")
+#	doItAndPrint("matContTable <- NULL")
+#	doItAndPrint("matContnonnormalTable <- NULL")
+	if(length(cat)>0){
+		catVariables <- paste('c("', cat[1], '"', sep="")
+		if(length(cat)>1){
+			for (i in 2:length(cat)) {
+				catVariables <- paste(catVariables, ', "', cat[i], '"', sep="")
+			}
+		}
+		catVariables <- paste(catVariables, ")", sep="")
+		if (length(group) == 0){
+			doItAndPrint(paste("CatTable <- CreateCatTable(vars = ", catVariables, ', data=', subdataSet, ")", sep=""))			
+		}else if(length(group)==1 & levels<2){
+			doItAndPrint(paste("CatTable <- CreateCatTable(vars = ", catVariables, ', data=', subdataSet, ")", sep=""))			
+		}else{
+			doItAndPrint(paste("CatTable <- CreateCatTable(vars = ", catVariables, ', strata="', group, '", data=', subdataSet, ")", sep=""))
+		}
+		if (exact=="chisq"){
+			doItAndPrint("matCatTable <- print(CatTable, printToggle = FALSE, showAllLevels = TRUE)")
+		} else if (exact=="exact"){
+			doItAndPrint(paste("matCatTable <- print(CatTable, printToggle = FALSE, showAllLevels = TRUE, exact=", catVariables, ")", sep=""))		
+		}	
+#		doItAndPrint("matCatTable <- data.frame(matCatTable)")
+		doItAndPrint('if(colnames(matCatTable)[length(colnames(matCatTable))]=="test"){\nmatCatTable<-matCatTable[,1:length(colnames(matCatTable))-1]\n}')
+		doItAndPrint("matCatTable <- cbind(Factor=row.names(matCatTable), matCatTable)")
+	}
+	if(length(cont)>0){
+		contVariables <- paste('c("', cont[1], '"', sep="")
+		if(length(cont)>1){
+			for (i in 2:length(cont)) {
+				contVariables <- paste(contVariables, ', "', cont[i], '"', sep="")
+			}
+		}
+		contVariables <- paste(contVariables, ")", sep="")
+		if (length(group) == 0){
+			doItAndPrint(paste("ContTable <- CreateContTable(vars = ", contVariables, ', data=', subdataSet, ")", sep=""))			
+		}else if(length(group)==1 & levels<2){
+			doItAndPrint(paste("ContTable <- CreateContTable(vars = ", contVariables, ', data=', subdataSet, ")", sep=""))			
+		}else{
+			doItAndPrint(paste("ContTable <- CreateContTable(vars = ", contVariables, ', strata="', group, '", data=', subdataSet, ")", sep=""))
+		}
+		doItAndPrint(paste("matContTable <- print(ContTable, printToggle = FALSE, explain = ", explain, ")", sep=""))
+#		doItAndPrint("matContTable <- data.frame(matContTable)")
+		doItAndPrint('if(colnames(matContTable)[length(colnames(matContTable))]=="test"){\nmatContTable<-matContTable[,1:length(colnames(matContTable))-1]\n}')
+		#Add a dummy column to ContTable, because CatTable has a grouping column
+		if(length(cat)>0) doItAndPrint('matContTable <- cbind(level="", matContTable)')
+		if(language==0 & explain=="TRUE") {
+			doItAndPrint('row.names(matContTable)[2:length(row.names(matContTable))] <- paste(substring(row.names(matContTable)[2:length(row.names(matContTable))], 1, nchar(row.names(matContTable)[2:length(row.names(matContTable))])-11), gettext(domain="R-RcmdrPlugin.EZR", "(mean (sd))"), sep="")')
+		}
+		doItAndPrint("matContTable <- cbind(Factor=row.names(matContTable), matContTable)")
+#		if(length(cat)>0) doItAndPrint("matContTable <- matContTable[2:length(rownames(matContTable)),]")
+	}
+	if(length(contnonnormal)>0){
+		contnonnormalVariables <- paste('c("', contnonnormal[1], '"', sep="")
+		if(length(contnonnormal)>1){
+			for (i in 2:length(contnonnormal)) {
+				contnonnormalVariables <- paste(contnonnormalVariables, ', "', contnonnormal[i], '"', sep="")
+			}
+		}
+		contnonnormalVariables <- paste(contnonnormalVariables, ")", sep="")
+		if (length(group) == 0) {
+			doItAndPrint(paste("ContnonnormalTable <- CreateContTable(vars = ", contnonnormalVariables, ', data=', subdataSet, ")", sep=""))			
+		}else if(length(group)==1 & levels<2){
+			doItAndPrint(paste("ContnonnormalTable <- CreateContTable(vars = ", contnonnormalVariables, ', data=', subdataSet, ")", sep=""))						
+		}else{
+			doItAndPrint(paste("ContnonnormalTable <- CreateContTable(vars = ", contnonnormalVariables, ', strata="', group, '", data=', subdataSet, ")", sep=""))
+		}
+		doItAndPrint(paste("matContnonnormalTable <- print(ContnonnormalTable, printToggle = FALSE, nonnormal = TRUE, explain = ", explain, ", minMax=", range, ")", sep=""))
+#		doItAndPrint("matContnonnormalTable <- data.frame(matContnonnormalTable)")
+		doItAndPrint('if(colnames(matContnonnormalTable)[length(colnames(matContnonnormalTable))]=="test"){\nmatContnonnormalTable<-matContnonnormalTable[,1:length(colnames(matContnonnormalTable))-1]\n}')
+		#Add a dummy column to ContTable, because CatTable has a grouping column
+		if(length(cat)>0) doItAndPrint('matContnonnormalTable <- cbind(level="", matContnonnormalTable)')
+		if(language==0 & explain=="TRUE") {
+			if(range=="TRUE"){
+				doItAndPrint('row.names(matContnonnormalTable)[2:length(row.names(matContnonnormalTable))] <- paste(substring(row.names(matContnonnormalTable)[2:length(row.names(matContnonnormalTable))], 1, nchar(row.names(matContnonnormalTable)[2:length(row.names(matContnonnormalTable))])-16), gettext(domain="R-RcmdrPlugin.EZR", "(median [range])"), sep="")')
+			} else {
+				doItAndPrint('row.names(matContnonnormalTable)[2:length(row.names(matContnonnormalTable))] <- paste(substring(row.names(matContnonnormalTable)[2:length(row.names(matContnonnormalTable))], 1, nchar(row.names(matContnonnormalTable)[2:length(row.names(matContnonnormalTable))])-14), gettext(domain="R-RcmdrPlugin.EZR", "(median [IQR])"), sep="")')			
+			}
+		}
+		doItAndPrint("matContnonnormalTable <- cbind(Factor=row.names(matContnonnormalTable), matContnonnormalTable)")
+#		if(length(cat)>0 | length(cont)>0) doItAndPrint("matContnonnormalTable <- matContnonnormalTable[2:length(rownames(matContnonnormalTable)),]")
+	}
+	if(length(cat)>0){
+		doItAndPrint("FinalTable <- as.matrix(matCatTable)")
+		ncol <- eval(parse(text=paste("length(colnames(FinalTable))")))	
+		doItAndPrint("tempStrata <- attributes(FinalTable)[[2]][2]")
+			if(length(cont>0)){
+#				doItAndPrint(paste("FinalTable <- rbind(FinalTable, matrix(matContTable, ncol=", ncol, "))", sep=""))
+#				doItAndPrint("FinalTable <- rbind(FinalTable, matContTable[2:length(rownames(matContTable)),])")
+				doItAndPrint("FinalTable <- rbind(FinalTable, matContTable)")
+			}
+			if(length(contnonnormal>0)){
+#				doItAndPrint(paste("FinalTable <- rbind(FinalTable, matrix(matContnonnormalTable, ncol=", ncol, "))", sep=""))				
+#				doItAndPrint("FinalTable <- rbind(FinalTable, matContnonnormalTable[2:length(rownames(matContnonnormalTable)),])")
+				doItAndPrint("FinalTable <- rbind(FinalTable, matContnonnormalTable)")
+			}
+	}
+	if(length(cat)==0 & length(cont)>0){
+		doItAndPrint("FinalTable <- as.matrix(matContTable)")
+		ncol <- eval(parse(text=paste("length(colnames(FinalTable))")))	
+		doItAndPrint("tempStrata <- attributes(FinalTable)[[2]][2]")
+			if(length(contnonnormal>0)){
+#				doItAndPrint(paste("FinalTable <- rbind(FinalTable, matrix(matContnonnormalTable, ncol=", ncol, "))", sep=""))				
+#				doItAndPrint("FinalTable <- rbind(FinalTable, matContnonnormalTable[2:length(rownames(matContnonnormalTable)),])")
+				doItAndPrint("FinalTable <- rbind(FinalTable, matContnonnormalTable)")
+			}
+	}
+	if(length(cat)==0 & length(cont)==0 & length(contnonnormal>0)){
+		doItAndPrint("FinalTable <- as.matrix(matContnonnormalTable)")
+		doItAndPrint("tempStrata <- attributes(FinalTable)[[2]][2]")
+	}	
+	doItAndPrint("attributes(FinalTable) <- c(list(dim=attributes(FinalTable)[[1]]), list(dimnames=c(attributes(FinalTable)[[2]][1], tempStrata)))")
+	if(length(cat)>0) doItAndPrint('colnames(FinalTable)[2] <- "Group"')
+	if(length(group)==1) {if (levels>1) doItAndPrint('colnames(FinalTable)[length(colnames(FinalTable))] <- "p.value"')}
+#	doItAndPrint("print(as.matrix(FinalTable), quote=FALSE)")
+#	doItAndPrint("FinalTable <- cbind(Factor=row.names(FinalTable), FinalTable)")
+	if(language==0) {
+		doItAndPrint('colnames(FinalTable) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(FinalTable))')
+#		doItAndPrint('colnames(FinalTable)[1] <- gettext(domain="R-RcmdrPlugin.EZR", "Factor")')
+#		doItAndPrint('if(colnames(FinalTable)[2] == "Group") colnames(FinalTable)[2] <- gettext(domain="R-RcmdrPlugin.EZR", "Group")')		
+#		if(length(group)==1) {if (levels>1) doItAndPrint('colnames(FinalTable)[length(colnames(FinalTable))] <- gettext(domain="R-RcmdrPlugin.EZR","p.value")')}
+	}
+	doItAndPrint("row0 <- colnames(FinalTable)")
+	doItAndPrint("row1 <- FinalTable[1,]")
+	doItAndPrint("row1 <- matrix(row1, nrow=1)")
+	doItAndPrint("colnames(row1) <- row0")
+	doItAndPrint('FinalTable <- FinalTable[which(rownames(FinalTable)!="n"),]')
+	doItAndPrint("FinalTable <- rbind(n=row1, FinalTable)")
+#	doItAndPrint("row.names(FinalTable) <- NULL")
+
+	if(length(cat)>0){
+		doItAndPrint("print(FinalTable[,2:length(FinalTable[1,])], quote=FALSE)")
+	} else if (length(group)==1){
+		if(levels>1){
+			if(length(cont)==1 && length(contnonnormal)==0){
+				doItAndPrint(paste('rownames(FinalTable) <- c("n", "', cont[1], '")',sep="")) 
+			}
+			if(length(cont)==0 && length(contnonnormal)==1){
+				doItAndPrint(paste('rownames(FinalTable) <- c("n", "', contnonnormal[1], '")',sep="")) 
+			}
+			doItAndPrint("print(FinalTable[,2:length(FinalTable[1,])], quote=FALSE)")
+		} else {		
+			doItAndPrint('rownames(FinalTable) <- rep("", length(rownames(FinalTable)))')
+			doItAndPrint("print(FinalTable, quote=F)")
+		}
+	} else {
+			doItAndPrint('rownames(FinalTable) <- rep("", length(rownames(FinalTable)))')
+			doItAndPrint("print(FinalTable, quote=F)")
+	}	
+	#	doItAndPrint("FinalTable <- cbind(Factor=row.names(FinalTable), FinalTable)")
+	doItAndPrint("FinalTable <- rbind(row0, FinalTable)")
+	if(length(group)==1) {
+		if (levels>1) {
+			doItAndPrint('row0 <- rep("", length(colnames(FinalTable)))')
+			if(length(cat)==0){
+				doItAndPrint(paste('row0[2] <- "', group, '"', sep=""))
+			}else{
+				doItAndPrint(paste('row0[3] <- "', group, '"', sep=""))			
+			}
+			doItAndPrint("FinalTable <- rbind(row0, FinalTable)")
+		}
+	}
+	if (output=="clipboard"){
+		doItAndPrint('write.table(FinalTable, "clipboard", sep="\t", row.names=FALSE, col.names=FALSE)')
+	} else {
+		doItAndPrint(paste('write.table(FinalTable, file="', output, '", sep=",", row.names=FALSE, col.names=FALSE)', sep=""))	
+	}
+	tkfocus(CommanderWindow())
+  }
+  OKCancelHelp(helpSubject="tableone", apply="StatMedTableOne", reset="StatMedTableOne")
+    tkgrid(getFrame(groupBox), sticky="nw")
+    tkgrid(getFrame(categoryBox), labelRcmdr(variableFrame, text="    "), getFrame(contBox), labelRcmdr(variableFrame, text="    "), getFrame(contnonnormalBox), sticky="nw")
+    tkgrid(variableFrame, sticky="nw")
+	tkgrid(exactFrame, labelRcmdr(optionsFrame, text="   "), rangeFrame, labelRcmdr(optionsFrame, text="   "), explainFrame, sticky="nw")	
+	tkgrid(optionsFrame, sticky="w")
+	tkgrid(outputFrame, labelRcmdr(options2Frame, text="   "), languageFrame, sticky="nw")	
+	tkgrid(options2Frame, sticky="w")
+	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Clipboard can be selected only in Windows."), fg="blue"), sticky="w")
+	tkgrid(subsetFrame, sticky="w")
+  tkgrid(buttonsFrame, sticky="w")
+  dialogSuffix(rows=7, columns=1)
+}
+
+
+objectCheck <- function(name, obj){
+	#obj <- objects() should be performed before executing this function.
+	#Used in StatMedSummaryResults
+	present <- 0
+	for(i in 1:length(obj)){
+		if (name==obj[i]) present <- 1
+	}
+#	if (present==0) print(paste("Object ", name, " was not found.", sep=""))
+	if (present==0) print(gettext(domain="R-RcmdrPlugin.EZR","You must perform analysis before outputting."))
+	return(present)
+}
+
+
+StatMedSummaryResults <- function() {
+	defaults <- list(analysis="twoway", output="clipboard", language="1")
+	dialog.values <- getDialog("StatMedSummaryResults", defaults)
+	currentModel <- TRUE
+    initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Summary table of results"))
+    optionsFrame <- tkframe(top)
+	radioButtons(optionsFrame, name="analysis", buttons=c("twoway", "ttest", "survival", "ci", "logistic", "multireg", "cox", "finegray"), values=c("twoway", "ttest", "survival", "ci", "logistic", "multireg", "cox", "finegray"), initialValue=dialog.values$analysis, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Two-way table", "T-test",  "Survival test", "Cumulative incidence", "Multivariate logistic regression", "Multivariate linear regression", "Proportional hazard regression", "Fine-Gray regression")), title=gettext(domain="R-RcmdrPlugin.EZR","Test for outputting result"))
+    radioButtons(optionsFrame, name="output", buttons=c("Clipboard", "CSVfile"), values=c("clipboard", "CSVfile"),
+        initialValue=dialog.values$output, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Clipboard", "CSV file")), title=gettext(domain="R-RcmdrPlugin.EZR","Output destination"))			
+    radioButtons(optionsFrame, name="language", buttons=c("Eng", "Local"), values=c("1", "0"),
+        initialValue=dialog.values$language, labels=gettext(domain="R-RcmdrPlugin.EZR",c("English", "Local")), title=gettext(domain="R-RcmdrPlugin.EZR","Language"))			
+    onOK <- function(){
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Summary table of results"), "#####", sep=""))
+        analysis <- tclvalue(analysisVariable)
+        output <- tclvalue(outputVariable)
+        language <- tclvalue(languageVariable)
+		putDialog("StatMedSummaryResults", list(analysis=analysis, output=output, language=language))
+		if(analysis=="twoway") table <- "Fisher.summary.table"
+		if(analysis=="ttest") table <- "summary.ttest"
+		if(analysis=="survival") table <- "km.summary.table"
+		if(analysis=="ci") table <- "ci.summary.table"
+		if(analysis=="logistic") table <- "odds"
+		if(analysis=="multireg") table <- "multireg.table"
+		if(analysis=="cox") table <- "cox.table"
+		if(analysis=="finegray") table <- "crr.table"		
+		if(output=="Screen") output <- ""
+		if(output=="CSVfile") {
+			output <- tclvalue(tkgetSaveFile(filetypes=
+				gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Text Files" {".txt" ".TXT" ".csv" ".CSV"}}'),
+				defaultextension="csv", initialfile=paste(table, "csv", sep=".")))
+			if (output == "") return()
+		}	
+		if (.Platform$OS.type != 'windows' & output=="clipboard"){
+            errorCondition(recall=StatMedSummaryResults, message=gettext(domain="R-RcmdrPlugin.EZR","Clipboard can be selected only in Windows."))
+            return()			
+		}
+#		findobject <- eval(parse(text=paste('objectCheck("', table, '", objects())', sep="")))
+#		doItAndPrint(paste('findobject <- objectCheck("', table, '", objects())', sep=""))
+#		if(findobject==0){
+#            errorCondition(recall=StatMedSummaryResults, message=gettext(domain="R-RcmdrPlugin.EZR","You must perform analysis before outputting."))
+#            return()		
+#		}
+		if(analysis=="twoway") doItAndPrint(paste('if(objectCheck("Fisher.summary.table", objects())) w.twoway(Fisher.summary.table, filename="', output, '", en=', language, ")", sep=""))
+		if(analysis=="ttest") doItAndPrint(paste('if(objectCheck("summary.ttest", objects())) w.ttest(summary.ttest, filename="', output, '", en=', language, ")", sep=""))
+		if(analysis=="survival") doItAndPrint(paste('if(objectCheck("km.summary.table", objects())) w.survival(km.summary.table, filename = "', output, '", en=', language, ")", sep=""))
+		if(analysis=="ci") doItAndPrint(paste('if(objectCheck("ci.summary.table", objects())) w.ci(ci.summary.table, filename = "', output, '", en=', language, ")", sep=""))
+		if(analysis=="logistic") doItAndPrint(paste('if(objectCheck("odds", objects())) w.multi(odds, filename = "', output, '", en=', language, ")", sep=""))
+		if(analysis=="multireg") doItAndPrint(paste('if(objectCheck("multireg.table", objects())) w.multireg(multireg.table, filename = "', output, '", en=', language, ")", sep=""))
+		if(analysis=="cox") doItAndPrint(paste('if(objectCheck("cox.table", objects())) w.multi(cox.table, filename = "', output, '", en=', language, ")", sep=""))
+		if(analysis=="finegray") doItAndPrint(paste('if(objectCheck("crr.table", objects())) w.multi(crr.table, filename = "', output, '", en=', language, ")", sep=""))			
+        closeDialog()
+        }
+    OKCancelHelp(helpSubject="w.multi")
+	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Clipboard can be selected only in Windows."), fg="blue"), sticky="w")
+	tkgrid(analysisFrame, labelRcmdr(optionsFrame, text="   "), outputFrame, labelRcmdr(optionsFrame, text="   "), languageFrame, sticky="nw")	
+	tkgrid(optionsFrame, sticky="w")
+    tkgrid(buttonsFrame, columnspan=2, sticky="w")
+    dialogSuffix(rows=7, columns=2)
+}
+
+
 stsplit <- function (dataframe, timetoevent, event, timeon, covariate, timeoff){
 	Temp1 <- dataframe
 	PatientsNumber <- length(Temp1[,1])
@@ -1465,15 +1887,9 @@ stsplit <- function (dataframe, timetoevent, event, timeon, covariate, timeoff){
 }
 
 
-Mantel.Byar <- function(Group=TempTD$covariate_td,	
-                        Event=TempTD$endpoint_td,	
-                        StartTime=TempTD$start_td,	
-						StopTime=TempTD$stop_td,
-                        method=c("SAS", "Tominaga"))        		#SAS or Tominaga
-{
-
-#modified from logrank test in http://aoki2.si.gunma-u.ac.jp/R/logrank.html
-#Reuire TempTD dataset created by Cox with TD variable in EZR
+Mantel.Byar <- function(Group=TempTD$covariate_td, Event=TempTD$endpoint_td, StartTime=TempTD$start_td,	StopTime=TempTD$stop_td, method=c("SAS", "Tominaga")) {
+	#modified from logrank test in http://aoki2.si.gunma-u.ac.jp/R/logrank.html
+	#Reuire TempTD dataset created by Cox with TD variable in EZR
 	method <- match.arg(method)
 	data.name <- sprintf("StartTime: %s, StopTime: %s, Event: %s, Group: %s",
                 deparse(substitute(StartTime)),
@@ -8300,6 +8716,7 @@ putDialog("StatMedLinearRegression", list(x=x, y=y, wald=wald, actmodel=actmodel
 		logger("###variance inflation factors")
 		doItAndPrint('colnames(res$coefficients) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(res$coefficients))')
 		doItAndPrint("res$coefficients")
+		doItAndPrint("multireg.table <- res$coefficients")
 		doItAndPrint("remove(res)")
 		if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
 		if (diagnosis==1){
@@ -13885,8 +14302,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.22", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","Feburuary 13, 2014"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.23", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","March 1, 2014"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -13991,7 +14408,7 @@ EZRhelp <- function(){
 	flag <- 0
 	for(i in search()) if(i=="package:RcmdrPlugin.EZR")flag <- 1
 	if(flag==0){
-		doItAndPrint('browseURL(paste(file.path(.path.package(package="Rcmdr"), "doc"), "/", "EZR.htm", sep=""))')
+		doItAndPrint('browseURL(paste(file.path(path.package(package="Rcmdr"), "doc"), "/", "EZR.htm", sep=""))')
 	}else{
 		doItAndPrint("help(EZR)")
 	}
@@ -13999,7 +14416,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.22", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.23", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -14056,4 +14473,8 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'saveOutput', '.commander.done', 'ci.summary.table', 'cox.table',
 'km.summary.table', 'summary.ttest', 'Fisher.summary.table', 
 'StatMedcloseCommander', 'hist2', 'separatestrata', 'diagnosisVariable',
-'martinVariable', 'res', 'HistEZR', 'QQPlot', '.Workbook', 'par.lwd', 'par.cex'))
+'martinVariable', 'res', 'HistEZR', 'QQPlot', '.Workbook', 'par.lwd', 'par.cex',
+'getSheets', 'analysisVariable', 'outputVariable', 'languageVariable',
+'analysisFrame', 'outputFrame', 'languageFrame', 'exactVariable', 
+'rangeVariable', 'explainVariable', 'exactFrame', 'rangeFrame',
+'explainFrame', 'multireg.table'))

@@ -114,6 +114,8 @@
 \alias{StatMedStripChart}
 \alias{StatMedSubsetBox}
 \alias{StatMedSubsetDataSet}
+\alias{StatMedSummaryResults}
+\alias{StatMedTableOne}
 \alias{StatMedTest}
 \alias{StatMedTtest}
 \alias{StatMedTwoWayTable}
