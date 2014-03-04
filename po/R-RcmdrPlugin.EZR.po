@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2014-02-12 17:12+0900\n"
+"PO-Revision-Date: 2014-03-04 12:39+0900\n"
 "Last-Translator: \n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
@@ -4436,7 +4436,7 @@ msgstr "文書を保存"
 msgid "Save document and exit?"
 msgstr "文書を保存して終了？"
 
-########## for EZR ##########
+############################################## for EZR #########################################
 msgid "New data set"
 msgstr "新しいデータセットを作成する(直接入力)"
 
@@ -6200,4 +6200,103 @@ msgstr "X軸のラベル"
 
 msgid "Y axis lavel"
 msgstr "Y軸のラベル"
+
+msgid "Create summary table"
+msgstr "背景データのサマリー表を作成"
+
+msgid "Categorical variables"
+msgstr "カテゴリー変数(名義変数、順序変数)"
+
+msgid "Continuous variables (normal distribution)"
+msgstr "連続変数(正規分布)"
+
+msgid "Continuous variables (non-normal distribution)"
+msgstr "連測変数(非正規分布)"
+
+msgid "Test for categorical variables"
+msgstr "カテゴリー変数の検定方法"
+
+msgid "Automatic selection"
+msgstr "自動選択"
+
+msgid "Range for non-normal categorical variables"
+msgstr "正規分布しない連続変数の範囲表示"
+
+msgid "Minimum and maximum values"
+msgstr "最小値と最大値"
+
+msgid "Interquartile ranges"
+msgstr "四分位数範囲(Q1-Q3)"
+
+msgid "Show explantation for continuous variables"
+msgstr "連続変数に表示の注釈を加える"
+
+msgid "Graphs and tables"
+msgstr "グラフと表"
+
+msgid "Summary table of sample characteristics"
+msgstr "サンプルの背景データのサマリー表の出力"
+
+msgid "Summary table of results"
+msgstr "解析結果のサマリー表の出力"
+
+msgid "You must perform analysis before outputting."
+msgstr "解析を実行してから出力してください"
+
+msgid "Language"
+msgstr "表示言語"
+
+msgid "English"
+msgstr "英語"
+
+msgid "Local"
+msgstr "日本語"
+
+msgid "Test for outputting result"
+msgstr "出力する解析結果"
+
+msgid "Clipboard can be selected only in Windows."
+msgstr "クリップボードへの出力はWindowsのみで可能"
+
+msgid "Output destination"
+msgstr "出力先"
+
+msgid "Two-way table"
+msgstr "二分割表"
+
+msgid "T-test"
+msgstr "t検定"
+
+msgid "Survival test"
+msgstr "生存解析"
+
+msgid "Cumulative incidence"
+msgstr "累積発生解析"
+
+msgid "Multivariate logistic regression"
+msgstr "ロジスティック回帰"
+
+msgid "Multivariate linear regression"
+msgstr "線形重回帰"
+
+msgid "Proportional hazard regression"
+msgstr "Cox比例ハザード回帰"
+
+msgid "Fine-Gray regression"
+msgstr "Fine-Gray比例ハザード回帰"
+
+msgid "CSV file"
+msgstr "CSVファイル"
+
+msgid "Overall"
+msgstr "全サンプル"
+
+msgid "(mean (sd))"
+msgstr "(平均値(標準偏差))"
+
+msgid "(median [IQR])"
+msgstr "(中央値[四分位範囲])"
+
+msgid "(median [range])"
+msgstr "(中央値[範囲])"
 
