@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.23", "\n")
+cat("   Version 1.24", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -10298,7 +10298,12 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 #        logger(paste(modelValue, " <- ", command, sep=""))
 #        assign(modelValue, justDoIt(command), envir=.GlobalEnv)
         doItAndPrint(paste(modelValue, " <- ", command, sep=""))
-        doItAndPrint(paste("summary(", modelValue, ")", sep=""))
+        doItAndPrint(paste("summary(", modelValue, ")", sep=""))	
+		x <- strsplit(tclvalue(rhsVariable), split="\\+")
+		command <- paste("TempDF <- with(", ActiveDataSet(), ", ", ActiveDataSet(), "[complete.cases(", paste(x[[1]], collapse=","), "),])", sep="")
+		doItAndPrint(command)
+		doItAndPrint(paste("GLM.null <- glm(", tclvalue(lhsVariable), "~1, family=binomial(logit), data=TempDF", subset, ")", sep=""))
+		doItAndPrint(paste("anova(", modelValue, ', GLM.null, test="Chisq")', sep=""))
         doItAndPrint(paste("vif(", modelValue, ")", sep=""))
 		logger("###variance inflation factors")
 		doItAndPrint(paste("odds <- data.frame(exp( summary(", modelValue, ")$coef[,1:2] %*% rbind(c(1,1,1), 1.96*c(0,-1,1))))", sep=""))
@@ -10314,9 +10319,6 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 			doItAndPrint("par(oldpar)")			
 		}
 		if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
-			x <- strsplit(tclvalue(rhsVariable), split="\\+")
-			command <- paste("TempDF <- with(", ActiveDataSet(), ", ", ActiveDataSet(), "[complete.cases(", paste(x[[1]], collapse=","), "),])", sep="")
-			doItAndPrint(command)
 			command <- paste("glm(", formula, ", family=binomial(logit), data=TempDF", subset, ")", sep="")
 			doItAndPrint(paste(modelValue, " <- ", command, sep=""))
 			}
@@ -14302,8 +14304,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.23", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","March 1, 2014"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.24", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","April 1, 2014"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -14416,7 +14418,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.23", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.24", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
