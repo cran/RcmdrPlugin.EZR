@@ -14,6 +14,7 @@
 \alias{StatMedCloseCommander}
 \alias{StatMedCochranQ}
 \alias{StatMedCompute}
+\alias{StatMedCopyDataset}
 \alias{StatMedCorrelation}
 \alias{StatMedCountMissing}
 \alias{StatMedCoxRegression}
@@ -56,6 +57,7 @@
 \alias{StatMedMannW}
 \alias{StatMedMcNemar}
 \alias{StatMedMeanCI}
+\alias{StatMedMergeDatasets}
 \alias{StatMedMeta}
 \alias{StatMedMetaCont}
 \alias{StatMedMetaHazard}
@@ -81,6 +83,7 @@
 \alias{StatMedProbRatioCI}
 \alias{StatMedProbSingle}
 \alias{StatMedPropTrend}
+\alias{StatMedRenameDataset}
 \alias{StatMedROC}
 \alias{StatMedROCtest}
 \alias{StatMedReadDataSet}

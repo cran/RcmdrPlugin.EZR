@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.24", "\n")
+cat("   Version 1.25", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -135,22 +135,22 @@ w.multi <- function (table = cox.table, filename = "clipboard", CI = 0, signif =
         table2 <- table2[, 1:2]
     }
     table2 <- cbind(rownames(table2), table2)
-    colnames(table2)[1] <- ifelse(en == 1, "Factor", gettext(domain = "R-RcmdrPlugin.EZR", 
+    colnames(table2)[1] <- ifelse(en == 1, "Factor", gettext(domain="R-RcmdrPlugin.EZR", 
         "Factor"))
     rownames(table2) <- NULL
-    if (en == 1 & colnames(table2)[2] == gettext(domain = "R-RcmdrPlugin.EZR", 
+    if (en == 1 & colnames(table2)[2] == gettext(domain="R-RcmdrPlugin.EZR", 
         "Hazard ratio")) 
         colnames(table2)[2] <- "Hazard ratio"
-    if (en == 1 & colnames(table2)[2] == gettext(domain = "R-RcmdrPlugin.EZR", 
+    if (en == 1 & colnames(table2)[2] == gettext(domain="R-RcmdrPlugin.EZR", 
         "odds ratio")) 
         colnames(table2)[2] <- "Odds ratio"
     if (en == 1 & CI == 1) 
         colnames(table2)[3:4] <- c("Lower 95%CI", "Upper 95%CI")
     if (CI == 0) 
-        colnames(table2)[3] <- ifelse(en == 1, "p.value", gettext(domain = "R-RcmdrPlugin.EZR", 
+        colnames(table2)[3] <- ifelse(en == 1, "p.value", gettext(domain="R-RcmdrPlugin.EZR", 
             "p.value"))
     if (CI == 1) 
-        colnames(table2)[5] <- ifelse(en == 1, "p.value", gettext(domain = "R-RcmdrPlugin.EZR", 
+        colnames(table2)[5] <- ifelse(en == 1, "p.value", gettext(domain="R-RcmdrPlugin.EZR", 
             "p.value"))
     print(data.frame(table2), quote=FALSE, row.names=FALSE, col.names=TRUE)
 #    print(table2)
@@ -183,7 +183,7 @@ w.multireg <- function (table = multireg.table, filename = "clipboard", CI = 0, 
 	if(en==1){
 		colnames(table) <- c("Factor", "Estimate", "Std. Error", "t value", "p.value")
 	} else {
-		colnames(table) <- gettext(domain = "R-RcmdrPlugin.EZR", c("Factor", "Estimate", "Std. Error", "t value", "p.value"))
+		colnames(table) <- gettext(domain="R-RcmdrPlugin.EZR", c("Factor", "Estimate", "Std. Error", "t value", "p.value"))
 	}
     rownames(table) <- NULL
 	print(data.frame(table), quote=FALSE, row.names=FALSE, col.names=TRUE)
@@ -226,7 +226,7 @@ w.twoway <- function (table = Fisher.summary.table, filename = "clipboard", en =
 #    rownames(table) <- NULL
     colnames(table)[length(colnames(table))] <- ifelse(en == 
         1, "p.value", gettextRcmdr("p.value"))
-    if (en == 0) colnames(table) <- gettext(domain = "R-RcmdrPlugin.EZR", colnames(table))
+    if (en == 0) colnames(table) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(table))
     print(data.frame(table), quote=F, row.names = FALSE, col.names = FALSE)
     ncol <- length(colnames(table))
     row1 <- colnames(table)
@@ -272,10 +272,10 @@ w.ttest <- function (table = summary.ttest, filename = "clipboard", en = 1) {
     colnames(table)[1] <- "mean +- SD"
     table <- cbind(Factor, Group, table)
     rownames(table) <- NULL
-    colnames(table)[4] <- ifelse(en == 1, "p.value", gettext(domain = "R-RcmdrPlugin.EZR", 
+    colnames(table)[4] <- ifelse(en == 1, "p.value", gettext(domain="R-RcmdrPlugin.EZR", 
         "p.value"))
     if (en == 0) 
-        colnames(table)[1:3] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+        colnames(table)[1:3] <- gettext(domain="R-RcmdrPlugin.EZR", 
             c("Factor", "Group", "mean +- SD"))
     print(data.frame(table), quote=FALSE, row.names=FALSE)
 #    print(table)
@@ -306,7 +306,7 @@ w.survival <- function (table = km.summary.table, filename = "clipboard", en = 1
                 break
         }
     }
-    if (colnames(table)[2] == gettext(domain = "R-RcmdrPlugin.EZR", 
+    if (colnames(table)[2] == gettext(domain="R-RcmdrPlugin.EZR", 
         "median survival")) {
         table[, 2] <- paste(table[, 2], " (", table[, 3], ")", 
             sep = "")
@@ -316,11 +316,11 @@ w.survival <- function (table = km.summary.table, filename = "clipboard", en = 1
                 "p.value")
         }
         else {
-            colnames(table)[1:3] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+            colnames(table)[1:3] <- gettext(domain="R-RcmdrPlugin.EZR", 
                 c("n", "median survival", "p.value"))
         }
     }
-    if (colnames(table)[2] == gettext(domain = "R-RcmdrPlugin.EZR", 
+    if (colnames(table)[2] == gettext(domain="R-RcmdrPlugin.EZR", 
         "survival rate")) {
         table[, 2] <- paste(table[, 2], " ", table[, 3], sep = "")
         table[, 4] <- paste(table[, 4], " (", table[, 5], ")", 
@@ -331,14 +331,14 @@ w.survival <- function (table = km.summary.table, filename = "clipboard", en = 1
                 "p.value")
         }
         else {
-            colnames(table)[1:4] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+            colnames(table)[1:4] <- gettext(domain="R-RcmdrPlugin.EZR", 
                 c("n", "survival rate", "median survival", "p.value"))
         }
     }
     table <- cbind(Factor, Group, table)
     rownames(table) <- NULL
     if (en == 0) 
-        colnames(table)[1:2] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+        colnames(table)[1:2] <- gettext(domain="R-RcmdrPlugin.EZR", 
             c("Factor", "Group"))
     print(table, quote=FALSE, row.names=FALSE, col.names=TRUE)
 #    print(table)
@@ -373,7 +373,7 @@ w.ci <- function (table = ci.summary.table, filename = "clipboard", en = 1) {
                 break
         }
     }
-    if (colnames(table)[2] == gettext(domain = "R-RcmdrPlugin.EZR", 
+    if (colnames(table)[2] == gettext(domain="R-RcmdrPlugin.EZR", 
         "incidence")) {
         table[, 2] <- paste(table[, 2], " ", table[, 3], sep = "")
         table <- table[, c(1, 2, 4, 5)]
@@ -382,7 +382,7 @@ w.ci <- function (table = ci.summary.table, filename = "clipboard", en = 1) {
                 "p.value")
         }
         else {
-            colnames(table)[1:4] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+            colnames(table)[1:4] <- gettext(domain="R-RcmdrPlugin.EZR", 
                 c("n", "incidence", "median time", "p.value"))
         }
     }
@@ -391,14 +391,14 @@ w.ci <- function (table = ci.summary.table, filename = "clipboard", en = 1) {
             colnames(table)[1:3] <- c("n", "median time", "p.value")
         }
         else {
-            colnames(table)[1:3] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+            colnames(table)[1:3] <- gettext(domain="R-RcmdrPlugin.EZR", 
                 c("n", "median time", "p.value"))
         }
     }
     table <- cbind(Factor, Group, Event, table)
     rownames(table) <- NULL
     if (en == 0) 
-        colnames(table)[1:3] <- gettext(domain = "R-RcmdrPlugin.EZR", 
+        colnames(table)[1:3] <- gettext(domain="R-RcmdrPlugin.EZR", 
             c("Factor", "Group", "Event"))
     print(table, quote=FALSE, row.names=FALSE, col.names=TRUE)
 #    print(table)
@@ -1887,7 +1887,7 @@ stsplit <- function (dataframe, timetoevent, event, timeon, covariate, timeoff){
 }
 
 
-Mantel.Byar <- function(Group=TempTD$covariate_td, Event=TempTD$endpoint_td, StartTime=TempTD$start_td,	StopTime=TempTD$stop_td, method=c("SAS", "Tominaga")) {
+Mantel.Byar <- function(Group=TempTD$covariate_td, Event=TempTD$endpoint_td, StartTime=TempTD$start_td,	StopTime=TempTD$stop_td, method=c("SAS", "Tominaga"), plot=0) {
 	#modified from logrank test in http://aoki2.si.gunma-u.ac.jp/R/logrank.html
 	#Reuire TempTD dataset created by Cox with TD variable in EZR
 	method <- match.arg(method)
@@ -1949,6 +1949,29 @@ Mantel.Byar <- function(Group=TempTD$covariate_td, Event=TempTD$endpoint_td, Sta
 #			print (paste("HR = ", HR, sep="") )			
 	}
 	P <- pchisq(chi, 1, lower.tail=FALSE)
+	if(plot==1){							#Currently, plot function does not work correctly, when subset was defined.
+		km <- survfit(Surv(StartTime,StopTime,Event)~Group, na.action = na.omit, conf.type="log-log")
+		diff <- survdiff(Surv(StopTime,Event)~Group)
+		summary(km)
+		km$n.risk[1] <- diff$n[1]			#To correct number at risk at zero point in no event group
+		len <- nchar("Group")
+		legend <- substring(names(km$strata), len+2)
+#		windows(width=7, height=7); par(lwd=1, las=1, family="sans", cex=1)
+		dev.new()
+		mar <- par("mar")
+		mar[1] <- mar[1] + length(km$strata) + 0.5
+		mar[2] <- mar[2] + 2
+		par(mar=mar)
+		opar <- par(mar = mar)
+		on.exit(par(opar))
+		plot(km, ylab="Probability", bty="l", col=1:32, lty=1, lwd=1, conf.int=FALSE, mark.time=TRUE)
+		xticks <- axTicks(1)
+		n.atrisk <- nrisk(km, xticks)
+		for (i in 1:length(km$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}
+		for (i in 1:length(km$strata)){mtext(legend[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i, cex=1)}
+		title(xlab = "Number at risk", line = 3.5, adj = 0)
+		legend ("topright", legend, col=1:32, lty=1, lwd=1,  box.lty=0, title="Time-dependent covariate")
+	}
 	return(structure(list(statistic=c("X-squared"=chi), parameter=c(df=1), p.value=P, 
         method=method, data.name=data.name, result=result), class="htest"))
 }
@@ -2589,7 +2612,7 @@ step.AIC.crr <- function (crr, cov, dataframe.name, BIC = 0, subset = NULL, wald
         call[6], ", na.action=na.omit))", sep = "")
     currentAIC <- crrAIC(crr, BIC)
 
-    cat("\n\n", gettext(domain = "R-RcmdrPlugin.EZR", "Current model:"), " ", paste(var.list[in.model==1], collapse=" + "), "\n", sep="")
+    cat("\n\n", gettext(domain="R-RcmdrPlugin.EZR", "Current model:"), " ", paste(var.list[in.model==1], collapse=" + "), "\n", sep="")
     cat(method, " = ", currentAIC, "\n\n", sep="")
 
     cat("\n")
@@ -2674,14 +2697,14 @@ step.AIC.crr <- function (crr, cov, dataframe.name, BIC = 0, subset = NULL, wald
 		currentAIC <- min
 		if (in.model[change.var]==1){
 			in.model[change.var] <- 0
-	        cat("\n", gettext(domain = "R-RcmdrPlugin.EZR", "-----Variable"), " ", var.list[change.var], " ", gettext(domain = "R-RcmdrPlugin.EZR", 
+	        cat("\n", gettext(domain="R-RcmdrPlugin.EZR", "-----Variable"), " ", var.list[change.var], " ", gettext(domain="R-RcmdrPlugin.EZR", 
             "removed from the model."), "(", method, "=", newAIC[change.var], ")\n\n", sep = "")
 		} else {
 			in.model[change.var] <- 1
-	        cat("\n", gettext(domain = "R-RcmdrPlugin.EZR", "-----Variable"), " ", var.list[change.var], " ", gettext(domain = "R-RcmdrPlugin.EZR", 
+	        cat("\n", gettext(domain="R-RcmdrPlugin.EZR", "-----Variable"), " ", var.list[change.var], " ", gettext(domain="R-RcmdrPlugin.EZR", 
             "removed from the model."), "(", method, "=", newAIC[change.var], ")\n\n", sep = "")
 		}
-		cat(gettext(domain = "R-RcmdrPlugin.EZR", "Next model:"), " ", paste(var.list[in.model==1], collapse=" + "), "\n", sep="")
+		cat(gettext(domain="R-RcmdrPlugin.EZR", "Next model:"), " ", paste(var.list[in.model==1], collapse=" + "), "\n", sep="")
 		cat(method, " = ", currentAIC, "\n\n", sep="")
 	}
 	}
@@ -2689,7 +2712,7 @@ step.AIC.crr <- function (crr, cov, dataframe.name, BIC = 0, subset = NULL, wald
 #final model
 
      if (sum(in.model) == 0) {
-            cat("\n", gettext(domain = "R-RcmdrPlugin.EZR", "-----All variables were removed from the model."), 
+            cat("\n", gettext(domain="R-RcmdrPlugin.EZR", "-----All variables were removed from the model."), 
                 "\n\n", sep = "")
      } else {
 		command <- "cbind("
@@ -2725,9 +2748,9 @@ step.AIC.crr <- function (crr, cov, dataframe.name, BIC = 0, subset = NULL, wald
 			}
 #		rownames(crr.table) <- cov[in.model[cov.to.var.list]==1]
 		rownames(crr.table) <- final.cov
-		colnames(crr.table) <- gettext(domain = "R-RcmdrPlugin.EZR", 
+		colnames(crr.table) <- gettext(domain="R-RcmdrPlugin.EZR", 
             c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))
-			cat("\n", gettext(domain = "R-RcmdrPlugin.EZR", "-----Final model"), 
+			cat("\n", gettext(domain="R-RcmdrPlugin.EZR", "-----Final model"), 
             "\n\n", sep = "")
 			print(crr.table)
 			if (waldtest == 1) 
@@ -3812,10 +3835,10 @@ listLMModels <- function(envir=.GlobalEnv, ...) {
 
 StatMedLoadDataSet <- function() {
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Load data set"), "#####", sep=""))
-#	file <- tclvalue(tkgetOpenFile(filetypes=
-#							gettext(domain="R-RcmdrPlugin.EZR",'{"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}} {"All Files" {"*"}}')))	
 	file <- tclvalue(tkgetOpenFile(filetypes=
-							gettextRcmdr('{"All Files" {"*"}} {"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}}')))
+							gettext(domain="R-RcmdrPlugin.EZR",'{"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}} {"All Files" {"*"}}')))	
+#	file <- tclvalue(tkgetOpenFile(filetypes=
+#							gettextRcmdr('{"All Files" {"*"}} {"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}}')))
 	if (file == "") return()
 	setBusyCursor()
 	on.exit(setIdleCursor())
@@ -4359,6 +4382,203 @@ StatMedImportExcel <- function(){
     tkgrid(buttonsFrame, columnspan="2", sticky="w")
     tkgrid.configure(entryDsname, sticky="w")
     dialogSuffix(focus=entryDsname)
+}
+
+
+StatMedCopyDataset <- function(){
+    dataSets <- listDataSets()
+    .activeDataSet <- ActiveDataSet()
+    initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR", "Copy data set"))
+    dsname <- tclVar("NewDataset")
+    dsnameFrame <- tkframe(top)
+    entryDsname <- ttkentry(dsnameFrame, width="20", textvariable=dsname)
+    dataSet1Box <- variableListBox(top, dataSets, title=gettext(domain="R-RcmdrPlugin.EZR","Original Data Set"),
+                                   initialSelection=if (is.null(.activeDataSet)) NULL else which(.activeDataSet == dataSets) - 1)
+    onOK <- function(){
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Copy data set"), "#####", sep=""))
+        dsnameValue <- trim.blanks(tclvalue(dsname))
+        if (dsnameValue == getSelection(dataSet1Box)) {
+            errorCondition(recall=StatMedCopyDataset,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must enter a different data set name."))
+            return()
+        }
+        if (dsnameValue == "") {
+            errorCondition(recall=StatMedCopyDataset,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must enter the name of a data set."))
+            return()
+        }
+        if (!is.valid.name(dsnameValue)) {
+            errorCondition(recall=StatMedCopyDataset,
+                           message=paste('"', dsnameValue, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
+            return()
+        }
+        if (is.element(dsnameValue, listDataSets())) {
+            if ("no" == tclvalue(checkReplace(dsnameValue, gettext(domain="R-RcmdrPlugin.EZR","Data set")))){
+                closeDialog()
+                StatMedCopyDataset()
+                return()
+            }
+        }
+        name1 <- getSelection(dataSet1Box)
+        if (length(name1) == 0){
+            errorCondition(recall=StatMedCopyDataset,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must select a data set."))
+            return()
+        }
+        command <- paste(dsnameValue, " <- ", name1, sep="")
+        doItAndPrint(command)
+        activeDataSet(dsnameValue)
+        closeDialog()
+        tkfocus(CommanderWindow())
+    }
+    OKCancelHelp()
+	tkgrid(labelRcmdr(dsnameFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Name for new data set:  ")), entryDsname)
+    tkgrid(dsnameFrame, sticky="w", columnspan=2)
+    tkgrid(getFrame(dataSet1Box), sticky="nw")
+    tkgrid(buttonsFrame, sticky="w", columnspan=2)
+    dialogSuffix()
+}
+
+
+StatMedRenameDataset <- function(){
+    dataSets <- listDataSets()
+    .activeDataSet <- ActiveDataSet()
+    initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR", "Rename data set"))
+    dsname <- tclVar("NewName")
+    dsnameFrame <- tkframe(top)
+    entryDsname <- ttkentry(dsnameFrame, width="20", textvariable=dsname)
+    dataSet1Box <- variableListBox(top, dataSets, title=gettext(domain="R-RcmdrPlugin.EZR","Original Data Set"),
+                                   initialSelection=if (is.null(.activeDataSet)) NULL else which(.activeDataSet == dataSets) - 1)
+    onOK <- function(){
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Rename data set"), "#####", sep=""))
+        dsnameValue <- trim.blanks(tclvalue(dsname))
+        if (dsnameValue == getSelection(dataSet1Box)) {
+            errorCondition(recall=StatMedRenameDataset,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must enter a different data set name."))
+            return()
+        }
+        if (dsnameValue == "") {
+            errorCondition(recall=StatMedRenameDataset,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must enter the name of a data set."))
+            return()
+        }
+        if (!is.valid.name(dsnameValue)) {
+            errorCondition(recall=StatMedRenameDataset,
+                           message=paste('"', dsnameValue, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
+            return()
+        }
+        if (is.element(dsnameValue, listDataSets())) {
+            if ("no" == tclvalue(checkReplace(dsnameValue, gettext(domain="R-RcmdrPlugin.EZR","Data set")))){
+                closeDialog()
+                StatMedRenameDataset()
+                return()
+            }
+        }
+        name1 <- getSelection(dataSet1Box)
+        if (length(name1) == 0){
+            errorCondition(recall=StatMedRenameDataset,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must select a data set."))
+            return()
+        }
+        command <- paste(dsnameValue, " <- ", name1, sep="")
+        doItAndPrint(command)
+        activeDataSet(dsnameValue)
+        command <- paste("remove(", name1, ")", sep="")
+        doItAndPrint(command)
+        activeDataSet(dsnameValue)
+        closeDialog()
+        tkfocus(CommanderWindow())
+    }
+    OKCancelHelp()
+    tkgrid(labelRcmdr(dsnameFrame, text=gettext(domain="R-RcmdrPlugin.EZR","New name for the data set:  ")), entryDsname)
+    tkgrid(dsnameFrame, sticky="w", columnspan=2)
+    tkgrid(getFrame(dataSet1Box), sticky="nw")
+    tkgrid(buttonsFrame, sticky="w", columnspan=2)
+    dialogSuffix()
+}
+
+
+StatMedMergeDatasets <- function(){
+    dataSets <- listDataSets()
+    .activeDataSet <- ActiveDataSet()
+    initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR", "Merge data sets"))
+    dsname <- tclVar("MergedDataset")
+    dsnameFrame <- tkframe(top)
+    entryDsname <- ttkentry(dsnameFrame, width="20", textvariable=dsname)
+    dataSet1Box <- variableListBox(top, dataSets, title=gettext(domain="R-RcmdrPlugin.EZR","First Data Set (pick one)"),
+                                   initialSelection=if (is.null(.activeDataSet)) NULL else which(.activeDataSet == dataSets) - 1)
+    dataSet2Box <- variableListBox(top, dataSets, title=gettext(domain="R-RcmdrPlugin.EZR","Second Data Set (pick one)"))
+    commonVar <- tclVar("0")
+    commonFrame <- tkframe(top)
+    commonButton <- ttkcheckbutton(commonFrame, variable=commonVar)    
+    radioButtons(top, "direction", buttons=c("rows", "columns"), 
+                 labels=gettext(domain="R-RcmdrPlugin.EZR",c("Merge rows", "Merge columns")), title=gettext(domain="R-RcmdrPlugin.EZR","Direction of Merge"))
+    onOK <- function(){
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Merge data sets"), "#####", sep=""))
+        dsnameValue <- trim.blanks(tclvalue(dsname))
+        if (dsnameValue == "") {
+            errorCondition(recall=StatMedMergeDatasets,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must enter the name of a data set."))
+            return()
+        }
+        if (!is.valid.name(dsnameValue)) {
+            errorCondition(recall=StatMedMergeDatasets,
+                           message=paste('"', dsnameValue, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
+            return()
+        }
+        if (is.element(dsnameValue, listDataSets())) {
+            if ("no" == tclvalue(checkReplace(dsnameValue, gettext(domain="R-RcmdrPlugin.EZR","Data set")))){
+                closeDialog()
+                StatMedMergeDatasets()
+                return()
+            }
+        }
+        name1 <- getSelection(dataSet1Box)
+        name2 <- getSelection(dataSet2Box)
+        if (length(name1) == 0){
+            errorCondition(recall=StatMedMergeDatasets,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must select a data set."))
+            return()
+        }
+        if (length(name2) == 0){
+            errorCondition(recall=StatMedMergeDatasets,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must select a data set."))
+            return()
+        }
+        if (name1 == name2){
+            errorCondition(recall=StatMedMergeDatasets,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You cannot merge a data set with itself."))
+            return()
+        }
+        common <- if (tclvalue(commonVar) == "1") TRUE else FALSE
+        direction <- tclvalue(directionVariable)
+        if (direction == "rows"){
+            command <- paste(dsnameValue, " <- mergeRows(", name1, ", ", name2,
+                             ", common.only=", common, ")", sep="")
+            doItAndPrint(command)	
+        }
+        else {
+            command <- paste(dsnameValue, " <- merge(", name1, ", ", name2,
+                             ", all=", !common, ', by="row.names")', sep="")
+            doItAndPrint(command)
+            command <- paste("rownames(", dsnameValue, ") <- ", dsnameValue, "$Row.names", sep="")
+            doItAndPrint(command)
+            command <- paste(dsnameValue, "$Row.names <- NULL", sep="")
+            doItAndPrint(command)
+        }
+        activeDataSet(dsnameValue)
+        closeDialog()
+        tkfocus(CommanderWindow())
+    }
+    OKCancelHelp(helpSubject="mergeRows")
+    tkgrid(labelRcmdr(dsnameFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Name for merged data set:  ")), entryDsname)
+    tkgrid(dsnameFrame, sticky="w", columnspan=2)
+    tkgrid(getFrame(dataSet1Box), getFrame(dataSet2Box), sticky="nw")
+    tkgrid(commonButton, labelRcmdr(commonFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Merge only common\nrows or columns")), 
+           sticky="nw")
+    tkgrid(directionFrame, commonFrame, sticky="sw")
+    tkgrid(buttonsFrame, sticky="w", columnspan=2)
+    dialogSuffix()
 }
 
 
@@ -7997,6 +8217,11 @@ putDialog("StatMedANOVA", list(group=group, response=response, variances=varianc
 #		    	assign(modelValue, justDoIt(command), envir=.GlobalEnv)			
 #				doItAndPrint(paste("numSummary(", subset1, .activeDataSet, subset2, "$", response, " , groups=", subset1, .activeDataSet, subset2, "$", group[i], ', statistics=c("mean", "sd"))', sep=""))					
 				if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+
+				#bar.means and bar.sds are required to show summary.anova even for "box" or "point"	
+				doItAndPrint(paste("bar.means <- tapply(", subset1, ActiveDataSet(), subset2, "$", response, ", factor(", subset1, ActiveDataSet(), subset2, "$", group[i], "), mean, na.rm=TRUE)", sep=""))
+				doItAndPrint(paste("bar.sds <- tapply(", subset1, ActiveDataSet(), subset2, "$", response, ", factor(", subset1, ActiveDataSet(), subset2, "$", group[i], "), sd, na.rm=TRUE)", sep=""))
+
 				if (graph == "box"){
 					command <- (paste("boxplot(", response, "~ factor(", group[i], '), ylab="', response,
 					'", xlab="', group[i], '"',
@@ -8018,8 +8243,6 @@ if(length(x) != length(y) | length(y) !=length(lower) | length(lower) != length(
 	stop("vectors must be same length")
 	arrows(x,y+upper, x, y-lower, angle=90, code=3, length=length, ...)
 }')
-				doItAndPrint(paste("bar.means <- tapply(", subset1, ActiveDataSet(), subset2, "$", response, ", factor(", subset1, ActiveDataSet(), subset2, "$", group[i], "), mean, na.rm=TRUE)", sep=""))
-				doItAndPrint(paste("bar.sds <- tapply(", subset1, ActiveDataSet(), subset2, "$", response, ", factor(", subset1, ActiveDataSet(), subset2, "$", group[i], "), sd, na.rm=TRUE)", sep=""))
 				doItAndPrint(paste('barx <- barplot(bar.means, ylim=c(ifelse(min(bar.means, na.rm=TRUE)>0, 0, min(bar.means-bar.sds, na.rm=TRUE)*1.2), max(bar.means+bar.sds, na.rm=TRUE)*1.2), xlab="', group[i], '", ylab="', response, '", axis.lty=1)',sep=""))
 				doItAndPrint(paste("error.bar(barx, bar.means, bar.sds)", sep=""))
 				}
@@ -14165,7 +14388,7 @@ putDialog("StatMedMetaHazard",list(input=input, studyname=studyname, hazard=haza
 
 
 StatMedMetaCont  <- function(){
-defaults <- list(studyname=NULL, testmean=NULL, testnumber=NULL, testsd=NULL, controlmean=NULL, controlnumber=NULL, controlsd=NULL, group=NULL, reg=NULL, dsl=1, detail=1, funnel=0, subset = "")
+defaults <- list(studyname=NULL, testmean=NULL, testnumber=NULL, testsd=NULL, controlmean=NULL, controlnumber=NULL, controlsd=NULL, group=NULL, reg=NULL, smd=0, dsl=1, detail=1, funnel=0, smd=0, subset = "")
 dialog.values <- getDialog("StatMedMetaCont", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -14184,7 +14407,7 @@ currentModel <- TRUE
 	regBox <- variableListBox(variables3Frame, Variables(), selectmode="multiple", title=gettext(domain="R-RcmdrPlugin.EZR","Variables for meta-regression"), initialSelection=varPosn(dialog.values$reg, "all"))
 	
     optionsFrame <- tkframe(top)
-	checkBoxes(frame="optionsFrame", boxes=c("dsl", "detail", "funnel"), initialValues=c(dialog.values$dsl, dialog.values$detail, dialog.values$funnel),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Conduct random effects meta-analysis", "Show detailed data in forest plot", "Evaluate publication bias with funnel plot")))		
+	checkBoxes(frame="optionsFrame", boxes=c("smd", "dsl", "detail", "funnel"), initialValues=c(dialog.values$smd, dialog.values$dsl, dialog.values$detail, dialog.values$funnel),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Pool standard mead difference", "Conduct random effects meta-analysis", "Show detailed data in forest plot", "Evaluate publication bias with funnel plot")))		
 #    checkBoxes(frame="dsl", boxes=c("dsl"),initialValues=c(1),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Conduct random effects meta-analysis")))
 #    checkBoxes(frame="detail", boxes=c("detail"),initialValues=c(1),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Show detailed data in forest plot")))
 #    checkBoxes(frame="funnel", boxes=c("funnel"),initialValues=c(0),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Evaluate publication bias with funnel plot")))
@@ -14222,6 +14445,7 @@ currentModel <- TRUE
 		group1 <- paste(", byvar=", group, ', bylab="', group, '"')
 		group2 <- paste(', bylab="', group, '"')
 	}
+    smd <- tclvalue(smdVariable)
     dsl <- tclvalue(dslVariable)
 	detail <- tclvalue(detailVariable)
 	funnel <- tclvalue(funnelVariable)
@@ -14231,13 +14455,14 @@ currentModel <- TRUE
 		doItAndPrint(paste("TempDF <- subset(", dataSet, ", subset=", subset, ")[complete.cases(subset(", dataSet, ", subset=", subset, ")$", testnumber, ", subset(", dataSet, ", subset=", subset, ")$", testmean, ", subset(", dataSet, ", subset=", subset, ")$", testsd, ", subset(", dataSet, ", subset=", subset, ")$", controlnumber, ", subset(", dataSet, ", subset=", subset, ")$", controlmean, ", subset(", dataSet, ", subset=", subset, ")$", controlsd, "),]", sep=""))
 	}
 
-putDialog("StatMedMetaCont", list(studyname=studyname, testmean=testmean, testnumber=testnumber, testsd=testsd, controlmean=controlmean, controlnumber=controlnumber, controlsd=controlsd, group=group, reg=reg, dsl=dsl, detail=detail, funnel=funnel, subset = tclvalue(subsetVariable)))
+putDialog("StatMedMetaCont", list(studyname=studyname, testmean=testmean, testnumber=testnumber, testsd=testsd, controlmean=controlmean, controlnumber=controlnumber, controlsd=controlsd, group=group, reg=reg, dsl=dsl, detail=detail, funnel=funnel, smd=smd, subset = tclvalue(subsetVariable)))
 	
     library(meta, quietly=TRUE)
+	smd <- ifelse(smd==0, ', sm="MD"', ', sm="SMD"')
 	if (dsl==0) {
-		command <- paste("res <- metacont(", testnumber, ", ", testmean, ", ", testsd, ", ", controlnumber, ", ", controlmean, ", ", controlsd, ", data=TempDF, studlab=", studyname, group1, ", comb.fixed=TRUE, comb.random=FALSE)", sep="")
+		command <- paste("res <- metacont(", testnumber, ", ", testmean, ", ", testsd, ", ", controlnumber, ", ", controlmean, ", ", controlsd, ", data=TempDF, studlab=", studyname, group1, ", comb.fixed=TRUE, comb.random=FALSE", smd, ")", sep="")
 	} else {
-		command <- paste("res <- metacont(", testnumber, ", ", testmean, ", ", testsd, ", ", controlnumber, ", ", controlmean, ", ", controlsd, ", data=TempDF, studlab=", studyname, group1, ", comb.fixed=TRUE, comb.random=TRUE)", sep="")
+		command <- paste("res <- metacont(", testnumber, ", ", testmean, ", ", testsd, ", ", controlnumber, ", ", controlmean, ", ", controlsd, ", data=TempDF, studlab=", studyname, group1, ", comb.fixed=TRUE, comb.random=TRUE", smd, ")", sep="")
 	}
 	doItAndPrint(command)
 	doItAndPrint("res")
@@ -14304,8 +14529,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.24", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","April 1, 2014"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.25", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","September 1, 2014"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -14418,7 +14643,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.24", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.25", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -14479,4 +14704,7 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'getSheets', 'analysisVariable', 'outputVariable', 'languageVariable',
 'analysisFrame', 'outputFrame', 'languageFrame', 'exactVariable', 
 'rangeVariable', 'explainVariable', 'exactFrame', 'rangeFrame',
-'explainFrame', 'multireg.table'))
+'explainFrame', 'multireg.table', 'smdVariable', 'survfit', 'survdiff',
+'odbcCloseAll', 'odbcConnectExcel', 'odbcConnectExcel2007', 'odbcConnectAccess',
+'odbcConnectAccess2007', 'odbcConnectDbase', 'sqlTables', '.Tcl.args',
+'cuminc', 'Anova', 'pmvt', 'wald.test', 'timepoints', 'ci', 'sqlQuery'))

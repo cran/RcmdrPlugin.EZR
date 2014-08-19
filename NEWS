@@ -1,4 +1,12 @@
-Changes to Version 1.24
+Changes to Version 1.25
+
+  o Added functions to copy, rename, and merge datasets.
+
+  o Added an option to pool standard mean difference in metaanalysis of continuous variables.
+
+  o Small bug fixes.
+
+  Changes to Version 1.24
 
   o Added likelihood ratio test after logistic regression analysis.
 

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2014-03-04 12:39+0900\n"
-"Last-Translator: \n"
+"PO-Revision-Date: 2014-08-17 23:24+0900\n"
+"Last-Translator: Y. Kanda <ycanda-tky@umin.ac.jp>\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -6299,4 +6299,28 @@ msgstr "(中央値[四分位範囲])"
 
 msgid "(median [range])"
 msgstr "(中央値[範囲])"
+
+msgid "Pool standard mead difference"
+msgstr "標準化平均値差を統合する"
+
+msgid "Copy data set"
+msgstr "データセットを複製する"
+
+msgid "Rename data set"
+msgstr "データセットの名前を変更する"
+
+msgid "Merge data sets"
+msgstr "２つのデータセットを結合する"
+
+msgid "Original Data Set"
+msgstr "コピー元のデータセット名"
+
+msgid "Name for new data set:  "
+msgstr "新しいデータセットの名前:  "
+
+msgid "New name for the data set:  "
+msgstr "データセットの新しい名前:  "
+
+msgid "You must enter a different data set name."
+msgstr "異なるデータセット名を入力してください。"
 
