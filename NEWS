@@ -1,3 +1,11 @@
+Changes to Version 1.26
+
+  o Added a function to bun numeric variable to more than 2 levels with specified thresholds.
+
+  o Added a function to reshape a wide format dataset to a long format dataset including all data.
+
+  o Enabled grouping with two factors in frequency bar graph.
+
 Changes to Version 1.25
 
   o Added functions to copy, rename, and merge datasets.

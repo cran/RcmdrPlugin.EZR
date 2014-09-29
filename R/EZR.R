@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.25", "\n")
+cat("   Version 1.26", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -733,6 +733,70 @@ OrderedPlot <- function(y, group=NULL, type="line", xlab="", ylab="Value", ylog=
 			legend("topright", levels, col=1, lty=1:32, lwd=1,  box.lty=0)			
 		}
 	}
+}
+
+
+BarplotFor3Factors <- function(First, Second, Third, prop=0, col=0, data){
+
+	dataset <- eval(parse(text=data))	
+	legend <- eval(parse(text=paste("levels(factor(", data, "$", First, "))", sep="")))
+	groups <- eval(parse(text=paste("levels(factor(", data, "$", Second, "))", sep="")))
+	levels <- eval(parse(text=paste("levels(factor(", data, "$", Third, "))", sep="")))
+	num <- length(levels)
+	
+	colors <- gray(2:(length(legend)+1) / (length(legend)+2))
+	if (col==1) colors <- 2:(1+length(legend))
+
+	res <- eval(parse(text=paste("xtabs(~", First, "+", Second, ", data=dataset, subset=", Third, "=='", levels[1], "')", sep="")))
+
+	if (prop==0){
+		barplot.table <- res
+	}else{
+		barplot.table <- prop.table(res,2)
+	}
+
+	dummy <- rep(0, length(barplot.table[,1]))
+
+	for (i in 2:num){
+		res <- eval(parse(text=paste("xtabs(~", First, "+", Second, ", data=dataset, subset=", Third, "=='", levels[i], "')", sep="")))
+		if (prop==0){
+			barplot.table <- cbind(barplot.table, " "=dummy, res)
+		}else{
+			barplot.table <- cbind(barplot.table, " "=dummy, prop.table(res,2))
+		}
+	}
+
+	mar <- par("mar")
+	mar[1] <- mar[1] + 2.5
+	mar[3] <- mar[3] + 1.5
+	par(mar=mar)
+	opar <- par(mar = mar)
+	on.exit(par(opar))
+
+	if(prop==1){
+		legend.y <- 1.2
+	} else {
+		max.height <- 0
+		for(i in 1:length(barplot.table[1,])) {
+			if (sum(barplot.table[,i]) > max.height) {max.height <- sum(barplot.table[,i])}
+		}
+		legend.y <- max.height * 1.2
+	}
+
+	(bplot <- barplot(barplot.table, beside=FALSE, xlab=NULL, ylab="Frequency", col=colors,
+  	legend=legend, args.legend=list(y=legend.y, horiz=TRUE, title=First, box.lty=0), axis.lty=1))
+
+	at <- NULL
+	for (i in 1:num){
+		at <- c(at, (bplot[(length(groups)+1)*(i-1)+1]+bplot[(length(groups)+1)*(i-1)+length(groups)])/2)
+	}
+	center <- (bplot[1] + bplot[length(bplot)])/2
+
+	axis(1, at = center, labels = Second, line = 2, tick = FALSE, las=0)
+#	axis(1, at = at, labels = rep(Third, length(levels)), line = 4, tick = FALSE, las=0)
+	axis(1, at = center, labels = Third, line = 4, tick = FALSE, las=0)
+	axis(1, at = at, labels = levels, line = 5, tick = FALSE, las=0)
+
 }
 
 
@@ -1758,6 +1822,7 @@ StatMedTableOne  <- function(){
   }
   OKCancelHelp(helpSubject="tableone", apply="StatMedTableOne", reset="StatMedTableOne")
     tkgrid(getFrame(groupBox), sticky="nw")
+	tkgrid(labelRcmdr(variableFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Click pressing Ctrl key to select multiple variables"), fg="blue"), sticky="w")
     tkgrid(getFrame(categoryBox), labelRcmdr(variableFrame, text="    "), getFrame(contBox), labelRcmdr(variableFrame, text="    "), getFrame(contnonnormalBox), sticky="nw")
     tkgrid(variableFrame, sticky="nw")
 	tkgrid(exactFrame, labelRcmdr(optionsFrame, text="   "), rangeFrame, labelRcmdr(optionsFrame, text="   "), explainFrame, sticky="nw")	
@@ -4894,7 +4959,7 @@ StatMedDeleteVariable <- function(){
 
 
 StatMedStack <- function(){
-	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Stack two data set"))
+	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Stack variables to long format data set"))
 	variableBox <- variableListBox(top, Variables(), selectmode="multiple",
 		title=gettext(domain="R-RcmdrPlugin.EZR","Variables (pick two or more)"), listHeight=10)
 	factorName <- tclVar("")
@@ -4903,25 +4968,29 @@ StatMedStack <- function(){
 	variableNameField <- ttkentry(top, width="20", textvariable=variableName)
 	datasetName <- tclVar("")
 	datasetNameField <- ttkentry(top, width="20", textvariable=datasetName)
+	checkBoxes(frame="checkboxFrame", boxes=c("othervar"), initialValues=c(1),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Include other variables in new data set")))	
+	#    subsetBox(model=TRUE)
+    StatMedSubsetBox()
 	onOK <- function(){
-		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Stack two data set"), "#####", sep=""))
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Stack variables to long format data set"), "#####", sep=""))
 		variables <- getSelection(variableBox)
 		facname <- tclvalue(factorName)
 		varname <- tclvalue(variableName)
 		dsname <- tclvalue(datasetName)
+		othervar <- tclvalue(othervarVariable)
 		closeDialog()
 		if (length(variables) < 2) {
-			errorCondition(recall=Stack,
+			errorCondition(recall=StatMedStack,
 				message=gettext(domain="R-RcmdrPlugin.EZR","You must select at least two variables."))
 			return()
 		}
 		if (!is.valid.name(facname)){
-			errorCondition(recall=Stack,
+			errorCondition(recall=StatMedStack,
 				message=paste('"', facname, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
 			return()
 		}
 		if (!is.valid.name(varname)){
-			errorCondition(recall=Stack,
+			errorCondition(recall=StatMedStack,
 				message=paste('"', varname, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
 			return()
 		}
@@ -4936,14 +5005,60 @@ StatMedStack <- function(){
 				return()
 			}
 		}
-		command <- paste(dsname, " <- stack(", activeDataSet(), "[, c(",
-			paste(paste('"', variables, '"', sep=""), collapse=","), ")])", sep="")
-		logger(command)
-		result <- justDoIt(command)
-		command <- paste("names(", dsname, ') <- c("', varname, '", "', facname, '")',
-			sep="")
-		logger(command)
-		justDoIt(command)
+#		command <- paste(dsname, " <- stack(", activeDataSet(), "[, c(",
+#			paste(paste('"', variables, '"', sep=""), collapse=","), ")])", sep="")
+#		logger(command)
+#		result <- justDoIt(command)
+#		command <- paste("names(", dsname, ') <- c("', varname, '", "', facname, '")',
+#			sep="")
+#		logger(command)
+#		justDoIt(command)
+
+		dataSet <- ActiveDataSet()
+        subset <- tclvalue(subsetVariable)
+        subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
+			doItAndPrint(paste("TempDF <- ", dataSet))
+		}
+        else {
+			doItAndPrint(paste("TempDF <- subset(", dataSet, ",", subset, ")") )
+        }
+
+		nvar <- length(variables)
+#		RepeatedData <- variables[1]
+#		RepeatedData2 <- paste('"', variables[1], '"', sep="")
+#		for(i in 2:nvar){
+#			RepeatedData <- paste(RepeatedData, ", ", variables[i], sep="")
+#			RepeatedData2 <- paste(RepeatedData2, ', "', variables[i], '"', sep="")
+#			}
+		logger("#Convert to long format")
+		doItAndPrint("n <- length(TempDF[,1])")
+#		doItAndPrint("TempDF$TempIDforReshaping <- c(1:n)")
+
+		if(othervar==0){
+			command <- paste("TempDF <- data.frame(", variables[1], "=TempDF$", variables[1], sep="")
+			for (i in 2:nvar){
+				command <- paste(command, ", ", variables[i], "=TempDF$", variables[i], sep="")
+			}
+			command <- paste(command, ")", sep="")
+			doItAndPrint(command)
+		}
+		
+#		command <- paste('TempDF2 <- reshape(TempDF, idvar="TempIDforReshaping", varying=list(c("', variables[1], sep="")
+		command <- paste('TempDF2 <- reshape(TempDF, varying=list(c("', variables[1], sep="")
+		for (i in 2:nvar){
+			command <- paste(command, '", "', variables[i], sep="")
+		}
+		command <- paste(command, '")), v.names="', varname, '", timevar="', facname, '", direction="long")', sep="")
+		doItAndPrint(command)
+		command <- paste('RepeatNumber <- c("', variables[1], sep="")
+		for (i in 2:nvar){
+			command <- paste(command, '", "', variables[i], sep="")
+		}
+		command <- paste(command, '")', sep="")
+		doItAndPrint(command)
+		doItAndPrint(paste("TempDF2$", facname, " <- RepeatNumber[TempDF2$", facname, "]", sep=""))
+#		doItAndPrint("TempDF2$TempIDforReshaping <- NULL")
+		result <- doItAndPrint(paste(dsname, " <- TempDF2", sep=""))
 		if (class(result)[1] !=  "try-error") activeDataSet(dsname)
 		tkfocus(CommanderWindow())
 	}
@@ -4953,9 +5068,11 @@ StatMedStack <- function(){
 	tkgrid(labelRcmdr(top,
 			text=gettext(domain="R-RcmdrPlugin.EZR","Name for stacked data set:")), datasetNameField, sticky="w")
 	tkgrid(labelRcmdr(top,
-			text=gettext(domain="R-RcmdrPlugin.EZR","Name for variable:")), variableNameField, sticky="w")
+			text=gettext(domain="R-RcmdrPlugin.EZR","Name for stacked variable data in new data set:")), variableNameField, sticky="w")
 	tkgrid(labelRcmdr(top,
-			text=gettext(domain="R-RcmdrPlugin.EZR","Name for factor:")), factorNameField, sticky="w")
+			text=gettext(domain="R-RcmdrPlugin.EZR","Name for factor to identify stacked variables in new data set:")), factorNameField, sticky="w")
+	 tkgrid(checkboxFrame, sticky="w")
+    tkgrid(subsetFrame, sticky="w")
 	tkgrid(buttonsFrame, sticky="w", columnspan=2)
 	dialogSuffix(rows=5, columns=2, preventGrabFocus=TRUE)
 }
@@ -5123,11 +5240,13 @@ StatMedNewVar <- function(){
 	newVariableNameEntry <- ttkentry(top, width="20", textvariable=newVariableName)
 	threshold <- tclVar("")
 	thresholdEntry <- ttkentry(top, width="20", textvariable=threshold)
+	radioButtons(name="grouping", buttons=c("equalgreater", "greater"), values=c(">=", ">"),
+		labels=gettext(domain="R-RcmdrPlugin.EZR",c(">= (equal to or greater than)", "> (greater than)")), title=gettext(domain="R-RcmdrPlugin.EZR","Threshold"))
 	onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Bin numeric variable with specified threshold"), "#####", sep=""))
 		var <- trim.blanks(getSelection(variablesBox))
         	if (length(var) == 0){
-  	          errorCondition(recall=StatMedNewVar, message=gettext(domain="R-RcmdrPlugin.EZR","You must select three variables."))
+  	          errorCondition(recall=StatMedNewVar, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
             	return()
             	}
 		newVar <- trim.blanks(tclvalue(newVariableName))
@@ -5141,26 +5260,206 @@ StatMedNewVar <- function(){
   	          errorCondition(recall=StatMedNewVar, message=gettext(domain="R-RcmdrPlugin.EZR","Input threshold to bin a numeric variable."))
             	return()
             	}
+		grouping <- as.character(tclvalue(groupingVariable))
 		closeDialog()
-		command <-  paste(dataSet,"$",newVar, " <- ifelse(", dataSet, "$", var, " >= ", threshold, ", 1 , 0)", sep="")
+		command <-  paste(dataSet,"$",newVar, " <- ifelse(", dataSet, "$", var, grouping, threshold, ", 1 , 0)", sep="")
 		logger(command)
 		result <- justDoIt(command)
 		if (class(result)[1] !=  "try-error") activeDataSet(dataSet, flushModel=FALSE)
-		logger(paste("#", gettext(domain="R-RcmdrPlugin.EZR","New variable"), " ", newVar, " ", gettext(domain="R-RcmdrPlugin.EZR","was made."), "(", threshold, gettext(domain="R-RcmdrPlugin.EZR","<=:1, >:0"), sep="") )
+#		logger(paste("#", gettext(domain="R-RcmdrPlugin.EZR","New variable"), " ", newVar, " ", gettext(domain="R-RcmdrPlugin.EZR","was made."), "(", threshold, gettext(domain="R-RcmdrPlugin.EZR","<=:1, >:0"), sep="") )
+		logger(paste("#", gettext(domain="R-RcmdrPlugin.EZR","New variable"), " ", newVar, " ", gettext(domain="R-RcmdrPlugin.EZR","was made."), sep="") )
 		doItAndPrint(paste("table(", dataSet, "$", newVar, ", exclude=NULL)", sep="") )
 		tkfocus(CommanderWindow())
 	}
         OKCancelHelp(helpSubject="ifelse")
 	tkgrid(getFrame(variablesBox), sticky="nw")
 	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","New variable name")), newVariableNameEntry, sticky="w")
-	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Threshold(>=) to bin a numeric variable.")), thresholdEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Threshold to bin a numeric variable.")), thresholdEntry, sticky="w")
 	tkgrid.configure(newVariableNameEntry, sticky="w")
 	tkgrid.configure(thresholdEntry, sticky="w")
+	tkgrid(groupingFrame, sticky="nw")
 	tkgrid(buttonsFrame, sticky="w", columnspan=2)
 	dialogSuffix(rows=3, columns=2)
 	}
 
+	
+StatMedNewVar2 <- function(){		
+    initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Bin numeric variable to more than 2 groups with specified thresholds"))
+  	dataSet <- activeDataSet()
+	variablesBox <- variableListBox(top, Numeric(), title=gettext(domain="R-RcmdrPlugin.EZR","Select one numeric variable"), listHeight=15)
 
+	thresholdFrame <- tkframe(top)
+	newVariableNameFrame <- tkframe(thresholdFrame)
+	newVariableNameVariable <- tclVar("")	
+	newVariableNameField <- ttkentry(thresholdFrame, width="20", textvariable=newVariableNameVariable)
+	threshold1Frame <- tkframe(thresholdFrame)
+	threshold1Variable <- tclVar("")	
+	threshold1Field <- ttkentry(thresholdFrame, width="10", textvariable=threshold1Variable)
+	threshold2Frame <- tkframe(thresholdFrame)
+	threshold2Variable <- tclVar("")	
+	threshold2Field <- ttkentry(thresholdFrame, width="10", textvariable=threshold2Variable)
+	threshold3Frame <- tkframe(thresholdFrame)
+	threshold3Variable <- tclVar("")	
+	threshold3Field <- ttkentry(thresholdFrame, width="10", textvariable=threshold3Variable)
+	threshold4Frame <- tkframe(thresholdFrame)
+	threshold4Variable <- tclVar("")	
+	threshold4Field <- ttkentry(thresholdFrame, width="10", textvariable=threshold4Variable)
+	threshold5Frame <- tkframe(thresholdFrame)
+	threshold5Variable <- tclVar("")	
+	threshold5Field <- ttkentry(thresholdFrame, width="10", textvariable=threshold5Variable)
+	levelname1Frame <- tkframe(thresholdFrame)
+	levelname1Variable <- tclVar("<no group>")	
+	levelname1Field <- ttkentry(thresholdFrame, width="20", textvariable=levelname1Variable)
+	levelname2Frame <- tkframe(thresholdFrame)
+	levelname2Variable <- tclVar("<no group>")	
+	levelname2Field <- ttkentry(thresholdFrame, width="20", textvariable=levelname2Variable)
+	levelname3Frame <- tkframe(thresholdFrame)
+	levelname3Variable <- tclVar("<no group>")	
+	levelname3Field <- ttkentry(thresholdFrame, width="20", textvariable=levelname3Variable)
+	levelname4Frame <- tkframe(thresholdFrame)
+	levelname4Variable <- tclVar("<no group>")	
+	levelname4Field <- ttkentry(thresholdFrame, width="20", textvariable=levelname4Variable)
+	levelname5Frame <- tkframe(thresholdFrame)
+	levelname5Variable <- tclVar("<no group>")	
+	levelname5Field <- ttkentry(thresholdFrame, width="20", textvariable=levelname5Variable)
+	levelname6Frame <- tkframe(thresholdFrame)
+	levelname6Variable <- tclVar("<no group>")	
+	levelname6Field <- ttkentry(thresholdFrame, width="20", textvariable=levelname6Variable)
+	radioButtons(name="grouping", buttons=c("equalgreater", "greater"), values=c(">=", ">"),
+		labels=gettext(domain="R-RcmdrPlugin.EZR",c(">= (equal to or greater than)", "> (greater than)")), title=gettext(domain="R-RcmdrPlugin.EZR","Threshold"))
+
+	onOK <- function(){
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Bin numeric variable to more than 2 groups with specified thresholds"), "#####", sep=""))
+		var <- trim.blanks(getSelection(variablesBox))
+        	if (length(var) == 0){
+  	          errorCondition(recall=StatMedNewVar2, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
+            	return()
+            	}
+		newVar <- trim.blanks(tclvalue(newVariableNameVariable))
+		if (!is.valid.name(newVar)){
+			errorCondition(recall=StatMedNewVar2,
+				message=paste('"', newVar, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
+			return()
+		}
+		threshold1 <- tclvalue(threshold1Variable)
+		threshold2 <- tclvalue(threshold2Variable)
+		threshold3 <- tclvalue(threshold3Variable)
+		threshold4 <- tclvalue(threshold4Variable)
+		threshold5 <- tclvalue(threshold5Variable)
+		levelname1 <- tclvalue(levelname1Variable)
+		levelname2 <- tclvalue(levelname2Variable)
+		levelname3 <- tclvalue(levelname3Variable)
+		levelname4 <- tclvalue(levelname4Variable)
+		levelname5 <- tclvalue(levelname5Variable)
+		levelname6 <- tclvalue(levelname6Variable)
+		grouping <- as.character(tclvalue(groupingVariable))
+		if(grouping==">="){
+			right <- ", right=FALSE)"
+		} else {
+			right <- ", right=TRUE)"
+		}
+		levels <- 0
+		breaks <- ", breaks=c(-Inf, "
+		labels <- ", labels=c("
+		if (levelname1 == "<no group>"){
+  	        errorCondition(recall=StatMedNewVar2, message=gettext(domain="R-RcmdrPlugin.EZR","Input at least two groups."))
+            return()
+        } else {
+			levels <- levels + 1
+			labels <- paste(labels, '"', levelname1, '"', sep="")
+		}
+		if (levelname2 != "<no group>"){
+			if (length(threshold1) == 0){
+  	          errorCondition(recall=StatMedNewVar2, message=gettext(domain="R-RcmdrPlugin.EZR","Input threshold to bin a numeric variable."))
+            return()
+            }
+			levels <- levels + 1
+			breaks <- paste(breaks, threshold1, sep="")
+			labels <- paste(labels, ', "', levelname2, '"', sep="")
+		}
+		if (levelname3 != "<no group>"){
+			if (length(threshold2) == 0){
+  	          errorCondition(recall=StatMedNewVar2, message=gettext(domain="R-RcmdrPlugin.EZR","Input threshold to bin a numeric variable."))
+            return()
+            }
+			levels <- levels + 1
+			breaks <- paste(breaks, ", ", threshold2, sep="")
+			labels <- paste(labels, ', "', levelname3, '"', sep="")
+		}
+		if (levelname4 != "<no group>"){
+			if (length(threshold3) == 0){
+  	          errorCondition(recall=StatMedNewVar2, message=gettext(domain="R-RcmdrPlugin.EZR","Input threshold to bin a numeric variable."))
+            return()
+            }
+			levels <- levels + 1
+			breaks <- paste(breaks, ", ", threshold3, sep="")
+			labels <- paste(labels, ', "', levelname4, '"', sep="")
+		}
+		if (levelname5 != "<no group>"){
+			if (length(threshold4) == 0){
+  	          errorCondition(recall=StatMedNewVar2, message=gettext(domain="R-RcmdrPlugin.EZR","Input threshold to bin a numeric variable."))
+            return()
+            }
+			levels <- levels + 1
+			breaks <- paste(breaks, ", ", threshold4, sep="")
+			labels <- paste(labels, ', "', levelname5, '"', sep="")
+		}
+		if (levelname6 != "<no group>"){
+			if (length(threshold5) == 0){
+  	          errorCondition(recall=StatMedNewVar2, message=gettext(domain="R-RcmdrPlugin.EZR","Input threshold to bin a numeric variable."))
+            return()
+            }
+			levels <- levels + 1
+			breaks <- paste(breaks, ", ", threshold5, sep="")
+			labels <- paste(labels, ', "', levelname6, '"', sep="")
+		}
+		if (levels < 2){
+  	          errorCondition(recall=StatMedNewVar2, message=gettext(domain="R-RcmdrPlugin.EZR","Input at least two groups."))
+            return()
+        }
+		breaks <- paste(breaks, ", Inf)", sep="")
+		labels <- paste(labels, ")", sep="")
+		closeDialog()
+		command <-  paste(dataSet,"$",newVar, " <- cut(", dataSet, "$", var, breaks, labels, right, sep="")
+		logger(command)
+		result <- justDoIt(command)
+		if (class(result)[1] !=  "try-error") activeDataSet(dataSet, flushModel=FALSE)
+		logger(paste("#", gettext(domain="R-RcmdrPlugin.EZR","New variable"), " ", newVar, " ", gettext(domain="R-RcmdrPlugin.EZR","was made."), sep="") )
+		doItAndPrint(paste("table(", dataSet, "$", newVar, ", exclude=NULL)", sep="") )
+		tkfocus(CommanderWindow())
+	}
+        OKCancelHelp(helpSubject="ifelse")
+	tkgrid(getFrame(variablesBox), sticky="nw")
+	tkgrid(labelRcmdr(newVariableNameFrame, text=gettext(domain="R-RcmdrPlugin.EZR","New variable name:")), newVariableNameField, sticky = "w")
+	tkgrid(newVariableNameFrame, labelRcmdr(thresholdFrame, text="  "), sticky="w")
+
+	tkgrid(labelRcmdr(thresholdFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Input thresholds and level names."), fg="blue"), sticky="w")
+
+	tkgrid(labelRcmdr(levelname1Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Level group name"), " 1:", sep="")), levelname1Field, sticky = "w")
+	tkgrid(levelname1Frame, labelRcmdr(thresholdFrame, text="  "), sticky="w")
+	tkgrid(labelRcmdr(levelname2Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Level group name"), " 2:", sep="")), levelname2Field, sticky = "w")
+	tkgrid(labelRcmdr(threshold1Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Threshold"), " 1:", sep="")), threshold1Field, sticky = "w")
+	tkgrid(levelname2Frame, labelRcmdr(thresholdFrame, text="  "), threshold1Frame, sticky="w")
+	tkgrid(labelRcmdr(levelname3Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Level group name"), " 3:", sep="")), levelname3Field, sticky = "w")
+	tkgrid(labelRcmdr(threshold2Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Threshold"), " 2:", sep="")), threshold2Field, sticky = "w")
+	tkgrid(levelname3Frame, labelRcmdr(thresholdFrame, text="  "), threshold2Frame, sticky="w")
+	tkgrid(labelRcmdr(levelname4Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Level group name"), " 4:", sep="")), levelname4Field, sticky = "w")
+	tkgrid(labelRcmdr(threshold3Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Threshold"), " 3:", sep="")), threshold3Field, sticky = "w")
+	tkgrid(levelname4Frame, labelRcmdr(thresholdFrame, text="  "), threshold3Frame, sticky="w")
+	tkgrid(labelRcmdr(levelname5Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Level group name"), " 5:", sep="")), levelname5Field, sticky = "w")
+	tkgrid(labelRcmdr(threshold4Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Threshold"), " 4:", sep="")), threshold4Field, sticky = "w")
+	tkgrid(levelname5Frame, labelRcmdr(thresholdFrame, text="  "), threshold4Frame, sticky="w")
+	tkgrid(labelRcmdr(levelname6Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Level group name"), " 6:", sep="")), levelname6Field, sticky = "w")
+	tkgrid(labelRcmdr(threshold5Frame, text=paste(gettext(domain="R-RcmdrPlugin.EZR","Threshold"), " 5:", sep="")), threshold5Field, sticky = "w")
+	tkgrid(levelname6Frame, labelRcmdr(thresholdFrame, text="  "), threshold5Frame, sticky="w")
+	tkgrid(thresholdFrame, sticky="w")
+	tkgrid(groupingFrame, sticky="nw")
+
+	tkgrid(buttonsFrame, sticky="w", columnspan=2)
+	dialogSuffix(rows=3, columns=2)
+	}
+
+	
 StatMedCompute <- function(){
 	onDoubleClick <-function(){
 		var <- trim.blanks(getSelection(variablesBox))
@@ -5512,13 +5811,13 @@ StatMedBinVariable <- function(){
 
 	
 StatMedFactorToNumeric <- function(){
-	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Convert factors or character variables to numeric variables"))
+	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Convert factors or character variables of numeric data to numeric variables"))
 	variableBox <- variableListBox(top, Variables(), selectmode="multiple",
 		title=gettext(domain="R-RcmdrPlugin.EZR","Variables (pick one or more)"), listHeight=15)
 	factorName <- tclVar(gettext(domain="R-RcmdrPlugin.EZR","<same as variables>"))
 	factorNameField <- ttkentry(top, width="20", textvariable=factorName)
 	onOK <- function(){
-	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Convert factors or character variables to numeric variables"), "#####", sep=""))
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Convert factors or character variables of numeric data to numeric variables"), "#####", sep=""))
 		variables <- getSelection(variableBox)
 		closeDialog()
 		if (length(variables) == 0) {
@@ -6406,7 +6705,10 @@ currentModel <- TRUE
         x <- getSelection(xBox)
         group <- getSelection(groupBox)
 		color <- tclvalue(colorVariable)
+        bins <- tclvalue(binsVariable)
+        scale <- tclvalue(scaleVariable)
 		subset <- tclvalue(subsetVariable)
+putDialog("StatMedHistogram", list(x=x, group=group, color=color, bins=tclvalue(binsVariable), scale=scale, subset=tclvalue(subsetVariable)))
 		if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 			subset1 <- ""
 			subset2 <- ""
@@ -6419,14 +6721,10 @@ currentModel <- TRUE
             errorCondition(recall=StatMedHistogram, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable"))
             return()
             }
-        bins <- tclvalue(binsVariable)
         opts <- options(warn=-1)
 #        bins <- if (bins == gettext(domain="R-RcmdrPlugin.EZR","<auto>")) '"Sturges"' else as.numeric(bins)
         bins <- if (bins == gettext(domain="R-RcmdrPlugin.EZR","<auto>")) '"scott"' else as.numeric(bins)-1	#chabge default to Scott, bins <- bins - 1
         options(opts)
-        scale <- tclvalue(scaleVariable)
-
-putDialog("StatMedHistogram", list(x=x, group=group, color=color, bins=tclvalue(binsVariable), scale=scale, subset=tclvalue(subsetVariable)))
 		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 		if (length(group)==0) {
 			command <- paste("HistEZR(", subset1, ActiveDataSet(), subset2, "$", x, ', scale="',
@@ -6610,7 +6908,8 @@ currentModel <- TRUE
 		group <- getSelection(groupBox)
 		logy <- tclvalue(logyVariable)
         whisker <- tclvalue(whiskerVariable)
-		    subset <- tclvalue(subsetVariable)
+		subset <- tclvalue(subsetVariable)
+putDialog("StatMedBoxPlot", list(x=x, group=group, logy=logy, whisker=whisker, subset = tclvalue(subsetVariable)))
 			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 				subset1 <- ""
 				subset2 <- ""
@@ -6620,7 +6919,6 @@ currentModel <- TRUE
 				subset2 <- paste(", ", subset, ")", sep="")
 				subset <- paste(", subset=", subset, sep="")
 			}
-putDialog("StatMedBoxPlot", list(x=x, group=group, logy=logy, whisker=whisker, subset = tclvalue(subsetVariable)))
         closeDialog()
         if (length(x) == 0){
             errorCondition(recall=StatMedBoxPlot, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable"))
@@ -6755,6 +7053,7 @@ currentModel <- TRUE
         group2 <- getSelection(group2Box)
         response <- getSelection(responseBox)
 		subset <- tclvalue(subsetVariable)
+putDialog("StatMedBarMeans", list(group1=group1, group2=group2, response=response, errorBars=error.bars, subset=tclvalue(subsetVariable)))
 		if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 			subset1 <- ""
 			subset2 <- ""
@@ -6769,8 +7068,6 @@ currentModel <- TRUE
           }
         dataSet <- ActiveDataSet()
         error.bars <- tclvalue(errorBarsVariable)
-
-putDialog("StatMedBarMeans", list(group1=group1, group2=group2, response=response, errorBars=error.bars, subset=tclvalue(subsetVariable)))
 		if (length(group1) == 0){
 			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 			doItAndPrint(paste("bar.sums <- sum(", subset1, dataSet, subset2, "$", response, ", na.rm=TRUE)", sep=""))
@@ -6884,14 +7181,14 @@ currentModel <- TRUE
 		groups <- getSelection(groupBox)
 		response <- getSelection(responseBox)
 		logy <- tclvalue(logyVariable)
-			.activeDataSet <- ActiveDataSet()
-		    subset <- tclvalue(subsetVariable)
+		.activeDataSet <- ActiveDataSet()
+		subset <- tclvalue(subsetVariable)
+putDialog("StatMedStripChart", list(group=groups, response=response, logy=logy, subset = tclvalue(subsetVariable)))
 			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 				.subDataSet <- .activeDataSet
 			} else {
 				.subDataSet <- paste("subset(", .activeDataSet, ", ", subset, ")", sep="")
 			}
-putDialog("StatMedStripChart", list(group=groups, response=response, logy=logy, subset = tclvalue(subsetVariable)))
 		closeDialog()
 		if (0 == length(response)) {
 			errorCondition(recall=StatMedStripChart, message=gettext(domain="R-RcmdrPlugin.EZR","No response variable selected."))
@@ -6964,8 +7261,9 @@ currentModel <- TRUE
 		trend <- as.character(tclvalue(trendVariable))		
 		lowlim <- tclvalue(lowlim)
 		uplim <- tclvalue(uplim)
-			.activeDataSet <- ActiveDataSet()
-		    subset <- tclvalue(subsetVariable)
+		.activeDataSet <- ActiveDataSet()
+		subset <- tclvalue(subsetVariable)
+putDialog("StatMedOrderedChart", list(response=response, group=getSelection(groupBox), type=type, trend=trend, lowlim=lowlim, uplim=uplim, logy=ylog, subset=tclvalue(subsetVariable)))
 			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 				.subDataSet <- .activeDataSet
 			} else {
@@ -6976,8 +7274,6 @@ currentModel <- TRUE
 		} else {
 			groups <- paste(.subDataSet, "$", groups, sep="")
 		}
-
-putDialog("StatMedOrderedChart", list(response=response, group=getSelection(groupBox), type=type, trend=trend, lowlim=lowlim, uplim=uplim, logy=ylog, subset=tclvalue(subsetVariable)))
 		closeDialog()
 		if (0 == length(response)) {
 			errorCondition(recall=StatMedOrderedChart, message=gettext(domain="R-RcmdrPlugin.EZR","No response variable selected."))
@@ -7265,10 +7561,6 @@ StatMedScatterPlotMatrix <- function () {
 		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Scatterplot Matrix"), "#####", sep=""))
 		variables <- getSelection(variablesBox)
 		closeDialog()
-		if (length(variables) < 3) {
-			errorCondition(recall = StatMedScatterPlotMatrix, message = gettext(domain="R-RcmdrPlugin.EZR","Fewer than 3 variable selected."))
-			return()
-		}
 		line <- if ("1" == tclvalue(lsLineVariable)) 
 					"lm"
 				else "FALSE"
@@ -7279,12 +7571,16 @@ StatMedScatterPlotMatrix <- function () {
 		initial.subset <- subset <- tclvalue(subsetVariable)
 		subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) ""
 				else paste(", subset=", subset, sep="")
+		.activeDataSet <- ActiveDataSet()
 		putDialog("StatMedScatterPlotMatrix", list(initial.variables = variables, initial.line = tclvalue (lsLineVariable), 
 						initial.smooth = tclvalue(smoothLineVariable),initial.spread = tclvalue (spreadVariable), 
 						initial.span = span, initial.diag = diag, initial.subset = initial.subset, 
 						initial.group=if (.groups == FALSE) NULL else .groups,
 						initial.lines.by.group=if (.linesByGroup) 1 else 0, subset=tclvalue(subsetVariable)))
-		.activeDataSet <- ActiveDataSet()
+		if (length(variables) < 3) {
+			errorCondition(recall = StatMedScatterPlotMatrix, message = gettext(domain="R-RcmdrPlugin.EZR","Fewer than 3 variable selected."))
+			return()
+		}
         if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 		if (.groups == FALSE) {
 			command <- paste("scatterplotMatrix(~", paste(variables, 
@@ -7695,10 +7991,6 @@ currentModel <- TRUE
     onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Single-Sample t-Test"), "#####", sep=""))
         x <- getSelection(xBox)
-        if (length(x) == 0){
-            errorCondition(recall=StatMedSingleSampleTTest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
-            return()
-            }
         alternative <- as.character(tclvalue(alternativeVariable))
         level <- tclvalue(confidenceVariable)
         mu <- tclvalue(muVariable)
@@ -7711,6 +8003,10 @@ currentModel <- TRUE
 			subset2 <- paste(", ", subset, ")", sep="")
 		}
 putDialog("StatMedSingleSampleTTest", list(x=x, mu=mu, confidence=tclvalue(confidenceVariable), alternative=alternative, subset = tclvalue(subsetVariable)))	
+        if (length(x) == 0){
+            errorCondition(recall=StatMedSingleSampleTTest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
+            return()
+            }
 		closeDialog()
         doItAndPrint(paste("(res <- t.test(", subset1, ActiveDataSet(), subset2, "$", x,
             ", alternative='", alternative, "', mu=", mu, ", conf.level=", level,
@@ -7810,15 +8106,7 @@ currentModel <- TRUE
     onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Two-variances F-test"), "#####", sep=""))
         group <- getSelection(groupBox)
-        if (length(group) == 0) {
-            errorCondition(recall=StatMedFTest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
-            return()
-            }
         response <- getSelection(responseBox)
-        if (length(response) == 0) {
-            errorCondition(recall=StatMedFTest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
-            return()
-            }
         alternative <- as.character(tclvalue(alternativeVariable))
         level <- tclvalue(confidenceVariable)
         subset <- tclvalue(subsetVariable)
@@ -7831,8 +8119,15 @@ currentModel <- TRUE
 			subset2 <- paste(", ", subset, ")", sep="")
 			subset <- paste(", subset=", subset, sep="")
 		}
-		
 putDialog("StatMedFTest", list(group=group, response=response, confidence=level, alternative=alternative, subset = tclvalue(subsetVariable)))	
+        if (length(group) == 0) {
+            errorCondition(recall=StatMedFTest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
+            return()
+            }
+        if (length(response) == 0) {
+            errorCondition(recall=StatMedFTest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
+            return()
+            }
             closeDialog()
         .activeDataSet <- ActiveDataSet()
         doItAndPrint(paste("tapply(", subset1, .activeDataSet, subset2, "$", response, ", ", subset1,
@@ -7879,15 +8174,7 @@ currentModel <- TRUE
     onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Bartlett's test"), "#####", sep=""))
         group <- getSelection(groupBox)
-        if (length(group) == 0) {
-            errorCondition(recall=StatMedBartlett, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
-            return()
-            }
         response <- getSelection(responseBox)
-        if (length(response) == 0) {
-            errorCondition(recall=StatMedBartlett, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
-            return()
-            }
         subset <- tclvalue(subsetVariable)
         if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 			subset1 <- ""
@@ -7899,6 +8186,14 @@ currentModel <- TRUE
 			subset <- paste(", subset=", subset, sep="")
 		}
 putDialog("StatMedBartlett", list(group=group, response=response, subset = tclvalue(subsetVariable)))	
+        if (length(group) == 0) {
+            errorCondition(recall=StatMedBartlett, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
+            return()
+            }
+        if (length(response) == 0) {
+            errorCondition(recall=StatMedBartlett, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
+            return()
+            }
         closeDialog()
         .activeDataSet <- ActiveDataSet()
         doItAndPrint(paste("tapply(", subset1, .activeDataSet, subset2, "$", response, ", ", subset1,
@@ -7936,15 +8231,7 @@ currentModel <- TRUE
     onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Two-sample t-test"), "#####", sep=""))	
 	    group <- getSelection(groupBox)
-        if (length(group) == 0) {
-            errorCondition(recall=StatMedTtest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
-            return()
-            }
         response <- getSelection(responseBox)
-        if (length(response) == 0) {
-            errorCondition(recall=StatMedTtest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
-            return()
-            }
         alternative <- as.character(tclvalue(alternativeVariable))
         level <- tclvalue(confidenceVariable)
         variances <- as.character(tclvalue(variancesVariable))
@@ -7958,10 +8245,16 @@ currentModel <- TRUE
 				subset1 <- "subset("
 				subset2 <- paste(", ", subset, ")", sep="")
 				subset <- paste(", subset=", subset, sep="")
-			}
-			
+			}			
 putDialog("StatMedTtest", list(group=group, response=response, confidence=tclvalue(confidenceVariable), alternative=alternative, variances=variances, graph=graph, subset = tclvalue(subsetVariable)))
-
+        if (length(group) == 0) {
+            errorCondition(recall=StatMedTtest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
+            return()
+            }
+        if (length(response) == 0) {
+            errorCondition(recall=StatMedTtest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
+            return()
+            }
         closeDialog()
 	nvar = length(group)
 	doItAndPrint("group.names <- NULL")
@@ -8058,14 +8351,6 @@ currentModel <- TRUE
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Paired t-test"), "#####", sep=""))
         x <- getSelection(xBox)
         y <- getSelection(yBox)
-        if (length(x) == 0 | length(y) == 0){
-            errorCondition(recall=StatMedPairedTtest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
-            return()
-            }
-        if (x == y){
-            errorCondition(recall=StatMedPairedTtest, message=gettext(domain="R-RcmdrPlugin.EZR","Variables must be different."))
-            return()
-            }
         alternative <- as.character(tclvalue(alternativeVariable))
         level <- tclvalue(confidenceVariable)
         subset <- tclvalue(subsetVariable)
@@ -8075,10 +8360,16 @@ currentModel <- TRUE
 		} else {
 			subset1 <- "subset("
 			subset2 <- paste(", ", subset, ")", sep="")
-		}
-		
+		}		
 putDialog("StatMedPairedTtest", list(xBox=x, yBox=y, confidence=level, alternative=alternative, subset = tclvalue(subsetVariable)))
-		
+        if (length(x) == 0 | length(y) == 0){
+            errorCondition(recall=StatMedPairedTtest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
+            return()
+            }
+        if (x == y){
+            errorCondition(recall=StatMedPairedTtest, message=gettext(domain="R-RcmdrPlugin.EZR","Variables must be different."))
+            return()
+            }		
         closeDialog()
         .activeDataSet <- ActiveDataSet()
         doItAndPrint(paste("(res <- t.test(", subset1, .activeDataSet, subset2, "$", x, ", ",
@@ -8156,19 +8447,6 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
 		onOK <- function(){
 		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","One-way ANOVA"), "#####", sep=""))
 			modelValue <- trim.blanks(tclvalue(modelName))
-			if (!is.valid.name(modelValue)){
-				UpdateModelNumber(-1)
-				errorCondition(recall=StatMedANOVA, message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue))
-				return()
-			}
-			if (is.element(modelValue, listAOVModels())) {
-				if ("no" == tclvalue(checkReplace(modelValue, type=gettext(domain="R-RcmdrPlugin.EZR","Model")))){
-					UpdateModelNumber(-1)
-					tkdestroy(top)
-					oneWayAnova()
-					return()
-				}
-			}
 			group <- getSelection(groupBox)			
 			response <- getSelection(responseBox)
 			variances <- as.character(tclvalue(variancesVariable))
@@ -8188,10 +8466,20 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
 				subset2 <- paste(", ", subset, ")", sep="")
 				subset <- paste(", subset=", subset, sep="")
 			}
-			
-
 putDialog("StatMedANOVA", list(group=group, response=response, variances=variances, pairwise=pairwise, dunnett=dunnett, bonferroni=bonferroni, holm=holm, actmodel=actmodel, graph=graph, subset=tclvalue(subsetVariable)))
-
+			if (!is.valid.name(modelValue)){
+				UpdateModelNumber(-1)
+				errorCondition(recall=StatMedANOVA, message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue))
+				return()
+			}
+			if (is.element(modelValue, listAOVModels())) {
+				if ("no" == tclvalue(checkReplace(modelValue, type=gettext(domain="R-RcmdrPlugin.EZR","Model")))){
+					UpdateModelNumber(-1)
+					tkdestroy(top)
+					oneWayAnova()
+					return()
+				}
+			}
 			closeDialog()
 			if (length(group) == 0){
 				errorCondition(recall=StatMedANOVA, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups factor."))
@@ -8370,25 +8658,8 @@ checkBoxes(frame="optionsFrame", boxes=c("bonferroni", "holm", "actmodel"), init
     onOK <- function(){
 		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Repeated-measures ANOVA"), "#####", sep=""))
 		modelValue <- trim.blanks(tclvalue(modelName))
-		if (!is.valid.name(modelValue)){
-			UpdateModelNumber(-1)
-			errorCondition(recall=StatMedRepANOVA, message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue))
-			return()
-		}
-		if (is.element(modelValue, listLMModels())) {
-			if ("no" == tclvalue(checkReplace(modelValue, type=gettext(domain="R-RcmdrPlugin.EZR","Model")))){
-				UpdateModelNumber(-1)
-				tkdestroy(top)
-				StatMedRepANOVA()
-				return()
-			}
-		}
         data <- getSelection(dataBox)
 		group <- getSelection(groupBox)
-        if (length(data) < 2) {
-            errorCondition(recall=StatMedRepANOVA, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
-            return()
-            }
 		bonferroni <- tclvalue(bonferroniVariable)
 		holm <- tclvalue(holmVariable)
 		actmodel <- tclvalue(actmodelVariable)
@@ -8404,9 +8675,24 @@ checkBoxes(frame="optionsFrame", boxes=c("bonferroni", "holm", "actmodel"), init
 		if (line=="color") line <- ", lty=1, lwd=1"
 		if (line=="type") line <- ", col=1, lwd=1"
 		if (line=="width") line <- ", col=1, lty=1"
-
 putDialog("StatMedRepANOVA", list(group=group, data=data, line=tclvalue(lineVariable), bonferroni=bonferroni, holm=holm, actmodel=actmodel, subset = tclvalue(subsetVariable)))
-
+		if (!is.valid.name(modelValue)){
+			UpdateModelNumber(-1)
+			errorCondition(recall=StatMedRepANOVA, message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue))
+			return()
+		}
+		if (is.element(modelValue, listLMModels())) {
+			if ("no" == tclvalue(checkReplace(modelValue, type=gettext(domain="R-RcmdrPlugin.EZR","Model")))){
+				UpdateModelNumber(-1)
+				tkdestroy(top)
+				StatMedRepANOVA()
+				return()
+			}
+		}
+        if (length(data) < 2) {
+            errorCondition(recall=StatMedRepANOVA, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
+            return()
+            }
 		closeDialog()
 		nvar <- length(data)
 		RepeatedData <- data[1]
@@ -8557,6 +8843,19 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
     onOK <- function(){
 		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Multi-way ANOVA"), "#####", sep=""))
 		modelValue <- trim.blanks(tclvalue(modelName))
+        data <- getSelection(dataBox)
+		group <- getSelection(groupBox)
+		dataSet <- ActiveDataSet()
+        subset <- tclvalue(subsetVariable)
+        subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
+			doItAndPrint(paste("TempDF <- ", dataSet))
+		} else {
+			doItAndPrint(paste("TempDF <- subset(", dataSet, ",", subset, ")") )
+        }
+		interaction <- tclvalue(interactionVariable)
+		actmodel <- tclvalue(actmodelVariable)
+		
+	putDialog("StatMedMultiANOVA", list(group=group, data=data, interaction=interaction, actmodel=actmodel, subset = tclvalue(subsetVariable)))
 		if (!is.valid.name(modelValue)){
 			UpdateModelNumber(-1)
 			errorCondition(recall=StatMedMultiANOVA, message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue))
@@ -8570,8 +8869,6 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
 				return()
 			}
 		}
-        data <- getSelection(dataBox)
-		group <- getSelection(groupBox)
         if (length(data) == 0) {
             errorCondition(recall=StatMedMultiANOVA, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
             return()
@@ -8580,18 +8877,6 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
             errorCondition(recall=StatMedMultiANOVA, message=gettext(domain="R-RcmdrPlugin.EZR","You must select at least one factor."))
             return()
             }
-		dataSet <- ActiveDataSet()
-        subset <- tclvalue(subsetVariable)
-        subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
-			doItAndPrint(paste("TempDF <- ", dataSet))
-		} else {
-			doItAndPrint(paste("TempDF <- subset(", dataSet, ",", subset, ")") )
-        }
-		interaction <- tclvalue(interactionVariable)
-		actmodel <- tclvalue(actmodelVariable)
-		
-	putDialog("StatMedMultiANOVA", list(group=group, data=data, interaction=interaction, actmodel=actmodel, subset = tclvalue(subsetVariable)))
-
 		closeDialog()
 		nvar <- length(group)
 		if (nvar <=3 & interaction==1){
@@ -8700,7 +8985,7 @@ currentModel <- TRUE
 	model <- ttkentry(modelFrame, width="20", textvariable=modelName)
     variablesFrame <- tkframe(top)
     dataBox <- variableListBox(variablesFrame, Numeric(),title=gettext(domain="R-RcmdrPlugin.EZR","Response Variable (pick one)"), listHeight=10, initialSelection=varPosn(dialog.values$data, "numeric"))
-    groupBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Grouping variables (pick one)"), listHeight=10, initialSelection=varPosn(dialog.values$group, "all"))
+    groupBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Grouping variable (pick one)"), listHeight=10, initialSelection=varPosn(dialog.values$group, "all"))
     variables2Frame <- tkframe(top)
     covariateBox <- variableListBox(variables2Frame, Numeric(), title=gettext(domain="R-RcmdrPlugin.EZR","Numeric variable for adjustment (pick one)"), listHeight=10, initialSelection=varPosn(dialog.values$covariate, "numeric"))	
     optionsFrame <- tkframe(top)
@@ -8711,6 +8996,18 @@ currentModel <- TRUE
     onOK <- function(){
 		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","ANCOVA"), "#####", sep=""))
 		modelValue <- trim.blanks(tclvalue(modelName))
+        data <- getSelection(dataBox)
+		group <- getSelection(groupBox)
+		covariate <- getSelection(covariateBox)
+		dataSet <- ActiveDataSet()
+		actmodel <- tclvalue(actmodelVariable)
+        subset <- tclvalue(subsetVariable)
+        subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
+			doItAndPrint(paste("TempDF <- ", dataSet))
+		} else {
+			doItAndPrint(paste("TempDF <- subset(", dataSet, ",", subset, ")") )
+        }
+putDialog("StatMedANCOVA", list(group=group, data=data, covariate=covariate, actmodel=actmodel, subset = tclvalue(subsetVariable)))
 		if (!is.valid.name(modelValue)){
 			UpdateModelNumber(-1)
 			errorCondition(recall=StatMedANCOVA, message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue))
@@ -8724,9 +9021,6 @@ currentModel <- TRUE
 				return()
 			}
 		}
-        data <- getSelection(dataBox)
-		group <- getSelection(groupBox)
-		covariate <- getSelection(covariateBox)
         if (length(data) == 0) {
             errorCondition(recall=StatMedANCOVA, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
             return()
@@ -8739,16 +9033,6 @@ currentModel <- TRUE
             errorCondition(recall=StatMedANCOVA, message=gettext(domain="R-RcmdrPlugin.EZR","You must select one numeric variable for adjustment."))
             return()
             }
-		dataSet <- ActiveDataSet()
-		actmodel <- tclvalue(actmodelVariable)
-        subset <- tclvalue(subsetVariable)
-        subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
-			doItAndPrint(paste("TempDF <- ", dataSet))
-		} else {
-			doItAndPrint(paste("TempDF <- subset(", dataSet, ",", subset, ")") )
-        }
-
-putDialog("StatMedANCOVA", list(group=group, data=data, covariate=covariate, actmodel=actmodel, subset = tclvalue(subsetVariable)))
 		closeDialog()
 		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}		
 		command <- paste("scatterplot(", data, " ~ ", covariate, " | factor(", group, "), reg.line=lm, smooth=FALSE, spread=FALSE, by.groups=TRUE, data=TempDF)", sep="")
@@ -8798,16 +9082,6 @@ currentModel <- TRUE
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Test for Pearson's correlation"), "#####", sep=""))
     alternative <- as.character(tclvalue(alternativeVariable))
     x <- getSelection(xBox)
-    if (2 > length(x)) {
-      errorCondition(recall=StatMedCorrelation,
-        message=gettext(domain="R-RcmdrPlugin.EZR","Fewer than 2 variables selected."))
-      return()
-    }
-    if(2 < length(x)) {
-      errorCondition(recall=StatMedCorrelation,
-        message=gettext(domain="R-RcmdrPlugin.EZR","More than 2 variables selected."))
-      return()
-    }
 		    subset <- tclvalue(subsetVariable)
 			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 				subset1 <- ""
@@ -8818,9 +9092,17 @@ currentModel <- TRUE
 				subset2 <- paste(", ", subset, ")", sep="")
 				subset <- paste(", subset=", subset, sep="")
 			}
-
 putDialog("StatMedCorrelation", list(x=x, alternative=alternative, subset = tclvalue(subsetVariable)))
-			
+    if (2 > length(x)) {
+      errorCondition(recall=StatMedCorrelation,
+        message=gettext(domain="R-RcmdrPlugin.EZR","Fewer than 2 variables selected."))
+      return()
+    }
+    if(2 < length(x)) {
+      errorCondition(recall=StatMedCorrelation,
+        message=gettext(domain="R-RcmdrPlugin.EZR","More than 2 variables selected."))
+      return()
+    }			
     closeDialog()
     .activeDataSet <- ActiveDataSet()
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
@@ -8882,21 +9164,6 @@ checkBoxes(frame="optionsFrame", boxes=c("wald", "actmodel", "diagnosis", "stepw
         x <- getSelection(xBox)
         y <- getSelection(yBox)
         closeDialog()
-        if (0 == length(y)) {
-            UpdateModelNumber(-1)
-            errorCondition(recall=StatMedLinearRegression, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
-            return()
-            }
-        if (0 == length(x)) {
-            UpdateModelNumber(-1)
-            errorCondition(recall=StatMedLinearRegression, message=gettext(domain="R-RcmdrPlugin.EZR","No explanatory variables selected."))
-            return()
-            }
-        if (is.element(y, x)) {
-            UpdateModelNumber(-1)
-            errorCondition(recall=StatMedLinearRegression, message=gettext(domain="R-RcmdrPlugin.EZR","Response and explanatory variables must be different."))
-            return()
-            }
 		wald <- tclvalue(waldVariable)
 		actmodel <- tclvalue(actmodelVariable)
 		diagnosis <- tclvalue(diagnosisVariable)
@@ -8912,9 +9179,22 @@ checkBoxes(frame="optionsFrame", boxes=c("wald", "actmodel", "diagnosis", "stepw
             subset <- paste(", subset=", subset, sep="")
             putRcmdr("modelWithSubset", TRUE)
             }
-
 putDialog("StatMedLinearRegression", list(x=x, y=y, wald=wald, actmodel=actmodel, diagnosis=diagnosis, stepwise1=stepwise1, stepwise2=stepwise2, stepwise3=stepwise3, subset = tclvalue(subsetVariable)))
-			
+        if (0 == length(y)) {
+            UpdateModelNumber(-1)
+            errorCondition(recall=StatMedLinearRegression, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
+            return()
+            }
+        if (0 == length(x)) {
+            UpdateModelNumber(-1)
+            errorCondition(recall=StatMedLinearRegression, message=gettext(domain="R-RcmdrPlugin.EZR","No explanatory variables selected."))
+            return()
+            }
+        if (is.element(y, x)) {
+            UpdateModelNumber(-1)
+            errorCondition(recall=StatMedLinearRegression, message=gettext(domain="R-RcmdrPlugin.EZR","Response and explanatory variables must be different."))
+            return()
+            }			
 		Library("aod")
 		modelValue <- trim.blanks(tclvalue(modelName))
         if (!is.valid.name(modelValue)){
@@ -9014,22 +9294,22 @@ currentModel <- TRUE
 	onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Mann-Whitney U test"), "#####", sep=""))
         group <- getSelection(groupBox)
-        if (length(group) == 0) {
-            errorCondition(recall=StatMedMannW, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
-            return()
-            }
         response <- getSelection(responseBox)
-        if (length(response) == 0) {
-            errorCondition(recall=StatMedMannW, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
-            return()
-            }
         alternative <- as.character(tclvalue(alternativeVariable))
         test <- as.character(tclvalue(testVariable))
         subset <- tclvalue(subsetVariable)
         subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) ""
             else paste(", subset=", subset, sep="")
 putDialog("StatMedMannW", list(group=group, response=response, alternative=alternative, test=test, subset = tclvalue(subsetVariable)))
-			closeDialog()
+        if (length(group) == 0) {
+            errorCondition(recall=StatMedMannW, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
+            return()
+            }
+        if (length(response) == 0) {
+            errorCondition(recall=StatMedMannW, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
+            return()
+            }
+		closeDialog()
         .activeDataSet <- ActiveDataSet()
         nvar = length(group)
 		doItAndPrint("p.value <- NA")
@@ -9175,10 +9455,6 @@ checkBoxes(frame="optionsFrame", boxes=c("bonferroni", "holm", "steeldwass", "st
     onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Kruskal-Wallis test"), "#####", sep=""))
         group <- getSelection(groupBox)
-        if (length(group) == 0) {
-            errorCondition(recall=StatMedKruWalli, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
-            return()
-            }
         response <- getSelection(responseBox)
 		steeldwass <- tclvalue(steeldwassVariable)
 		steel <- tclvalue(steelVariable)
@@ -9193,9 +9469,12 @@ checkBoxes(frame="optionsFrame", boxes=c("bonferroni", "holm", "steeldwass", "st
 				subset1 <- "subset("
 				subset2 <- paste(", ", subset, ")", sep="")
 				subset <- paste(", subset=", subset, sep="")
-			}
-			
+			}			
 putDialog("StatMedKruWalli", list(group=group, response=response, steeldwass=steeldwass, steel=steel, bonferroni=bonferroni, holm=holm, subset = tclvalue(subsetVariable)))			
+        if (length(group) == 0) {
+            errorCondition(recall=StatMedKruWalli, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
+            return()
+            }
         closeDialog()
         if (length(response) == 0) {
             errorCondition(recall=StatMedKruWalli, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a response variable."))
@@ -9226,6 +9505,7 @@ putDialog("StatMedKruWalli", list(group=group, response=response, steeldwass=ste
 			doItAndPrint(command)
 		}		
 		if (steel==1){
+			Library("mvtnorm")
 			command <- paste("Steel(", subset1, .activeDataSet, subset2, "$", response, ", ", subset1, .activeDataSet, subset2, "$", group, ")", sep="")
 			doItAndPrint(command)
 		}		
@@ -9276,7 +9556,7 @@ checkBoxes(frame="optionsFrame", boxes=c("bonferroni", "holm"), initialValues=c(
 				subset1 <- "subset("
 				subset2 <- paste(", ", subset, ")", sep="")
 			}
-putDialog("StatMedFriedman", list(response=responses, bonferroni=bonferroni, holm=holm, subset = tclvalue(subsetVariable)))		
+putDialog("StatMedFriedman", list(response=responses, bonferroni=bonferroni, holm=holm, subset = tclvalue(subsetVariable)))	
 			closeDialog()
 		if (length(responses) < 2) {
 			errorCondition(recall=StatMedFriedman, message=gettext(domain="R-RcmdrPlugin.EZR","You must select at least two variables."))
@@ -9330,10 +9610,6 @@ currentModel <- TRUE
         response <- getSelection(responseBox)
         group <- getSelection(groupBox)
         alternative <- as.character(tclvalue(alternativeVariable))
-        if (length(response) == 0 || length(group) == 0){
-            errorCondition(recall=StatMedJT, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
-            return()
-            }
 		.activeDataSet <- ActiveDataSet()
 		subset <- tclvalue(subsetVariable)
 		if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
@@ -9341,14 +9617,16 @@ currentModel <- TRUE
 		} else {
 			.subDataSet <- paste("subset(", .activeDataSet, ", ", subset, ")", sep="")
 		}
+putDialog("StatMedJT", list(response=response, group=group, alternative=alternative, subset = tclvalue(subsetVariable)))
+		closeDialog()
+        if (length(response) == 0 || length(group) == 0){
+            errorCondition(recall=StatMedJT, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
+            return()
+            }
         if (response == group) {
             	errorCondition(recall=StatMedJT, message=gettext(domain="R-RcmdrPlugin.EZR","Objective variable and grouping variable must be different."))
  	           return()
         } 
-
-putDialog("StatMedJT", list(response=response, group=group, alternative=alternative, subset = tclvalue(subsetVariable)))
-		closeDialog()
-
 		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 		command <- (paste("boxplot(", response, "~ factor(", group, '), ylab="', response,
                 '", xlab="', group, '"',
@@ -9394,16 +9672,6 @@ currentModel <- TRUE
 	alternative <- as.character(tclvalue(alternativeVariable))
     method <- as.character(tclvalue(methodVariable))
     x <- getSelection(xBox)
-    if (2 > length(x)) {
-      errorCondition(recall=StatMedSpearman,
-        message=gettext(domain="R-RcmdrPlugin.EZR","Fewer than 2 variables selected."))
-      return()
-    }
-    if(2 < length(x)) {
-      errorCondition(recall=StatMedSpearman,
-        message=gettext(domain="R-RcmdrPlugin.EZR","More than 2 variables selected."))
-      return()
-    }
 		    subset <- tclvalue(subsetVariable)
 			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 				subset1 <- ""
@@ -9415,6 +9683,16 @@ currentModel <- TRUE
 				subset <- paste(", subset=", subset, sep="")
 			}
 putDialog("StatMedSpearman", list(x=x, alternative=alternative, method=method, subset = tclvalue(subsetVariable)))			
+    if (2 > length(x)) {
+      errorCondition(recall=StatMedSpearman,
+        message=gettext(domain="R-RcmdrPlugin.EZR","Fewer than 2 variables selected."))
+      return()
+    }
+    if(2 < length(x)) {
+      errorCondition(recall=StatMedSpearman,
+        message=gettext(domain="R-RcmdrPlugin.EZR","More than 2 variables selected."))
+      return()
+    }
     closeDialog()
     .activeDataSet <- ActiveDataSet()
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
@@ -9632,10 +9910,6 @@ currentModel <- TRUE
     onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","One sample proportion test"), "#####", sep=""))
         x <- getSelection(xBox)
-        if (length(x) == 0){
-            errorCondition(recall=StatMedProbSingle, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
-            return()
-            }
 		chisq <- tclvalue(chisqTestVariable)
         exact <- tclvalue(exactTestVariable)
 		continuity <- tclvalue(continuityVariable)
@@ -9650,9 +9924,11 @@ currentModel <- TRUE
 			subset1 <- "subset("
 			subset2 <- paste(", ", subset, ")", sep="")
 		}
-
 putDialog("StatMedProbSingle", list(x=x, chisq=chisq, exact=exact, continuity=continuity, alternative=alternative, p0=p0, confidence=level, subset=tclvalue(subsetVariable)))		
-		
+        if (length(x) == 0){
+            errorCondition(recall=StatMedProbSingle, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
+            return()
+            }		
 		closeDialog()
 		doItAndPrint(paste("(.Table <- table(", subset1, ActiveDataSet(), subset2, "$", x, "))", sep="")) 
 		if(chisq==1){
@@ -9798,14 +10074,15 @@ StatMedProbRatioCI <- function(){
 
 	
 StatMedBarGraph <- function(){
-defaults <- list(variable=NULL, group=NULL, color=0, beside=0, percent=0, subset="")
+defaults <- list(variable=NULL, group=NULL, group2=NULL, color=0, beside=0, percent=0, subset="")
 dialog.values <- getDialog("StatMedBarGraph", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
     initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Bar graph(Frequencies)"))
 	variablesFrame <- tkframe(top)
     variableBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Variable (pick one)"), listHeight=15, initialSelection=varPosn(dialog.values$variable, "all"))
-    groupBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Grouping variable(pick 0 or 1)"), listHeight=15, initialSelection=varPosn(dialog.values$group, "all"))
+    groupBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Grouping variable1(pick 0 or 1)"), listHeight=15, initialSelection=varPosn(dialog.values$group, "all"))
+    group2Box <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Grouping variable2(pick 0 or 1)"), listHeight=15, initialSelection=varPosn(dialog.values$group2, "all"))
 	
 optionsFrame <- tkframe(top)
 checkBoxes(frame="optionsFrame", boxes=c("color", "beside", "percent"), initialValues=c(dialog.values$color, dialog.values$beside, dialog.values$percent),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Draw in color", "Show groups side by side", "Compare proportion in each group")))	
@@ -9818,6 +10095,7 @@ checkBoxes(frame="optionsFrame", boxes=c("color", "beside", "percent"), initialV
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Bar graph(Frequencies)"), "#####", sep=""))
         variable <- getSelection(variableBox)
         group <- getSelection(groupBox)
+        group2 <- getSelection(group2Box)
 		color <- tclvalue(colorVariable)
 		beside <- tclvalue(besideVariable)
 		percent <- tclvalue(percentVariable)
@@ -9840,8 +10118,7 @@ checkBoxes(frame="optionsFrame", boxes=c("color", "beside", "percent"), initialV
 			subset1 <- "subset("
 			subset2 <- paste(", ", subset, ")", sep="")
 		}
-
-putDialog("StatMedBarGraph", list(variable=variable, group=group, color=tclvalue(colorVariable), beside=tclvalue(besideVariable), percent=percent, subset=tclvalue(subsetVariable)))
+putDialog("StatMedBarGraph", list(variable=variable, group=group, group2=group2, color=tclvalue(colorVariable), beside=tclvalue(besideVariable), percent=percent, subset=tclvalue(subsetVariable)))
         closeDialog()
         if (length(variable) == 0){
             errorCondition(recall=StatMedBarGraph, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
@@ -9852,7 +10129,7 @@ putDialog("StatMedBarGraph", list(variable=variable, group=group, color=tclvalue
 				command <- paste("barplot(table(", subset1, ActiveDataSet(), subset2, "$", variable, '), xlab="',
 				variable, '", ylab="Frequency"', color, ", axis.lty=1)", sep="")
 			}
-		else{
+		else if (length(group2) == 0){
 			if(percent == 0){
 				command <- paste("barplot(table(", subset1, ActiveDataSet(), subset2, "$", variable, ",", subset1, ActiveDataSet(), subset2, "$", group, '), xlab="',
 				group, '", ylab="Frequency"', color, beside, ", legend=levels(factor(", subset1, ActiveDataSet(), subset2, "$", variable, ')), args.legend=list(title="', variable, '", box.lty=0), axis.lty=1)', sep="")
@@ -9861,6 +10138,8 @@ putDialog("StatMedBarGraph", list(variable=variable, group=group, color=tclvalue
 				command <- paste("barplot(prop.table(table(", subset1, ActiveDataSet(), subset2, "$", variable, ",", subset1, ActiveDataSet(), subset2, "$", group, '),2), xlab="',
 				group, '", ylab="Frequency"', color, beside, ", legend=levels(factor(", subset1, ActiveDataSet(), subset2, "$", variable, ')), args.legend=list(title="', variable, '", box.lty=0), axis.lty=1)', sep="")
 			}
+		} else {
+				command <- paste('BarplotFor3Factors(First="', variable, '", Second="', group, '", Third="', group2, '", data="', subset1, ActiveDataSet(), subset2, '", prop=', percent, ", col=", tclvalue(colorVariable), ")", sep="")				
 		}
         logger(command)
         justDoIt(command)
@@ -9868,12 +10147,13 @@ putDialog("StatMedBarGraph", list(variable=variable, group=group, color=tclvalue
         tkfocus(CommanderWindow())
         }
     OKCancelHelp(helpSubject="barplot", apply="StatMedBarGraph", reset="StatMedBarGraph")
-	tkgrid(getFrame(variableBox), labelRcmdr(variablesFrame, text=gettext(domain="R-RcmdrPlugin.EZR","    ")), getFrame(groupBox), sticky="w")
+	tkgrid(getFrame(variableBox), labelRcmdr(variablesFrame, text=gettext(domain="R-RcmdrPlugin.EZR","    ")), getFrame(groupBox), labelRcmdr(variablesFrame, text=gettext(domain="R-RcmdrPlugin.EZR","    ")), getFrame(group2Box), sticky="w")
 	tkgrid(variablesFrame, sticky="w")
 #    tkgrid(color, sticky="w")
 #    tkgrid(beside, sticky="w")
 #    tkgrid(percent, sticky="w")
 	tkgrid(optionsFrame, sticky="w")
+	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Side by side graph not created when 2 grouping variables are picked.")), sticky="w")  
 	tkgrid(subsetFrame, sticky="w")
     tkgrid(buttonsFrame, sticky="w")
     dialogSuffix(rows=2, columns=1)
@@ -10117,10 +10397,6 @@ currentModel <- TRUE
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Create two-way table and compare two proportions (Fisher's exact test)"), "#####", sep=""))
         row <- getSelection(rowBox)
         column <- getSelection(columnBox)
-        if (length(row) == 0 || length(column) == 0){
-            errorCondition(recall=StatMedTwoWayTable, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
-            return()
-            }
         percents <- as.character(tclvalue(percentsVariable))
         chisq <- tclvalue(chisqTestVariable)
         chisqComp <- tclvalue(chisqComponentsVariable)
@@ -10139,9 +10415,11 @@ currentModel <- TRUE
 			subset2 <- paste(", ", subset, ")", sep="")
 			subset <- paste(", subset=", subset, sep="")
 		}
-
 putDialog("StatMedTwoWayTable", list(row=row, column=column, percents=percents, chisq=chisq, chisqComp=chisqComp, expected=expected, fisher=fisher, continuity=continuity, bonferroni=bonferroni, holm=holm, subset=tclvalue(subsetVariable)))
-	
+        if (length(row) == 0 || length(column) == 0){
+            errorCondition(recall=StatMedTwoWayTable, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
+            return()
+            }	
 		closeDialog()
 	nvar = length(row)
 	doItAndPrint("Fisher.summary.table <- NULL")
@@ -10278,17 +10556,15 @@ currentModel <- TRUE
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Compare proportions of two paired samples (McNemar test)"), "#####", sep=""))
         row <- getSelection(rowBox)
         column <- getSelection(columnBox)
-        if (length(row) == 0 || length(column) == 0){
-            errorCondition(recall=StatMedMcNemar, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
-            return()
-            }
 		continuity <- tclvalue(continuityVariable)
         subset <- tclvalue(subsetVariable)
         subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) ""
             else paste(", subset=", subset, sep="")
-
 putDialog("StatMedMcNemar", list(row=row, column=column, continuity=continuity, subset=tclvalue(subsetVariable)))
-
+        if (length(row) == 0 || length(column) == 0){
+            errorCondition(recall=StatMedMcNemar, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
+            return()
+            }
 		closeDialog()
 
         if (row == column) {
@@ -10388,18 +10664,15 @@ currentModel <- TRUE
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Cochran-Armitage test for trend in proportions"), "#####", sep=""))
         response <- getSelection(responseBox)
         group <- getSelection(groupBox)
+        subset <- tclvalue(subsetVariable)
+        subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) ""
+            else paste(", subset=", subset, sep="")			
+putDialog("StatMedPropTrend", list(response=response, group=group, subset=tclvalue(subsetVariable)))
         if (length(response) == 0 || length(group) == 0){
             errorCondition(recall=StatMedPropTrend, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
             return()
             }
-        subset <- tclvalue(subsetVariable)
-        subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) ""
-            else paste(", subset=", subset, sep="")
-			
-putDialog("StatMedPropTrend", list(response=response, group=group, subset=tclvalue(subsetVariable)))
-
         closeDialog()
-
         if (response == group) {
             	errorCondition(recall=StatMedPropTrend, message=gettext(domain="R-RcmdrPlugin.EZR","Binary variable and grouping variable must be different."))
  	           return()
@@ -10472,6 +10745,17 @@ currentFields$subset <- dialog.values$subset
     StatMedSubsetBox(model=TRUE)
     onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Logistic regression"), "#####", sep=""))
+        modelValue <- trim.blanks(tclvalue(modelName))
+        formula <- paste(tclvalue(lhsVariable), tclvalue(rhsVariable), sep=" ~ ")
+		wald <- tclvalue(waldVariable)
+		actmodel <- tclvalue(actmodelVariable)
+		diagnosis <- tclvalue(diagnosisVariable)
+		stepwise1 <- tclvalue(stepwise1Variable)
+        stepwise2 <- tclvalue(stepwise2Variable)
+		stepwise3 <- tclvalue(stepwise3Variable)
+		subset <- tclvalue(subsetVariable)
+#input values into dialog memory	
+putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  actmodelVariable = actmodel, diagnosisVariable = diagnosis, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
         check.empty <- gsub(" ", "", tclvalue(lhsVariable))
         if ("" == check.empty) {
             errorCondition(recall=StatMedLogisticRegression, model=TRUE, message=gettext(domain="R-RcmdrPlugin.EZR","Left-hand side of model empty."))
@@ -10482,8 +10766,7 @@ currentFields$subset <- dialog.values$subset
             errorCondition(recall=StatMedLogisticRegression, model=TRUE, message=gettext(domain="R-RcmdrPlugin.EZR","Right-hand side of model empty."))
             return()
             }
-        modelValue <- trim.blanks(tclvalue(modelName))
-        if (!is.valid.name(modelValue)){
+		if (!is.valid.name(modelValue)){
             errorCondition(recall=StatMedLogisticRegression, model=TRUE, message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue))
             return()
             }
@@ -10495,15 +10778,7 @@ currentFields$subset <- dialog.values$subset
                 return()
                 }
             }
-        formula <- paste(tclvalue(lhsVariable), tclvalue(rhsVariable), sep=" ~ ")
-		wald <- tclvalue(waldVariable)
-		actmodel <- tclvalue(actmodelVariable)
-		diagnosis <- tclvalue(diagnosisVariable)
-		stepwise1 <- tclvalue(stepwise1Variable)
-        stepwise2 <- tclvalue(stepwise2Variable)
-		stepwise3 <- tclvalue(stepwise3Variable)
-		subset <- tclvalue(subsetVariable)
-        closeDialog()
+			closeDialog()
         if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>") || trim.blanks(subset) == ""){
             subset <- ""
             putRcmdr("modelWithSubset", FALSE)
@@ -10512,10 +10787,6 @@ currentFields$subset <- dialog.values$subset
             subset <- paste(", subset=", subset, sep="")
             putRcmdr("modelWithSubset", TRUE)
             }
-
-#input values into dialog memory	
-putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  actmodelVariable = actmodel, diagnosisVariable = diagnosis, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
-	
 		Library("aod")
 			command <- paste("glm(", formula, ", family=binomial(logit), data=", ActiveDataSet(), subset, ")", sep="")
 #        logger(paste(modelValue, " <- ", command, sep=""))
@@ -10659,17 +10930,6 @@ currentModel <- TRUE
     timetoevent <- getSelection(timetoeventBox)
     group <- getSelection(groupBox)
     strata <- getSelection(strataBox)
-    closeDialog()
-    if (length(event) != 1) {
-      errorCondition(recall=StatMedKaplanMeier, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1)"))
-      return()
-    }
-    if (length(timetoevent) != 1) {
-      errorCondition(recall=StatMedKaplanMeier, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
-      return()
-    }
     subset <- tclvalue(subsetVariable)
     if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
         || trim.blanks(subset) == ""){
@@ -10758,10 +11018,19 @@ currentModel <- TRUE
 	}else{
 		censor <- ", mark.time=TRUE"	
 	}
-	dataSet <- activeDataSet()
-	
+	dataSet <- activeDataSet()	
 putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, group = group, strata = strata, test = test, line = tclvalue(lineVariable), place = tclvalue(placeVariable), xscale = tclvalue(xscaleVariable), posthoc = posthoc, censor = tclvalue(censorVariable), ci = ci, separatestrata = separatestrata, atrisk = atrisk, point = tclvalue(pointVariable), xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), xlabel = tclvalue(xlabelVariable), ylabel = tclvalue(ylabelVariable), subset = tclvalue(subsetVariable)))
-
+    if (length(event) != 1) {
+      errorCondition(recall=StatMedKaplanMeier, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1)"))
+      return()
+    }
+    if (length(timetoevent) != 1) {
+      errorCondition(recall=StatMedKaplanMeier, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
+      return()
+    }
+	closeDialog()
     Library("survival")
     nvar <- length(group)
     if (nvar == 0){
@@ -10966,17 +11235,6 @@ dialog.values <- getDialog("StatMedLogrankTrend", defaults)
     event <- getSelection(eventBox)
     timetoevent <- getSelection(timetoeventBox)
     group <- getSelection(groupBox)
-    closeDialog()
-    if (length(event) != 1) {
-      errorCondition(recall=StatMedLogrankTrend, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1)"))
-      return()
-    }
-    if (length(timetoevent) != 1) {
-      errorCondition(recall=StatMedLogrankTrend, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
-      return()
-    }
     subset <- tclvalue(subsetVariable)
     if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
         || trim.blanks(subset) == ""){
@@ -10989,10 +11247,19 @@ dialog.values <- getDialog("StatMedLogrankTrend", defaults)
 	  sub2 <- paste(", ", subset, ")", sep="")
       subset <- paste(", subset=", subset, sep="")
 	  }
-	dataSet <- activeDataSet()
-	
+	dataSet <- activeDataSet()	
 	putDialog("StatMedLogrankTrend", list(event = event, timetoevent = timetoevent, group = group, subset = tclvalue(subsetVariable)))
-
+    if (length(event) != 1) {
+      errorCondition(recall=StatMedLogrankTrend, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1)"))
+      return()
+    }
+    if (length(timetoevent) != 1) {
+      errorCondition(recall=StatMedLogrankTrend, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
+      return()
+    }
+    closeDialog()
 	Library("survival")
     nvar <- length(group)
 	command <- paste("(res <- survdiff(Surv(", timetoevent, ",", event, "==1)~", group, ", data=", dataSet, subset, ', na.action = na.omit))', sep="")
@@ -11069,12 +11336,6 @@ currentFields$subset <- dialog.values$subset
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Cox proportional hazard regression"), "#####", sep=""))
 #    XXX <- getSelection(timeBox)
     modelValue <- trim.blanks(tclvalue(modelName))
-    closeDialog()
-    if (!is.valid.name(modelValue)){
-      errorCondition(recall=StatMedCoxRegression, 
-        message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue), model=TRUE)
-      return()
-    }
 		wald <- tclvalue(waldVariable)
 		prophaz <- tclvalue(prophazVariable)
 		martin <- tclvalue(martinVariable)
@@ -11093,13 +11354,18 @@ currentFields$subset <- dialog.values$subset
       subset <- paste(", subset=", subset, sep="")
       putRcmdr("modelWithSubset", TRUE)
     }
+putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, martinVariable = martin, basecurveVariable = basecurve, actmodelVariable = actmodel, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
+    if (!is.valid.name(modelValue)){
+      errorCondition(recall=StatMedCoxRegression, 
+        message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue), model=TRUE)
+      return()
+    }
 #    check.empty <- gsub(" ", "", tclvalue(lhsVariable))
 #    if ("" == check.empty) {
 #      errorCondition(recall=StatMedCoxRegression,
 #        message=gettext(domain="R-RcmdrPlugin.EZR","Left-hand side of model empty."), model=TRUE) 
 #      return()
 #    }
-
         check.empty <- gsub(" ", "", tclvalue(SurvivalTimeVariable))
         if ("" == check.empty) {
             errorCondition(recall=StatMedCoxRegression, message=gettext(domain="R-RcmdrPlugin.EZR","Survival time variable of model empty."), model=TRUE)
@@ -11110,7 +11376,6 @@ currentFields$subset <- dialog.values$subset
             errorCondition(recall=StatMedCoxRegression, message=gettext(domain="R-RcmdrPlugin.EZR","Status variable of model empty."), model=TRUE)
             return()
             }
-
     check.empty <- gsub(" ", "", tclvalue(rhsVariable))
     if ("" == check.empty) {
       errorCondition(recall=StatMedCoxRegression,
@@ -11123,10 +11388,8 @@ currentFields$subset <- dialog.values$subset
         StatMedCoxRegression()
         return()
       }
-    }
-	
-putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, martinVariable = martin, basecurveVariable = basecurve, actmodelVariable = actmodel, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
-	
+    }	
+    closeDialog()	
     Library("survival")
 	Library("aod")
 #    formula <- paste("Surv(", XXX, ", ", tclvalue(lhsVariable), ") ~ ", tclvalue(rhsVariable), sep="")
@@ -11293,22 +11556,6 @@ onOK <- function(){
     timetoevent <- getSelection(timetoeventBox)
     group <- getSelection(groupBox)
     adjust <- getSelection(adjustBox)
-    closeDialog()
-    if (length(event) != 1) {
-      errorCondition(recall=StatMedAdjustedSurvival, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1)"))
-      return()
-    }
-    if (length(timetoevent) != 1) {
-      errorCondition(recall=StatMedAdjustedSurvival, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
-      return()
-    }
-    if (length(adjust) == 0) {
-      errorCondition(recall=StatMedAdjustedSurvival, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick at least one variable for adjustment."))
-      return()
-    }
 	dataSet <- activeDataSet()
     subset <- tclvalue(subsetVariable)
     if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
@@ -11320,14 +11567,12 @@ onOK <- function(){
 		subdataSet <- paste("subset(", dataSet, ", ", subset, ")", sep="")
 		naexcludeSubdataSet <- paste("subset(", dataSet, ", (", subset, ") & ", sep="")	
 		}
-	line <- tclvalue(lineVariable)
-	
+	line <- tclvalue(lineVariable)	
 	par.lwd <- get("par.lwd", envir=.GlobalEnv)
 	if (line=="color") line <- paste("col=1:32, lty=1, ", par.lwd, ", ", sep="")
 	if (line=="type") line <- paste("col=1, lty=1:32, ", par.lwd, ", ", sep="")
 	if (line=="width") line <- paste("col=1, lty=1, ", par.lwd, ":8, ", sep="")
-	par.cex <- get("par.cex", envir=.GlobalEnv)
-	
+	par.cex <- get("par.cex", envir=.GlobalEnv)	
 	if(length(group)==0){line <- paste("col=1, lty=1, ", par.lwd, ", ", sep="")}
 	place <- tclvalue(placeVariable)
 	if(place=="mouse"){
@@ -11374,9 +11619,23 @@ onOK <- function(){
 	}else{
 		censor <- ", mark.time=TRUE"	
 	}
-
 putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoevent, group = group, adjust = adjust, line = tclvalue(lineVariable), place = tclvalue(placeVariable), xscale = tclvalue(xscaleVariable), censor = tclvalue(censorVariable), atrisk = atrisk, xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), xlabel = tclvalue(xlabelVariable), ylabel = tclvalue(ylabelVariable), subset = tclvalue(subsetVariable)))
-
+    if (length(event) != 1) {
+      errorCondition(recall=StatMedAdjustedSurvival, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1)"))
+      return()
+    }
+    if (length(timetoevent) != 1) {
+      errorCondition(recall=StatMedAdjustedSurvival, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
+      return()
+    }
+    if (length(adjust) == 0) {
+      errorCondition(recall=StatMedAdjustedSurvival, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick at least one variable for adjustment."))
+      return()
+    }
+    closeDialog()
     Library("survival")
 	factor <- adjust[1]
 	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "(is.na(", adjust[1], ")==F", sep="")
@@ -11533,23 +11792,6 @@ currentModel <- TRUE
     timetoevent <- getSelection(timetoeventBox)
     group <- getSelection(groupBox)
 #    strata <- getSelection(strataBox)
-    closeDialog()
-    if (length(event) != 1) {
-      errorCondition(recall=StatMedCumInc, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1,2,3...)"))
-      return()
-    }
-    if (length(timetoevent) != 1) {
-      errorCondition(recall=StatMedCumInc, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
-      return()
-    }
-#	if (length(strata) ==0){
-#		strata <- ""
-#	}
-#	else{
-#		strata <- paste(strata, ", ", sep="")
-#	}
 	dataSet <- activeDataSet()
     subset <- tclvalue(subsetVariable)
     if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
@@ -11633,7 +11875,23 @@ currentModel <- TRUE
 		ylabel <- paste(', ylab="', ylabel, '"', sep="")
 	}	
 putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group = group, line = tclvalue(lineVariable), place = tclvalue(placeVariable), xscale = tclvalue(xscaleVariable), posthoc = posthoc, censor = tclvalue(censorVariable), atrisk = atrisk, point = tclvalue(pointVariable), plotevent = tclvalue(ploteventVariable), xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), xlabel = tclvalue(xlabelVariable), ylabel = tclvalue(ylabelVariable), subset = tclvalue(subsetVariable)))
-	
+    if (length(event) != 1) {
+      errorCondition(recall=StatMedCumInc, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1,2,3...)"))
+      return()
+    }
+    if (length(timetoevent) != 1) {
+      errorCondition(recall=StatMedCumInc, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
+      return()
+    }
+#	if (length(strata) ==0){
+#		strata <- ""
+#	}
+#	else{
+#		strata <- paste(strata, ", ", sep="")
+#	}
+    closeDialog()	
     Library("survival")
     Library("cmprsk")
 #    library(survival)
@@ -11932,17 +12190,6 @@ currentModel <- TRUE
     event <- getSelection(eventBox)
     timetoevent <- getSelection(timetoeventBox)
     group <- getSelection(groupBox)
-    closeDialog()
-    if (length(event) != 1) {
-      errorCondition(recall=StatMedStackCumInc, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1,2,3...)"))
-      return()
-    }
-    if (length(timetoevent) != 1) {
-      errorCondition(recall=StatMedStackCumInc, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
-      return()
-    }
 	dataSet <- activeDataSet()
     subset <- tclvalue(subsetVariable)
     if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
@@ -11979,9 +12226,18 @@ currentModel <- TRUE
 	} else {
 		ylabel <- paste(', ylab="', ylabel, '"', sep="")
 	}
-
 putDialog("StatMedStackCumInc", list(event = event, timetoevent = timetoevent, group = group, atrisk = atrisk, xlim = tclvalue(xlimVariable), ylim = tclvalue(ylimVariable), xlabel = tclvalue(xlabelVariable), ylabel = tclvalue(ylabelVariable), subset = tclvalue(subsetVariable)))
-	
+    if (length(event) != 1) {
+      errorCondition(recall=StatMedStackCumInc, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1,2,3...)"))
+      return()
+    }
+    if (length(timetoevent) != 1) {
+      errorCondition(recall=StatMedStackCumInc, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
+      return()
+    }	
+    closeDialog()
     Library("survival")
     Library("cmprsk")
 #    library(survival)
@@ -12067,7 +12323,15 @@ currentModel <- TRUE
 	stepwise1 <- tclvalue(stepwise1Variable)
 	stepwise2 <- tclvalue(stepwise2Variable)
 	stepwise3 <- tclvalue(stepwise3Variable)
-    closeDialog()
+	subset <- tclvalue(subsetVariable)	
+    if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
+        || trim.blanks(subset) == ""){
+      subset <- ""
+    }
+    else{
+      subset <- paste(", subset=", subset, sep="")
+    }	
+putDialog("StatMedCrr", list(event = event, timetoevent = timetoevent, group = group, fcode = fcode, wald = wald, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset = tclvalue(subsetVariable)))
     if (length(event) != 1) {
       errorCondition(recall=StatMedCrr, )
         message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1,2,3...)")
@@ -12087,18 +12351,8 @@ currentModel <- TRUE
       errorCondition(recall=StatMedCrr, 
         message=gettext(domain="R-RcmdrPlugin.EZR","Specify one event of interest"))
       return()
-    }    
-	subset <- tclvalue(subsetVariable)	
-    if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
-        || trim.blanks(subset) == ""){
-      subset <- ""
-    }
-    else{
-      subset <- paste(", subset=", subset, sep="")
-    }
-	
-putDialog("StatMedCrr", list(event = event, timetoevent = timetoevent, group = group, fcode = fcode, wald = wald, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset = tclvalue(subsetVariable)))
-	
+    }    	
+    closeDialog()
     Library("survival")
     Library("cmprsk")
 		Library("aod")
@@ -12246,19 +12500,6 @@ currentFields$subset <- dialog.values$subset
 	timedependentcovariate <- getSelection(timedependentcovariateBox)
 	timepositive <- getSelection(timepositiveBox)
 	timenegative <- getSelection(timenegativeBox)
-		if (length(timedependentcovariate) == 0 || length(timepositive) == 0){
-  	        errorCondition(recall=StatMedCoxTD, message=gettext(domain="R-RcmdrPlugin.EZR","Pick all required variables"))
-            return()
-        }
-		if (length(timenegative) == 0){
-			timenegative <- tclvalue(SurvivalTimeVariable)
-		}
-    closeDialog()
-    if (!is.valid.name(modelValue)){
-      errorCondition(recall=StatMedCoxTD, 
-        message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue), model=TRUE)
-      return()
-    }
 		wald <- tclvalue(waldVariable)
 		prophaz <- tclvalue(prophazVariable)
 		basecurve <- tclvalue(basecurveVariable)
@@ -12275,7 +12516,20 @@ currentFields$subset <- dialog.values$subset
     else{
       subset <- paste(", subset=", subset, sep="")
       putRcmdr("modelWithSubset", TRUE)
-    }
+    }	
+putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, basecurveVariable = basecurve, actmodelVariable = actmodel, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable), timedependentcovariate = timedependentcovariate, timepositive = timepositive, timenegative = timenegative))
+		if (length(timedependentcovariate) == 0 || length(timepositive) == 0){
+  	        errorCondition(recall=StatMedCoxTD, message=gettext(domain="R-RcmdrPlugin.EZR","Pick all required variables"))
+            return()
+        }
+		if (length(timenegative) == 0){
+			timenegative <- tclvalue(SurvivalTimeVariable)
+		}
+    if (!is.valid.name(modelValue)){
+      errorCondition(recall=StatMedCoxTD, 
+        message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue), model=TRUE)
+      return()
+    }	
 #    check.empty <- gsub(" ", "", tclvalue(lhsVariable))
 #    if ("" == check.empty) {
 #      errorCondition(recall=StatMedCoxRegression,
@@ -12307,9 +12561,7 @@ currentFields$subset <- dialog.values$subset
         return()
       }
     }
-	
-putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, basecurveVariable = basecurve, actmodelVariable = actmodel, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable), timedependentcovariate = timedependentcovariate, timepositive = timepositive, timenegative = timenegative))
-	
+    closeDialog()
     Library("survival")
 		Library("aod")
 	dataSet <- activeDataSet()
@@ -12479,10 +12731,6 @@ currentModel <- TRUE
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","ROC curve analysis for quantitative test"), "#####", sep=""))
         response <- getSelection(responseBox)
         predictor <- getSelection(predictorBox)
-        if (length(response) == 0 || length(predictor) == 0){
-            errorCondition(recall=StatMedROC, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
-            return()
-            }
 	direction <- tclvalue(directionVariable)
 	best <- tclvalue(bestVariable)
 	cost <- tclvalue(costVariable)
@@ -12495,8 +12743,11 @@ currentModel <- TRUE
 				subset1 <- "subset("
 				subset2 <- paste(", ", subset, ")", sep="")
 			}
-
 putDialog("StatMedROC", list(response=response, predictor=predictor, threshold=tclvalue(thresholdVariable), direction=direction, best=best, cost=cost, prevalence=prevalence, subset = tclvalue(subsetVariable)))
+        if (length(response) == 0 || length(predictor) == 0){
+            errorCondition(recall=StatMedROC, message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables."))
+            return()
+            }
         closeDialog()
    	if (tclvalue(thresholdVariable) == "1"){
 		pt <- paste(', print.thres="best", print.thres.best.method="', best, '", print.thres.best.weights=c(', cost, ", ", prevalence, ")", sep="")
@@ -12567,10 +12818,6 @@ currentModel <- TRUE
         response <- getSelection(responseBox)
         predictor1 <- getSelection(predictor1Box)
         predictor2 <- getSelection(predictor2Box)
-        if (length(response) == 0 || length(predictor1) == 0 || length(predictor2) == 0){
-            errorCondition(recall=StatMedROCtest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select three variables."))
-            return()
-            }
 			subset <- tclvalue(subsetVariable)
 			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 				subset1 <- ""
@@ -12581,8 +12828,11 @@ currentModel <- TRUE
 				subset2 <- paste(", ", subset, ")", sep="")
 				subset <- paste(", subset=", subset, sep="")
 			}
-
 putDialog("StatMedROCtest", list(response=response, predictor1=predictor1, predictor2=predictor2, subset = tclvalue(subsetVariable)))
+        if (length(response) == 0 || length(predictor1) == 0 || length(predictor2) == 0){
+            errorCondition(recall=StatMedROCtest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select three variables."))
+            return()
+            }
         closeDialog()
 		command <- paste("ROC1 <- roc(", response, "~", predictor1, ", data=", subset1, ActiveDataSet(), subset2, 
             	", ci=TRUE)", sep="")
@@ -12832,19 +13082,20 @@ dialog.values <- getDialog("StatMedOptMatch", defaults)
 	onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Extract matched controls"), "#####", sep=""))
 	    group <- getSelection(groupBox)
-        if (length(group) == 0) {
-            errorCondition(recall=StatMedOptMatch, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
-            return()
-            }
         strata <- getSelection(strataBox)
-        if (length(strata) == 0) {
-            errorCondition(recall=StatMedOptMatch, message=gettext(domain="R-RcmdrPlugin.EZR","Pick at least one matching variable"))
-            return()
-            }
 	    matchnumber <- tclvalue(matchnumberLevel)
         unmatch <- as.character(tclvalue(unmatchVariable))
 		newName <- trim.blanks(tclvalue(dataSetName))
 		if (newName == gettext(domain="R-RcmdrPlugin.EZR","Add _MP at the end of original name")) newName <- paste(ActiveDataSet(), "_MP", sep="")
+putDialog("StatMedOptMatch", list(group=group, strata=strata, matchnumber=matchnumber, unmatch=unmatch, newDataSetName=newName))
+        if (length(group) == 0) {
+            errorCondition(recall=StatMedOptMatch, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
+            return()
+            }
+        if (length(strata) == 0) {
+            errorCondition(recall=StatMedOptMatch, message=gettext(domain="R-RcmdrPlugin.EZR","Pick at least one matching variable"))
+            return()
+            }
 		if (!is.valid.name(newName)){
 			errorCondition(recall=StatMedOptMatch,
 				message=paste('"', newName, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
@@ -12857,8 +13108,6 @@ dialog.values <- getDialog("StatMedOptMatch", defaults)
 				return()
 			}
 		}
-
-putDialog("StatMedOptMatch", list(group=group, strata=strata, matchnumber=matchnumber, unmatch=unmatch, newDataSetName=newName))
 		closeDialog()
 		.activeDataSet <- ActiveDataSet()
 		doItAndPrint("library(optmatch, quietly=TRUE)")
@@ -12874,7 +13123,7 @@ putDialog("StatMedOptMatch", list(group=group, strata=strata, matchnumber=matchn
 		mdist.command <- paste(mdist.command, ", data=TempDataSet)", sep="")
 		doItAndPrint(nacheck.command)
 		doItAndPrint(mdist.command)
-		match.command <- paste("pairmatch.results <- pairmatch(match.distance, control=", matchnumber, ", remove.unmatchables=", unmatch, ")", sep="")
+		match.command <- paste("pairmatch.results <- pairmatch(match.distance, control=", matchnumber, ", remove.unmatchables=", unmatch, ", data=TempDataSet)", sep="")
 		logger(match.command)
 		result <- justDoIt(match.command)
 		if (class(result)[1] ==  "try-error"){
@@ -12919,26 +13168,24 @@ dialog.values <- getDialog("StatMedMH", defaults)
 	onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Mantel-Haenzel test for matched proportions"), "#####", sep=""))
 	    group <- getSelection(groupBox)
+        var <- getSelection(varBox)
+        strata <- getSelection(strataBox)
+		continuity <- tclvalue(continuityVariable)
+putDialog("StatMedMH", list(group=group, var=var, strata=strata, continuity=continuity))
         if (length(group) == 0) {
             errorCondition(recall=StatMedMH, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
             return()
             }
-        var <- getSelection(varBox)
         if (length(var) == 0) {
             errorCondition(recall=StatMedMH, message=gettext(domain="R-RcmdrPlugin.EZR","Pick at least one binary response variable."))
             return()
             }
-        strata <- getSelection(strataBox)
         if (length(strata) == 0) {
             errorCondition(recall=StatMedMH, message=gettext(domain="R-RcmdrPlugin.EZR",""))
             return()
             }
-		continuity <- tclvalue(continuityVariable)
-
-putDialog("StatMedMH", list(group=group, var=var, strata=strata, continuity=continuity))
 		closeDialog()
 		.activeDataSet <- ActiveDataSet()
-
 		nvar = length(var)
 		doItAndPrint("MH.summary.table <- NULL")
 		for (i in 1:nvar) {
@@ -13024,6 +13271,14 @@ currentFields$subset <- dialog.values$subset
 #	stepwise2CheckBox <- tkcheckbutton(optionsFrame, variable=stepwise2Variable)
     onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Conditional logistic regression for matched-pair analysis"), "#####", sep=""))
+        strata <- getSelection(strataBox)
+        modelValue <- trim.blanks(tclvalue(modelName))
+        formula <- paste(tclvalue(lhsVariable), " ~ ", tclvalue(rhsVariable), " + strata(", strata, ")", sep="")
+		actmodel <- tclvalue(actmodelVariable)
+#		stepwise1 <- tclvalue(stepwise1Variable)
+#       stepwise2 <- tclvalue(stepwise2Variable)
+putDialog("StatMedCLogistic", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), actmodelVariable = actmodel, strata = strata))
+        closeDialog()		
         check.empty <- gsub(" ", "", tclvalue(lhsVariable))
         if ("" == check.empty) {
             errorCondition(recall=StatMedCLogistic, model=TRUE, message=gettext(domain="R-RcmdrPlugin.EZR","Left-hand side of model empty."))
@@ -13034,12 +13289,10 @@ currentFields$subset <- dialog.values$subset
             errorCondition(recall=StatMedCLogistic, model=TRUE, message=gettext(domain="R-RcmdrPlugin.EZR","Right-hand side of model empty."))
             return()
             }
-        strata <- getSelection(strataBox)
         if (length(strata) == 0) {
             errorCondition(recall=StatMedCLogistic, message=gettext(domain="R-RcmdrPlugin.EZR","Pick one stratifying variable for matching."))
             return()
             }
-        modelValue <- trim.blanks(tclvalue(modelName))
         if (!is.valid.name(modelValue)){
             errorCondition(recall=StatMedCLogistic, model=TRUE, message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue))
             return()
@@ -13051,15 +13304,7 @@ currentFields$subset <- dialog.values$subset
                 StatMedCLogistic()
                 return()
                 }
-           }
-        formula <- paste(tclvalue(lhsVariable), " ~ ", tclvalue(rhsVariable), " + strata(", strata, ")", sep="")
-		actmodel <- tclvalue(actmodelVariable)
-#		stepwise1 <- tclvalue(stepwise1Variable)
-#       stepwise2 <- tclvalue(stepwise2Variable)
-        closeDialog()
-		
-putDialog("StatMedCLogistic", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), actmodelVariable = actmodel, strata = strata))
-		
+           }		
         command <- paste("clogit(", formula, ", data=", ActiveDataSet(), ")", sep="")
 #        logger(paste(modelValue, " <- ", command, sep=""))
 #        assign(modelValue, justDoIt(command), envir=.GlobalEnv)
@@ -13182,28 +13427,21 @@ currentFields$rhs <- dialog.values$rhs
 #    XXX <- getSelection(timeBox)
     modelValue <- trim.blanks(tclvalue(modelName))
     strata <- getSelection(strataBox)
-    closeDialog()
-    if (!is.valid.name(modelValue)){
-      errorCondition(recall=StatMedStCox, 
-        message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue), model=TRUE)
-      return()
-    }
-        if (length(strata) == 0) {
-            errorCondition(recall=StatMedStCox, message=gettext(domain="R-RcmdrPlugin.EZR","Pick one stratifying variable for matching."))
-            return()
-            }
 		prophaz <- tclvalue(prophazVariable)
 		wald <- tclvalue(waldVariable)
 		actmodel <- tclvalue(actmodelVariable)
 		stepwise1 <- tclvalue(stepwise1Variable)
 		stepwise2 <- tclvalue(stepwise2Variable)
+#    library(survival, quietly=TRUE)
+#    formula <- paste("Surv(", XXX, ", ", tclvalue(lhsVariable), ") ~ ", tclvalue(rhsVariable), sep="")
+putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, actmodelVariable = actmodel, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, strata = strata))
+    closeDialog()
 #    check.empty <- gsub(" ", "", tclvalue(lhsVariable))
 #    if ("" == check.empty) {
 #      errorCondition(recall=StatMedCoxRegression,
 #        message=gettext(domain="R-RcmdrPlugin.EZR","Left-hand side of model empty."), model=TRUE) 
 #      return()
 #    }
-
         check.empty <- gsub(" ", "", tclvalue(SurvivalTimeVariable))
         if ("" == check.empty) {
             errorCondition(recall=StatMedStCox, message=gettext(domain="R-RcmdrPlugin.EZR","Survival time variable of model empty."), model=TRUE)
@@ -13228,10 +13466,15 @@ currentFields$rhs <- dialog.values$rhs
         return()
       }
     }
-#    library(survival, quietly=TRUE)
-#    formula <- paste("Surv(", XXX, ", ", tclvalue(lhsVariable), ") ~ ", tclvalue(rhsVariable), sep="")
-
-putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, actmodelVariable = actmodel, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, strata = strata))
+    if (!is.valid.name(modelValue)){
+      errorCondition(recall=StatMedStCox, 
+        message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue), model=TRUE)
+      return()
+    }
+        if (length(strata) == 0) {
+            errorCondition(recall=StatMedStCox, message=gettext(domain="R-RcmdrPlugin.EZR","Pick one stratifying variable for matching."))
+            return()
+            }
 
     Library("survival")
 		Library("aod")
@@ -14165,8 +14408,7 @@ currentModel <- TRUE
 	endpoint <- tclvalue(endpointVariable)
     dsl <- tclvalue(dslVariable)
 	detail <- tclvalue(detailVariable)
-	funnel <- tclvalue(funnelVariable)
-	
+	funnel <- tclvalue(funnelVariable)	
 putDialog("StatMedMeta", list(studyname=studyname, testpositive=testpositive, testnumber=testnumber, controlpositive=controlpositive, controlnumber=controlnumber, group=group, reg=reg, endpoint=endpoint, dsl=dsl, detail=detail, funnel=funnel, subset = tclvalue(subsetVariable)))
     closeDialog()
     if (length(testpositive) == 0 || length(testnumber) == 0 || length(controlpositive) == 0 || length(controlnumber) == 0) {
@@ -14292,10 +14534,8 @@ currentModel <- TRUE
 	input <- tclvalue(inputVariable)
     dsl <- tclvalue(dslVariable)
 	detail <- tclvalue(detailVariable)
-	funnel <- tclvalue(funnelVariable)
-	
+	funnel <- tclvalue(funnelVariable)	
 putDialog("StatMedMetaHazard",list(input=input, studyname=studyname, hazard=hazard, ci=upperci, group=group, reg=reg, dsl=dsl, detail=detail, funnel=funnel, subset = tclvalue(subsetVariable)))
-
 	closeDialog()
     if (length(hazard) == 0 || length(upperci) == 0) {
       errorCondition(recall=StatMedMetaHazard, 
@@ -14428,12 +14668,6 @@ currentModel <- TRUE
 	if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 		subset <- ""
 	} 
-    closeDialog()
-    if (length(testmean) == 0 || length(testnumber) == 0 || length(testsd) == 0 || length(controlmean) == 0 || length(controlnumber) == 0 || length(controlsd) == 0) {
-      errorCondition(recall=StatMedMetaCont, 
-        message=gettext(domain="R-RcmdrPlugin.EZR","Pick all required variables"))
-      return()
-    }
 	if (length(studyname) == 0 ){
 		studyname <- NULL
 	}
@@ -14454,9 +14688,13 @@ currentModel <- TRUE
 	}else{
 		doItAndPrint(paste("TempDF <- subset(", dataSet, ", subset=", subset, ")[complete.cases(subset(", dataSet, ", subset=", subset, ")$", testnumber, ", subset(", dataSet, ", subset=", subset, ")$", testmean, ", subset(", dataSet, ", subset=", subset, ")$", testsd, ", subset(", dataSet, ", subset=", subset, ")$", controlnumber, ", subset(", dataSet, ", subset=", subset, ")$", controlmean, ", subset(", dataSet, ", subset=", subset, ")$", controlsd, "),]", sep=""))
 	}
-
 putDialog("StatMedMetaCont", list(studyname=studyname, testmean=testmean, testnumber=testnumber, testsd=testsd, controlmean=controlmean, controlnumber=controlnumber, controlsd=controlsd, group=group, reg=reg, dsl=dsl, detail=detail, funnel=funnel, smd=smd, subset = tclvalue(subsetVariable)))
-	
+    closeDialog()
+    if (length(testmean) == 0 || length(testnumber) == 0 || length(testsd) == 0 || length(controlmean) == 0 || length(controlnumber) == 0 || length(controlsd) == 0) {
+      errorCondition(recall=StatMedMetaCont, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick all required variables"))
+      return()
+    }	
     library(meta, quietly=TRUE)
 	smd <- ifelse(smd==0, ', sm="MD"', ', sm="SMD"')
 	if (dsl==0) {
@@ -14529,8 +14767,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.25", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","September 1, 2014"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.26", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","October 1, 2014"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -14627,7 +14865,8 @@ StatMedcloseCommander <- function(ask=TRUE, ask.save=ask){
 		}
 	}
 		
-	closeCommander()
+	closeCommander(ask=TRUE, ask.save=ask)
+#	closeCommander()
 }
 
 
@@ -14643,7 +14882,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.25", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.26", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -14707,4 +14946,5 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'explainFrame', 'multireg.table', 'smdVariable', 'survfit', 'survdiff',
 'odbcCloseAll', 'odbcConnectExcel', 'odbcConnectExcel2007', 'odbcConnectAccess',
 'odbcConnectAccess2007', 'odbcConnectDbase', 'sqlTables', '.Tcl.args',
-'cuminc', 'Anova', 'pmvt', 'wald.test', 'timepoints', 'ci', 'sqlQuery'))
+'cuminc', 'Anova', 'pmvt', 'wald.test', 'timepoints', 'ci', 'sqlQuery',
+'groupingVariable', 'groupingFrame', 'othervarVariable'))

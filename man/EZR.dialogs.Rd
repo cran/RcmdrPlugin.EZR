@@ -65,6 +65,7 @@
 \alias{StatMedMultiANOVA}
 \alias{StatMedNAgroup}
 \alias{StatMedNewVar}
+\alias{StatMedNewVar2}
 \alias{StatMedNumericToFactor}
 \alias{StatMedNumericalSummaries}
 \alias{StatMedOptMatch}
