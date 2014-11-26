@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2014-09-16 18:59+0900\n"
+"PO-Revision-Date: 2014-11-25 14:10+0900\n"
 "Last-Translator: Y. Kanda <ycanda-tky@umin.ac.jp>\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
@@ -1639,6 +1639,9 @@ msgstr "質的変数を選択してください．"
 msgid "Two-sided"
 msgstr "両側"
 
+msgid "One-sided"
+msgstr "片側"
+
 msgid "Difference < 0"
 msgstr "差 < 0"
 
@@ -1655,6 +1658,9 @@ msgid "Assume equal variances?"
 msgstr "等分散と考えますか?"
 
 msgid "Confidence Level"
+msgstr "信頼水準"
+
+msgid "Confidence level"
 msgstr "信頼水準"
 
 msgid "Paired t-Test"
@@ -5848,6 +5854,9 @@ msgstr "はい(あるいは正確検定)"
 msgid "Yes (or Fisher's exact test)"
 msgstr "はい(あるいはFisher正確検定)"
 
+msgid "No correction"
+msgstr "いいえ"
+
 msgid "Proportion in group 1"
 msgstr "グループ1の比率 (0.0-1.0)"
 
@@ -6535,3 +6544,24 @@ msgstr "検索... (Ctrl-F)"
 
 msgid "Select all (Ctrl-A)"
 msgstr "全てを選択 (Ctrl-A)"
+
+msgid "Show ROC curve"
+msgstr "ROC曲線を表示する"
+
+msgid "Merge by row number"
+msgstr "行番号で照合する"
+
+msgid "Merge by specified columns"
+msgstr "指定した変数で照合する"
+
+msgid "Matching method to merge columns"
+msgstr "列単位での結合の照合方法"
+
+msgid "Columns to merge datasets"
+msgstr "列を結合するための変数"
+
+msgid "Column name for matching in dataset 1(pick one)"
+msgstr "列を結合するために照合する変数(1番目のデータセット)"
+
+msgid "Column name for matching in dataset 2(pick one)"
+msgstr "列を結合するために照合する変数(2番目のデータセット)"

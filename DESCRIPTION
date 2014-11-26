@@ -1,11 +1,11 @@
 Package: RcmdrPlugin.EZR
 Type: Package
 Title: R Commander Plug-in for the EZR (Easy R) Package
-Version: 1.26
-Date: 2014-10-01
+Version: 1.27
+Date: 2014-12-01
 Author: Yoshinobu Kanda
 Maintainer: Yoshinobu Kanda <ycanda-tky@umin.ac.jp>
-Depends: R (>= 3.00)
+Depends: R (>= 3.0.0)
 Imports: Rcmdr (>= 2.0.0)
 Suggests: abind, aod, aplpack, car, clinfun, cmprsk, foreign, meta,
         metatest, multcomp, mvtnorm, optmatch, pROC, RODBC, tableone,
@@ -39,7 +39,7 @@ License: GPL (>= 2)
 URL:
         http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf
         http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html
-Packaged: 2014-09-29 06:12:39 UTC; Yoshinobu_Kanda
+Packaged: 2014-11-26 04:30:18 UTC; Yoshinobu_Kanda
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2014-09-29 08:38:31
+Date/Publication: 2014-11-26 08:06:52

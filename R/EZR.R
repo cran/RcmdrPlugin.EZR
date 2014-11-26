@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.26", "\n")
+cat("   Version 1.27", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -3481,7 +3481,7 @@ StatMedGroupsBox <- defmacro(recall=NULL, label=gettext(domain="R-RcmdrPlugin.EZ
 			if (plotLinesByGroup) tkgrid(linesByGroupFrame, sticky="w")
 			tkgrid(subButtonsFrame, sticky="w")
 			if (positionLegend) tkgrid(labelRcmdr(subdialog, text=gettext(domain="R-RcmdrPlugin.EZR","Position legend with mouse click"), fg="blue"))
-			dialogSuffix(subdialog, onOK=onOKsub, rows=3+plotLinesByGroup+positionLegend, columns=2, focus=subdialog)
+			dialogSuffix(subdialog, onOK=onOKsub, rows=3+plotLinesByGroup+positionLegend, columns=2, focus=subdialog, force.wait=TRUE)
 		}
 		groupsFrame <- tkframe(top)
 		groupsButton <- tkbutton(groupsFrame, textvariable=.groupsLabel, command=onGroups, borderwidth=3)
@@ -3981,7 +3981,7 @@ StatMedReadDataSet <- function() {
 				tkgrid(urlXscroll, sticky="ew")
 				tkgrid(urlFrame, sticky="nw")
 				tkgrid(subButtonsFrame, sticky="w")
-				dialogSuffix(subdialog, rows=2, columns=1, focus=url, onOK=onOKsub)
+				dialogSuffix(subdialog, rows=2, columns=1, focus=url, onOK=onOKsub, force.wait=TRUE)
 				tclvalue(urlVar)
 			}
 		if (file == "") {
@@ -4578,6 +4578,8 @@ StatMedMergeDatasets <- function(){
     commonButton <- ttkcheckbutton(commonFrame, variable=commonVar)    
     radioButtons(top, "direction", buttons=c("rows", "columns"), 
                  labels=gettext(domain="R-RcmdrPlugin.EZR",c("Merge rows", "Merge columns")), title=gettext(domain="R-RcmdrPlugin.EZR","Direction of Merge"))
+    radioButtons(top, "columnmerge", buttons=c("rownumber", "columns"), 
+                 labels=gettext(domain="R-RcmdrPlugin.EZR",c("Merge by row number", "Merge by specified columns")), title=gettext(domain="R-RcmdrPlugin.EZR","Matching method to merge columns"))
     onOK <- function(){
 		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Merge data sets"), "#####", sep=""))
         dsnameValue <- trim.blanks(tclvalue(dsname))
@@ -4617,21 +4619,54 @@ StatMedMergeDatasets <- function(){
         }
         common <- if (tclvalue(commonVar) == "1") TRUE else FALSE
         direction <- tclvalue(directionVariable)
+        columnmerge <- tclvalue(columnmergeVariable)
         if (direction == "rows"){
             command <- paste(dsnameValue, " <- mergeRows(", name1, ", ", name2,
                              ", common.only=", common, ")", sep="")
             doItAndPrint(command)	
+			activeDataSet(dsnameValue)
         }
-        else {
-            command <- paste(dsnameValue, " <- merge(", name1, ", ", name2,
-                             ", all=", !common, ', by="row.names")', sep="")
-            doItAndPrint(command)
-            command <- paste("rownames(", dsnameValue, ") <- ", dsnameValue, "$Row.names", sep="")
-            doItAndPrint(command)
-            command <- paste(dsnameValue, "$Row.names <- NULL", sep="")
-            doItAndPrint(command)
+        else {		
+			if (columnmerge == "columns"){
+				command <- paste(dsnameValue, " <- NULL", sep="")
+				doItAndPrint(command)
+				initializeDialog(subdialog, title=gettext(domain="R-RcmdrPlugin.EZR","Columns to merge datasets"))
+				onOKsub <- function() {
+					column.name.1 <- getSelection(column1Box)
+					column.name.2 <- getSelection(column2Box)
+					if (length(column.name.1) == 0){
+						errorCondition(recall=NULL,
+                        message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables"))
+						return()
+					}
+					if (length(column.name.2) == 0){
+						errorCondition(recall=NULL,
+                        message=gettext(domain="R-RcmdrPlugin.EZR","You must select two variables"))
+						return()
+					}
+					closeDialog(subdialog)
+					command <- paste(dsnameValue, " <- merge(", name1, ", ", name2, ", all=", !common, ', by.x="', column.name.1, '", by.y="', column.name.2, '")', sep="")
+					doItAndPrint(command)
+					activeDataSet(dsnameValue)
+				}
+				subOKCancelHelp()
+				list1 <- listVariables(name1)
+				list2 <- listVariables(name2)				
+				column1Box <- variableListBox(subdialog, list1, title=gettext(domain="R-RcmdrPlugin.EZR","Column name for matching in dataset 1(pick one)"), listHeight=10)
+				column2Box <- variableListBox(subdialog, list2, title=gettext(domain="R-RcmdrPlugin.EZR","Column name for matching in dataset 2(pick one)"), listHeight=10)
+				tkgrid(getFrame(column1Box), getFrame(column2Box), sticky="nw")				
+				tkgrid(subButtonsFrame, sticky="w", columnspan=2)
+				dialogSuffix(subdialog, focus=subdialog, force.wait=TRUE)
+			} else {
+				command <- paste(dsnameValue, " <- merge(", name1, ", ", name2, ", all=", !common, ', by="row.names")', sep="")
+				doItAndPrint(command)
+				command <- paste("rownames(", dsnameValue, ") <- ", dsnameValue, "$Row.names", sep="")
+				doItAndPrint(command)
+				command <- paste(dsnameValue, "$Row.names <- NULL", sep="")
+				doItAndPrint(command)
+				activeDataSet(dsnameValue)
+			}
         }
-        activeDataSet(dsnameValue)
         closeDialog()
         tkfocus(CommanderWindow())
     }
@@ -4642,6 +4677,7 @@ StatMedMergeDatasets <- function(){
     tkgrid(commonButton, labelRcmdr(commonFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Merge only common\nrows or columns")), 
            sticky="nw")
     tkgrid(directionFrame, commonFrame, sticky="sw")
+    tkgrid(columnmergeFrame, sticky="sw")
     tkgrid(buttonsFrame, sticky="w", columnspan=2)
     dialogSuffix()
 }
@@ -4905,7 +4941,7 @@ StatMedRenameVariables <- function(){
 #            tkgrid(labelRcmdr(subdialog, text=variables[i]), eval(parse(text=paste("entry", i, sep=""))), sticky="w")
 		}
 		tkgrid(subButtonsFrame, sticky="w", columnspan=2)
-		dialogSuffix(subdialog, rows=nvariables+2, columns=2, focus=entry1, onOK=onOKsub)
+		dialogSuffix(subdialog, rows=nvariables+2, columns=2, focus=entry1, onOK=onOKsub, force.wait=TRUE)
 	}
 	OKCancelHelp(helpSubject="names")
 	tkgrid(getFrame(variableBox), sticky="nw")
@@ -5670,7 +5706,7 @@ StatMedNumericToFactor <- function(){
 #                    tkgrid(labelRcmdr(subdialog, text=values[i]), eval(parse(text=paste("entry", i, sep=""))), sticky="w")
 				}
 				tkgrid(subButtonsFrame, sticky="w", columnspan=2)
-				dialogSuffix(subdialog, rows=nvalues+2, columns=2, focus=entry1, onOK=onOKsub)
+				dialogSuffix(subdialog, rows=nvalues+2, columns=2, focus=entry1, onOK=onOKsub, force.wait=TRUE)
 			}
 			if (levelsType == "names"){
 				if (!exists("labels", mode="character")) return()
@@ -5774,7 +5810,7 @@ StatMedBinVariable <- function(){
 #                tkgrid(labelRcmdr(subdialog, text=as.character(i)), eval(parse(text=paste("entry", i, sep=""))), sticky="w")
 			}
 			tkgrid(subButtonsFrame, sticky="w", columnspan=2)
-			dialogSuffix(subdialog, focus=entry1, rows=bins+1, columns=2, bindReturn=FALSE)
+			dialogSuffix(subdialog, focus=entry1, rows=bins+1, columns=2, bindReturn=FALSE, force.wait=TRUE)
 		}
 		labels <- if (levels == "numbers") "FALSE"
 			else if (levels == "ranges") "NULL"
@@ -5936,7 +5972,7 @@ StatMedReorderFactor <- function(){
 #            tkgrid(labelRcmdr(subdialog, text=old.levels[i]), eval(parse(text=paste("entry", i, sep=""))), sticky="w")
 		}
 		tkgrid(subButtonsFrame, sticky="w", columnspan=2)
-		dialogSuffix(subdialog, focus=entry1, rows=nvalues+1, columns=2)
+		dialogSuffix(subdialog, focus=entry1, rows=nvalues+1, columns=2, force.wait=TRUE)
 	}
 	OKCancelHelp(helpSubject="factor")
 	tkgrid(getFrame(variableBox), sticky="nw")
@@ -6052,7 +6088,7 @@ StatMedSetContrasts <- function(){
 			tkgrid(tableFrame, sticky="w")
 			tkgrid(labelRcmdr(subdialog, text=""))
 			tkgrid(subButtonsFrame, sticky="w")
-			dialogSuffix(subdialog, rows=5, columns=1, focus=subdialog)
+			dialogSuffix(subdialog, rows=5, columns=1, focus=subdialog, force.wait=TRUE)
 		}
 	}
 	OKCancelHelp(helpSubject="contrasts")
@@ -7052,6 +7088,7 @@ currentModel <- TRUE
         group1 <- getSelection(group1Box)
         group2 <- getSelection(group2Box)
         response <- getSelection(responseBox)
+        error.bars <- tclvalue(errorBarsVariable)
 		subset <- tclvalue(subsetVariable)
 putDialog("StatMedBarMeans", list(group1=group1, group2=group2, response=response, errorBars=error.bars, subset=tclvalue(subsetVariable)))
 		if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
@@ -7067,7 +7104,6 @@ putDialog("StatMedBarMeans", list(group1=group1, group2=group2, response=respons
             return()
           }
         dataSet <- ActiveDataSet()
-        error.bars <- tclvalue(errorBarsVariable)
 		if (length(group1) == 0){
 			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 			doItAndPrint(paste("bar.sums <- sum(", subset1, dataSet, subset2, "$", response, ", na.rm=TRUE)", sep=""))
@@ -10701,7 +10737,7 @@ putDialog("StatMedPropTrend", list(response=response, group=group, subset=tclval
 
 
 StatMedLogisticRegression <- function(){
-defaults <- list(lhs = "", rhs = "", waldVariable = 0,  diagnosisVariable = 0, actmodelVariable = 0, stepwise1Variable = 0, stepwise2Variable = 0, stepwise3Variable = 0, subset = "")
+defaults <- list(lhs = "", rhs = "", waldVariable = 0,  rocVariable = 0, diagnosisVariable = 0, actmodelVariable = 0, stepwise1Variable = 0, stepwise2Variable = 0, stepwise3Variable = 0, subset = "")
 dialog.values <- getDialog("StatMedLogisticRegression", defaults)
 currentFields$lhs <- dialog.values$lhs			#Values in currentFields will be sent to modelFormula
 currentFields$rhs <- dialog.values$rhs
@@ -10714,12 +10750,12 @@ currentFields$subset <- dialog.values$subset
 #        eval(parse(text=paste("class(", .activeModel, ")[1] == 'glm'", sep="")),
 #            envir=.GlobalEnv)
         else FALSE
-    if (currentModel) {
-        currentFields <- formulaFields(get(.activeModel, envir=.GlobalEnv), glm=TRUE)
+#    if (currentModel) {
+#        currentFields <- formulaFields(get(.activeModel, envir=.GlobalEnv), glm=TRUE)
 #        currentFields <- formulaFields(eval(parse(text=.activeModel),
 #            envir=.GlobalEnv), glm=TRUE)
-        if (currentFields$data != ActiveDataSet()) currentModel <- FALSE
-        }
+#        if (currentFields$data != ActiveDataSet()) currentModel <- FALSE
+#        }
 		
 	currentModel <- TRUE
 	
@@ -10730,7 +10766,7 @@ currentFields$subset <- dialog.values$subset
     model <- ttkentry(modelFrame, width="20", textvariable=modelName)
 	optionsFrame <- tkframe(top)
 	
-	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "diagnosis", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$actmodelVariable, dialog.values$diagnosisVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show basic diagnostic plots", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$actmodelVariable, dialog.values$rocVariable, dialog.values$diagnosisVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 
 #	waldVariable <- tclVar("0")
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -10749,13 +10785,14 @@ currentFields$subset <- dialog.values$subset
         formula <- paste(tclvalue(lhsVariable), tclvalue(rhsVariable), sep=" ~ ")
 		wald <- tclvalue(waldVariable)
 		actmodel <- tclvalue(actmodelVariable)
+		roc <- tclvalue(rocVariable)
 		diagnosis <- tclvalue(diagnosisVariable)
 		stepwise1 <- tclvalue(stepwise1Variable)
         stepwise2 <- tclvalue(stepwise2Variable)
 		stepwise3 <- tclvalue(stepwise3Variable)
 		subset <- tclvalue(subsetVariable)
 #input values into dialog memory	
-putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  actmodelVariable = actmodel, diagnosisVariable = diagnosis, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
+putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  actmodelVariable = actmodel, rocVariable = roc, diagnosisVariable = diagnosis, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
         check.empty <- gsub(" ", "", tclvalue(lhsVariable))
         if ("" == check.empty) {
             errorCondition(recall=StatMedLogisticRegression, model=TRUE, message=gettext(domain="R-RcmdrPlugin.EZR","Left-hand side of model empty."))
@@ -10806,6 +10843,14 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 		doItAndPrint('names(odds) <- gettext(domain="R-RcmdrPlugin.EZR",c("odds ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))')
 		doItAndPrint("odds")
 		if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
+		if (roc==1){
+			Library("pROC")
+			doItAndPrint(paste("ROC <- roc(", tclvalue(lhsVariable), " ~ ", modelValue, "$fitted.values, data=TempDF", subset, ', ci=TRUE, direction="auto")', sep=""))
+			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+			doItAndPrint("plot(ROC)")
+			doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR","Area under the curve"), signif(ROC$auc[1], digits=3), gettext(domain="R-RcmdrPlugin.EZR","95% CI"), signif(ROC$ci[1], digits=3), "-", signif(ROC$ci[3], digits=3), "\n")')
+			doItAndPrint("remove(ROC)")
+		}
 		if (diagnosis==1){
 			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
 			doItAndPrint("oldpar <- par(oma=c(0,0,3,0), mfrow=c(2,2))")
@@ -13305,6 +13350,7 @@ putDialog("StatMedCLogistic", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(r
                 return()
                 }
            }		
+		Library("survival")
         command <- paste("clogit(", formula, ", data=", ActiveDataSet(), ")", sep="")
 #        logger(paste(modelValue, " <- ", command, sep=""))
 #        assign(modelValue, justDoIt(command), envir=.GlobalEnv)
@@ -13599,7 +13645,7 @@ StatMedSampleProportionsSingle <- function(){
 	powerEntry <- ttkentry(top, width="20", textvariable=power)
 	radioButtons(name="method", buttons=c("Two.sided", "One.sided"), values=c(2, 1),
 labels=gettext(domain="R-RcmdrPlugin.EZR",c("Two-sided", "One-sided")),title=gettext(domain="R-RcmdrPlugin.EZR","Method"))
-	radioButtons(name="continuity", buttons=c("Yes", "No"), values=c(1, 0), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Yes (or exact test)", "No")),title=gettext(domain="R-RcmdrPlugin.EZR","Continuity correction of chi-square test"))
+	radioButtons(name="continuity", buttons=c("Yes", "No"), values=c(1, 0), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Yes (or exact test)", "No correction")),title=gettext(domain="R-RcmdrPlugin.EZR","Continuity correction of chi-square test"))
 	onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Calculate sample size for comparison with specified proportion"), "#####", sep=""))
 		group1 <- tclvalue(group1)
@@ -13656,7 +13702,7 @@ StatMedPowerProportionsSingle <- function(){
 	sample <- tclVar("")
 	sampleEntry <- ttkentry(top, width="20", textvariable=sample)
 	radioButtons(name="method", buttons=c("Two.sided", "One.sided"), values=c(2, 1), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Two-sided", "One-sided")),title=gettext(domain="R-RcmdrPlugin.EZR","Method"))
-	radioButtons(name="continuity", buttons=c("Yes", "No"), values=c(1, 0), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Yes (or exact test)", "No")),title=gettext(domain="R-RcmdrPlugin.EZR","Continuity correction of chi-square test"))
+	radioButtons(name="continuity", buttons=c("Yes", "No"), values=c(1, 0), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Yes (or exact test)", "No correction")),title=gettext(domain="R-RcmdrPlugin.EZR","Continuity correction of chi-square test"))
 	onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Calculate power for comparison with specified proportion"), "#####", sep=""))
 		group1 <- tclvalue(group1)
@@ -14060,7 +14106,7 @@ StatMedSampleProportions <- function(){
 	ratio <- tclVar("1")
 	ratioEntry <- ttkentry(top, width="20", textvariable=ratio)
 	radioButtons(name="method", buttons=c("Two.sided", "One.sided"), values=c(2, 1), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Two-sided", "One-sided")),title=gettext(domain="R-RcmdrPlugin.EZR","Method"))
-	radioButtons(name="continuity", buttons=c("Yes", "No"), values=c(1, 0), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Yes (or Fisher's exact test)", "No")),title=gettext(domain="R-RcmdrPlugin.EZR","Continuity correction of chi-square test"))
+	radioButtons(name="continuity", buttons=c("Yes", "No"), values=c(1, 0), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Yes (or Fisher's exact test)", "No correction")),title=gettext(domain="R-RcmdrPlugin.EZR","Continuity correction of chi-square test"))
 	onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Calculate sample size for comparison between two proportions"), "#####", sep=""))	
 		group1 <- tclvalue(group1)
@@ -14115,7 +14161,7 @@ StatMedPowerProportions <- function(){
 	sample2 <- tclVar("")
 	sample2Entry <- ttkentry(top, width="20", textvariable=sample2)
 	radioButtons(name="method", buttons=c("Two.sided", "One.sided"), values=c(2, 1), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Two-sided", "One-sided")),title=gettext(domain="R-RcmdrPlugin.EZR","Method"))
-	radioButtons(name="continuity", buttons=c("Yes", "No"), values=c(1, 0), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Yes (or Fisher's exact test)", "No")),title=gettext(domain="R-RcmdrPlugin.EZR","Continuity correction of chi-square test"))
+	radioButtons(name="continuity", buttons=c("Yes", "No"), values=c(1, 0), labels=gettext(domain="R-RcmdrPlugin.EZR",c("Yes (or Fisher's exact test)", "No correction")),title=gettext(domain="R-RcmdrPlugin.EZR","Continuity correction of chi-square test"))
 	onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Calculate power for comparison between two proportions"), "#####", sep=""))
 		group1 <- tclvalue(group1)
@@ -14767,8 +14813,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.26", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","October 1, 2014"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.27", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","December 1, 2014"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -14882,7 +14928,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.26", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.27", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -14947,4 +14993,5 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'odbcCloseAll', 'odbcConnectExcel', 'odbcConnectExcel2007', 'odbcConnectAccess',
 'odbcConnectAccess2007', 'odbcConnectDbase', 'sqlTables', '.Tcl.args',
 'cuminc', 'Anova', 'pmvt', 'wald.test', 'timepoints', 'ci', 'sqlQuery',
-'groupingVariable', 'groupingFrame', 'othervarVariable'))
+'groupingVariable', 'groupingFrame', 'othervarVariable', 'rocVariable',
+'columnmergeVariable', 'column.name1', 'column.name2', 'columnmergeFrame'))

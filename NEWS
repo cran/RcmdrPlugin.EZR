@@ -1,3 +1,11 @@
+Changes to Version 1.27
+
+  o Added a function to plot ROC curve after logistic regression.
+  
+  o Added an option to merge datasets by matching specified columns.
+
+  o Small bug fixes.
+
 Changes to Version 1.26
 
   o Added a function to bun numeric variable to more than 2 levels with specified thresholds.

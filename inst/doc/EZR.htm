@@ -1,10 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html><head><title>R: Rcmdr Plug-In Package for the EZR (Easy R especially for...</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link rel="stylesheet" type="text/css" href="R.css">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><title>R: Rcmdr Plug-In Package for the EZR (Easy R especially for...</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R.css" />
 </head><body>
 
-<table width="100%" summary="page for EZR"><tr><td>EZR</td><td align="right">R Documentation</td></tr></table>
+<table width="100%" summary="page for EZR"><tr><td>EZR</td><td style="text-align: right;">R Documentation</td></tr></table>
 
 <h2>
 Rcmdr Plug-In Package for the EZR (Easy R especially for medical statistics)
@@ -12,7 +11,7 @@ Rcmdr Plug-In Package for the EZR (Easy R especially for medical statistics)
 
 <h3>Description</h3>
 
-<p>This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in <EM>Bone Marrow Transplantation</EM> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: <a href="http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf">http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf</a>). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: <a href="http://www.chugaiigaku.jp/item/detail.php?id=733">http://www.chugaiigaku.jp/item/detail.php?id=733</a>)
+<p>This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in <em>Bone Marrow Transplantation</em> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: <a href="http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf">http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf</a>). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: <a href="http://www.chugaiigaku.jp/item/detail.php?id=733">http://www.chugaiigaku.jp/item/detail.php?id=733</a>)
 </p>
 
 
@@ -21,30 +20,30 @@ Rcmdr Plug-In Package for the EZR (Easy R especially for medical statistics)
 
 <table summary="Rd table">
 <tr>
- <td align="left">
-Package: </td><td align="left"> RcmdrPlugin.EZR</td>
+ <td style="text-align: left;">
+Package: </td><td style="text-align: left;"> RcmdrPlugin.EZR</td>
 </tr>
 <tr>
- <td align="left">
-Type: </td><td align="left"> Package</td>
+ <td style="text-align: left;">
+Type: </td><td style="text-align: left;"> Package</td>
 </tr>
 <tr>
- <td align="left">
-Version: </td><td align="left"> 1.24</td>
+ <td style="text-align: left;">
+Version: </td><td style="text-align: left;"> 1.27</td>
 </tr>
 <tr>
- <td align="left">
-Date: </td><td align="left"> 2014-04-01</td>
+ <td style="text-align: left;">
+Date: </td><td style="text-align: left;"> 2014-12-01</td>
 </tr>
 <tr>
- <td align="left">
-License: </td><td align="left"> GPL (&gt;= 2)</td>
+ <td style="text-align: left;">
+License: </td><td style="text-align: left;"> GPL (&gt;= 2)</td>
 </tr>
 <tr>
- <td align="left"></td>
+ <td style="text-align: left;"></td>
 </tr>
 <tr>
- <td align="left">
+ <td style="text-align: left;">
 </td>
 </tr>
 
@@ -54,146 +53,146 @@ License: </td><td align="left"> GPL (&gt;= 2)</td>
 
 <h3>Installation of EZR</h3>
 
-<p>See <a href="http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html">http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html</a> for detailed information. Briefly, EZR is platform-independent. RcmdrPlugin.EZR should be installed with R commander (Rcmdr) and the other packages that Rcmdr or EZR depends on. Packages required by EZR can be easily installed at the same time with the installation of EZR by copying and pasting the following command to the R console window after &quot; &gt; &quot;.<br><br>
-<code>install.packages(pkgs="RcmdrPlugin.EZR", dependencies=TRUE)</code><br><br>
-After installation, R commander can be started by the command, <code>library(Rcmdr)</code> from the R console. Packagees required by Rcmdr are installed at the first start-up of R commander. EZR can be loaded by selecting RcmdrPlugin.EZR from the &quot;Tools&quot; &gt; &quot;Load Rcmdr plug-in(s)&quot; menu. Answer &quot;Yes&quot; to &quot;Restart now?&quot;.<br><br>
-On Windows, EZR plugin package will be loaded when R commander is started, if the following sentence is added to the Rprofile.site file in etc folder in the R folder (C:\Program Files\R\R-X.XX.X\etc).<br><br>
-<code>options(Rcmdr=list(plugins="RcmdrPlugin.EZR"))</code><br><br>
-In addition, if the following phrase is added to the command in &quot;Target:&quot; column on the &quot;Shortcut&quot; tab of the &quot;Property&quot; of &quot;R&quot; shorcut on the desktop (which can be opened by right-clicking on the shortcut), R commander will start at the same time with launching R.<br><br>
-<code>R_DEFAULT_PACKAGES="Rcmdr"</code><br><br>
-Therefore, if these two options were added, EZR can be started just by double-clicking on the &quot;R&quot; shortcut on the desktop.<br><br>
-In OS X, these can be done by opening the Terminal.app located in the Utilities folder, followed by copying and pasting the following command.<br><br>
-<code>echo "options(Rcmdr=list(plugins='RcmdrPlugin.EZR'))" &gt;&gt; ~/.Rprofile</code><br>
-<code>echo "library(Rcmdr)" &gt;&gt; ~/.Rprofile</code><br>
-<code>echo "local({" &gt;&gt; ~/.Rprofile</code><br>
-<code>echo "old &lt;- getOption('defaultPackages')" &gt;&gt; ~/.Rprofile</code><br>
-<code>echo "options(defaultPackages = c(old, 'Rcmdr'))" &gt;&gt; ~/.Rprofile</code><br>
-<code>echo "})" &gt;&gt; ~/.Rprofile</code><br><br>
-The default data folder of Windows EZR can be changed by right-clicking on this &quot;R&quot; shortcut on the desktop, selecting &quot;Properties&quot;, and replacing the folder name in the &quot;Start in:&quot; column on the &quot;Shortcut&quot; tab.<br><br>
+<p>See <a href="http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html">http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html</a> for detailed information. Briefly, EZR is platform-independent. RcmdrPlugin.EZR should be installed with R commander (Rcmdr) and the other packages that Rcmdr or EZR depends on. Packages required by EZR can be easily installed at the same time with the installation of EZR by copying and pasting the following command to the R console window after &quot; &gt; &quot;.<br /><br />
+<code>install.packages(pkgs="RcmdrPlugin.EZR", dependencies=TRUE)</code><br /><br />
+After installation, R commander can be started by the command, <code>library(Rcmdr)</code> from the R console. Packagees required by Rcmdr are installed at the first start-up of R commander. EZR can be loaded by selecting RcmdrPlugin.EZR from the &quot;Tools&quot; &gt; &quot;Load Rcmdr plug-in(s)&quot; menu. Answer &quot;Yes&quot; to &quot;Restart now?&quot;.<br /><br />
+On Windows, EZR plugin package will be loaded when R commander is started, if the following sentence is added to the Rprofile.site file in etc folder in the R folder (C:\Program Files\R\R-X.XX.X\etc).<br /><br />
+<code>options(Rcmdr=list(plugins="RcmdrPlugin.EZR"))</code><br /><br />
+In addition, if the following phrase is added to the command in &quot;Target:&quot; column on the &quot;Shortcut&quot; tab of the &quot;Property&quot; of &quot;R&quot; shorcut on the desktop (which can be opened by right-clicking on the shortcut), R commander will start at the same time with launching R.<br /><br />
+<code>R_DEFAULT_PACKAGES="Rcmdr"</code><br /><br />
+Therefore, if these two options were added, EZR can be started just by double-clicking on the &quot;R&quot; shortcut on the desktop.<br /><br />
+In OS X, these can be done by opening the Terminal.app located in the Utilities folder, followed by copying and pasting the following command.<br /><br />
+<code>echo "options(Rcmdr=list(plugins='RcmdrPlugin.EZR'))" &gt;&gt; ~/.Rprofile</code><br />
+<code>echo "library(Rcmdr)" &gt;&gt; ~/.Rprofile</code><br />
+<code>echo "local({" &gt;&gt; ~/.Rprofile</code><br />
+<code>echo "old &lt;- getOption('defaultPackages')" &gt;&gt; ~/.Rprofile</code><br />
+<code>echo "options(defaultPackages = c(old, 'Rcmdr'))" &gt;&gt; ~/.Rprofile</code><br />
+<code>echo "})" &gt;&gt; ~/.Rprofile</code><br /><br />
+The default data folder of Windows EZR can be changed by right-clicking on this &quot;R&quot; shortcut on the desktop, selecting &quot;Properties&quot;, and replacing the folder name in the &quot;Start in:&quot; column on the &quot;Shortcut&quot; tab.<br /><br />
 </p>
 
 
 <h3>EZR statistical functions</h3>
 
-<p>EZR includes following statistical functions.<br><br>
-<EM>For discrete variables</EM><br><br>
+<p>EZR includes following statistical functions.<br /><br />
+<em>For discrete variables</em><br /><br />
 Frequency distributions/cr
-Confidence interval for a proportion<br>
-One sample proportion test<br>
-Confidence interval for a difference between two proportions<br>
-Confidence interval for a ratio of two proportions<br>
-Compare two proportions (Fisher's exact test and Chi-square test)<br>
-Compare proportions of two paired samples (McNemar test)<br>
-Compare proportions of more than two paired samples (Cochran Q test)<br>
-Cochran-Armitage test for trend in proportions<br>
-Logistic regression<br><br>
-<EM>For continuous variables</EM><br><br>
-Numerical summaries<br>
-Smirnov-Grubbs test for outliers<br>
-Kolmogorov-Smimov test for normal distribution<br>
-Confidence interval for a mean<br>
-Single-sample t-test<br>
-Two-variances F-test<br>
-Two-sample t-test<br>
-Paired t-test<br>
-Bartlett's test<br>
-One-way ANOVA<br>
-Repeated-measures ANOVA<br>
-Multi-way ANOVA<br>
-ANCOVA<br>
-Test for Pearson's correlation<br>
-Linear regression<br><br>
-<EM>For nonparametric tests for continuous variables</EM><br><br>
-Mann-Whitney U test<br>
-Wilcoxon's signed rank test<br>
-Kruskal-Wallis test<br>
-Friedman test<br>
-Jonckheere-Terpstra test<br>
-Spearman's rank correlation test<br><br>
-<EM>For survival analysis</EM><br><br>
-Kaplan-Meier survival curve and logrank test<br>
-Logrank trend test<br>
-Cox proportional hazard regression<br>
-Cox proportional hazard regression with time-dependent covariate<br>
-Cumulative incidence of competing events and Gray test<br>
-Fine-Gray proportional hazard regression for competing events<br><br>
-<EM>For diagnostic test analysis</EM><br><br>
-Accuracy of qualitative test<br>
-Kappa statistics for agreement of two tests<br>
-Compute positive and negative predictive values<br>
-ROC curve analysis for quantitative test<br>
-Compare two ROC curves<br>
-Cronbach's alpha coefficient for reliability<br><br>
-<EM>For matched-pair analysis</EM><br><br>
-Extract matched controls (This function relys on optmatch package and is limietd to academic use.)<br>
-Mantel-Haenzel test for matched proportions<br>
-Conditional logistic regression for matched-pair analysis<br>
-Stratified Cox proportional hazard regression for matched-pair analysis<br><br>
-<EM>For meta-analysis and meta-regression test</EM><br><br>
-Meta-analysis and meta-regression test for proportions<br>
-Meta-analysis and meta-regression test for means<br>
-Meta-analysis and meta-regression test for hazard ratios<br><br>
-<EM>For smaple size and power calculation</EM><br><br>
-Calculate sample size from control and desired response rates<br>
-Calculate sample size from proportion and confidence interval<br>
-Calculate sample size or power for comparison with specified proportion<br>
-Calculate sample size or power for comparison between two proportions<br>
-Calculate sample size for non-inferiority trial of two proportions<br>
-Calculate sample size from standard deviation and confidence interval<br>
-Calculate sample size or power for comparison between two means<br>
-Calculate sample size or power for comparison between two paired means<br>
-Calculate sample size or power for comparison between two survival curves<br><br>
-<EM>For drawing graphs</EM><br><br>
-Bar graph(Frequencies)<br>
-Pie chart(Frequencies)<br>
-Stem-and-leaf display<br>
-Histogram<br>
-QQ plot<br>
-Bar graph(Means)<br>
-Line graph(Means)<br>
-Line graph(Repeated measures)<br>
-Boxplot<br>
-Dot chart<br>
-Ordered chart<br>
-Scatterplot<br>
-Scatterplot matrix<br>
-Adjusted survival curve<br>
-Stacked cumulative incidences<br><br>
-<EM>Statistical functions from original R commander</EM><br><br>
-Principal-components analysis<br>
-Factor analysis<br>
-k-means cluster analysis<br>
-Hierarchical cluster analysis<br>
-Summarize hierarchical clustering<br>
-Add hierarchical clustering to data set<br>
-Linear hypothesis<br>
-Variance-inflation factor<br>
-Breusch-Pagan test for heteroscedasticity<br>
-Durbin-Watson test for autocorrelation<br>
-RESET test for nonlinearity<br>
-Bonferroni outlier test<br>
-Basic diagnostic plots<br>
-Residual quantile-comparison plot<br>
-Component+residual plots<br>
-Added-variable plots<br>
-Influence plot<br>
-Effect plots<br><br>
+Confidence interval for a proportion<br />
+One sample proportion test<br />
+Confidence interval for a difference between two proportions<br />
+Confidence interval for a ratio of two proportions<br />
+Compare two proportions (Fisher's exact test and Chi-square test)<br />
+Compare proportions of two paired samples (McNemar test)<br />
+Compare proportions of more than two paired samples (Cochran Q test)<br />
+Cochran-Armitage test for trend in proportions<br />
+Logistic regression<br /><br />
+<em>For continuous variables</em><br /><br />
+Numerical summaries<br />
+Smirnov-Grubbs test for outliers<br />
+Kolmogorov-Smimov test for normal distribution<br />
+Confidence interval for a mean<br />
+Single-sample t-test<br />
+Two-variances F-test<br />
+Two-sample t-test<br />
+Paired t-test<br />
+Bartlett's test<br />
+One-way ANOVA<br />
+Repeated-measures ANOVA<br />
+Multi-way ANOVA<br />
+ANCOVA<br />
+Test for Pearson's correlation<br />
+Linear regression<br /><br />
+<em>For nonparametric tests for continuous variables</em><br /><br />
+Mann-Whitney U test<br />
+Wilcoxon's signed rank test<br />
+Kruskal-Wallis test<br />
+Friedman test<br />
+Jonckheere-Terpstra test<br />
+Spearman's rank correlation test<br /><br />
+<em>For survival analysis</em><br /><br />
+Kaplan-Meier survival curve and logrank test<br />
+Logrank trend test<br />
+Cox proportional hazard regression<br />
+Cox proportional hazard regression with time-dependent covariate<br />
+Cumulative incidence of competing events and Gray test<br />
+Fine-Gray proportional hazard regression for competing events<br /><br />
+<em>For diagnostic test analysis</em><br /><br />
+Accuracy of qualitative test<br />
+Kappa statistics for agreement of two tests<br />
+Compute positive and negative predictive values<br />
+ROC curve analysis for quantitative test<br />
+Compare two ROC curves<br />
+Cronbach's alpha coefficient for reliability<br /><br />
+<em>For matched-pair analysis</em><br /><br />
+Extract matched controls (This function relys on optmatch package and is limietd to academic use.)<br />
+Mantel-Haenzel test for matched proportions<br />
+Conditional logistic regression for matched-pair analysis<br />
+Stratified Cox proportional hazard regression for matched-pair analysis<br /><br />
+<em>For meta-analysis and meta-regression test</em><br /><br />
+Meta-analysis and meta-regression test for proportions<br />
+Meta-analysis and meta-regression test for means<br />
+Meta-analysis and meta-regression test for hazard ratios<br /><br />
+<em>For smaple size and power calculation</em><br /><br />
+Calculate sample size from control and desired response rates<br />
+Calculate sample size from proportion and confidence interval<br />
+Calculate sample size or power for comparison with specified proportion<br />
+Calculate sample size or power for comparison between two proportions<br />
+Calculate sample size for non-inferiority trial of two proportions<br />
+Calculate sample size from standard deviation and confidence interval<br />
+Calculate sample size or power for comparison between two means<br />
+Calculate sample size or power for comparison between two paired means<br />
+Calculate sample size or power for comparison between two survival curves<br /><br />
+<em>For drawing graphs</em><br /><br />
+Bar graph(Frequencies)<br />
+Pie chart(Frequencies)<br />
+Stem-and-leaf display<br />
+Histogram<br />
+QQ plot<br />
+Bar graph(Means)<br />
+Line graph(Means)<br />
+Line graph(Repeated measures)<br />
+Boxplot<br />
+Dot chart<br />
+Ordered chart<br />
+Scatterplot<br />
+Scatterplot matrix<br />
+Adjusted survival curve<br />
+Stacked cumulative incidences<br /><br />
+<em>Statistical functions from original R commander</em><br /><br />
+Principal-components analysis<br />
+Factor analysis<br />
+k-means cluster analysis<br />
+Hierarchical cluster analysis<br />
+Summarize hierarchical clustering<br />
+Add hierarchical clustering to data set<br />
+Linear hypothesis<br />
+Variance-inflation factor<br />
+Breusch-Pagan test for heteroscedasticity<br />
+Durbin-Watson test for autocorrelation<br />
+RESET test for nonlinearity<br />
+Bonferroni outlier test<br />
+Basic diagnostic plots<br />
+Residual quantile-comparison plot<br />
+Component+residual plots<br />
+Added-variable plots<br />
+Influence plot<br />
+Effect plots<br /><br />
 </p>
 
 
 <h3>Basic operations in EZR</h3>
 
-<p>These EZR functions can be started by point-and-click access using the items on the menu bar. See <code>EZRdialogs</code> for details. R commander automatically creates and executes corresponding R commands that appear in the &quot;Script window&quot;. Results are shown in the &quot;Output window&quot;. If any errors or warnings are noted, messages will appear in the &quot;Message window&quot;. The created commands can be saved by selecting &quot;File&quot; &gt; &quot;Save script&quot; on the menu bar. The output can be saved by selecting &quot;File&quot; &gt; &quot;Save output&quot;. By saving the commands, users can reproduce the analyses and can also share the procedure with the other investigators.<br><br>
-The following EZR functions can be executed by typing the commands in the &quot;Script window&quot; and clicking on the &quot;Submit&quot; button.<br><br>
-Following functions are built to create a formatted table for presentation.<br><br>
-<code>w.twoway(table, filename)</code> function copies the results of two-way table analyses to the clipboard or text file. <br><br>
-<code>w.ttest(table, filename)</code> function copies the results of t-test to the clipboard or text file. <br><br>
-<code>w.survival(table, filename)</code> function copies the results of survival analyses to the clipboard or text file. <br><br>
-<code>w.ci(table, filename)</code> function copies the results of cumulative incidence analyses to the clipboard or text file. <br><br>
-<code>w.multi(table, filename)</code> function copies the results of multivariate regression analyses to the clipboard or text file. <br><br>
-&quot;table&quot; can be omitted except for logistic regression analysis and Fine &amp; Gray proportinal hazard regression analysis, in which &quot;odds&quot; and &quot;crr.table&quot; should be specified for &quot;table&quot;(default is &quot;cox.table&quot; to copy the results of Cox proportional hazard regression analysis).<br>
-If &quot;filename&quot; is omitted, the formatted table will be copied to the clopboard, which can be pasted into a spreadsheet.<br><br>
-<code>Mantel.Byar()</code> functon is for Mantel-Byar test, which should be performed after executing &quot;Cox proportional hazard modeling with time-dependent covariate&quot;.<br><br>
+<p>These EZR functions can be started by point-and-click access using the items on the menu bar. See <code>EZRdialogs</code> for details. R commander automatically creates and executes corresponding R commands that appear in the &quot;Script window&quot;. Results are shown in the &quot;Output window&quot;. If any errors or warnings are noted, messages will appear in the &quot;Message window&quot;. The created commands can be saved by selecting &quot;File&quot; &gt; &quot;Save script&quot; on the menu bar. The output can be saved by selecting &quot;File&quot; &gt; &quot;Save output&quot;. By saving the commands, users can reproduce the analyses and can also share the procedure with the other investigators.<br /><br />
+The following EZR functions can be executed by typing the commands in the &quot;Script window&quot; and clicking on the &quot;Submit&quot; button.<br /><br />
+Following functions are built to create a formatted table for presentation.<br /><br />
+<code>w.twoway(table, filename)</code> function copies the results of two-way table analyses to the clipboard or text file. <br /><br />
+<code>w.ttest(table, filename)</code> function copies the results of t-test to the clipboard or text file. <br /><br />
+<code>w.survival(table, filename)</code> function copies the results of survival analyses to the clipboard or text file. <br /><br />
+<code>w.ci(table, filename)</code> function copies the results of cumulative incidence analyses to the clipboard or text file. <br /><br />
+<code>w.multi(table, filename)</code> function copies the results of multivariate regression analyses to the clipboard or text file. <br /><br />
+&quot;table&quot; can be omitted except for logistic regression analysis and Fine &amp; Gray proportinal hazard regression analysis, in which &quot;odds&quot; and &quot;crr.table&quot; should be specified for &quot;table&quot;(default is &quot;cox.table&quot; to copy the results of Cox proportional hazard regression analysis).<br />
+If &quot;filename&quot; is omitted, the formatted table will be copied to the clopboard, which can be pasted into a spreadsheet.<br /><br />
+<code>Mantel.Byar()</code> functon is for Mantel-Byar test, which should be performed after executing &quot;Cox proportional hazard modeling with time-dependent covariate&quot;.<br /><br />
 </p>
 
 
@@ -205,18 +204,18 @@ If &quot;filename&quot; is omitted, the formatted table will be copied to the cl
 
 <h3>Author(s)</h3>
 
-<p>Yoshinobu Kanda &lt;ycanda-tky@umin.ac.jp&gt;<br>
+<p>Yoshinobu Kanda &lt;ycanda-tky@umin.ac.jp&gt;<br />
 Maintainer: Yoshinobu Kanda &lt;ycanda-tky@umin.ac.jp&gt;
 </p>
 
 
 <h3>References</h3>
 
-<p>Its complete manual is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: <a href="http://www.chugaiigaku.jp/item/detail.php?id=733">http://www.chugaiigaku.jp/item/detail.php?id=733</a>), but a report that introduced the investigation of EZR was published in <EM>Bone Marrow Transplantation</EM> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below.
+<p>Its complete manual is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: <a href="http://www.chugaiigaku.jp/item/detail.php?id=733">http://www.chugaiigaku.jp/item/detail.php?id=733</a>), but a report that introduced the investigation of EZR was published in <em>Bone Marrow Transplantation</em> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below.
 </p>
 <p>Yoshinobu Kanda (2013).
 Investigation of the freely available easy-to-use software EZR for medical statistics.
-<EM>Bone Marrow Transplantation</EM> (Open article, URL: <a href="http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf">http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf</a>).<br><br>
+<em>Bone Marrow Transplantation</em> (Open article, URL: <a href="http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf">http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf</a>).<br /><br />
 </p>
 <p>EZR web site:
 Division of Hematology, Saitama Medical Center, Jichi Medical University. URL: <a href="http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html">http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html</a>
