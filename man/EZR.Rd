@@ -72,15 +72,15 @@
 Rcmdr Plug-In Package for the EZR (Easy R especially for medical statistics)
 }
 \description{
-This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in \emph{Bone Marrow Transplantation} (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: \url{http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf}). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: \url{http://www.chugaiigaku.jp/item/detail.php?id=733})
+This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in \emph{Bone Marrow Transplantation} (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: \url{http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf}). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8, URL: \url{http://www.chugaiigaku.jp/item/detail.php?id=1660} or Nankodo, ISBN: 978-4-524-26158-1, URL: \url{http://www.nankodo.co.jp/g/g9784524261581/})
 }
 
 \details{
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.27\cr
-Date: \tab 2014-12-01\cr
+Version: \tab 1.28\cr
+Date: \tab 2015-06-01\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
@@ -88,7 +88,7 @@ License: \tab GPL (>= 2)\cr\cr
 \section{Installation of EZR}{
 See \url{http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html} for detailed information. Briefly, EZR is platform-independent. RcmdrPlugin.EZR should be installed with R commander (Rcmdr) and the other packages that Rcmdr or EZR depends on. Packages required by EZR can be easily installed at the same time with the installation of EZR by copying and pasting the following command to the R console window after " > ".\cr\cr
 \code{install.packages(pkgs="RcmdrPlugin.EZR", dependencies=TRUE)}\cr\cr
-After installation, R commander can be started by the command, \code{library(Rcmdr)} from the R console. Packagees required by Rcmdr are installed at the first start-up of R commander. EZR can be loaded by selecting RcmdrPlugin.EZR from the "Tools" > "Load Rcmdr plug-in(s)" menu. Answer "Yes" to "Restart now?".\cr\cr
+After installation, R commander can be started by the command, \code{library(Rcmdr)} from the R console. Packages required by Rcmdr are installed at the first start-up of R commander. EZR can be loaded by selecting RcmdrPlugin.EZR from the "Tools" > "Load Rcmdr plug-in(s)" menu. Answer "Yes" to "Restart now?".\cr\cr
 On Windows, EZR plugin package will be loaded when R commander is started, if the following sentence is added to the Rprofile.site file in etc folder in the R folder (C:\\Program Files\\R\\R-X.XX.X\\etc).\cr\cr
 \code{options(Rcmdr=list(plugins="RcmdrPlugin.EZR"))}\cr\cr
 In addition, if the following phrase is added to the command in "Target:" column on the "Shortcut" tab of the "Property" of "R" shorcut on the desktop (which can be opened by right-clicking on the shortcut), R commander will start at the same time with launching R.\cr\cr
@@ -234,7 +234,7 @@ EZR comes with translations from English into Japanese.
 }
 
 \references{
-Its complete manual is available only in Japanese (Chugai Igakusha, ISBN-10: 4498109007, URL: \url{http://www.chugaiigaku.jp/item/detail.php?id=733}), but a report that introduced the investigation of EZR was published in \emph{Bone Marrow Transplantation} (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below.
+Its complete manual is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8, URL: \url{http://www.chugaiigaku.jp/item/detail.php?id=1660} or Nankodo,  ISBN: 978-4-524-26158-1, URL: \url{http://www.nankodo.co.jp/g/g9784524261581/}), but a report that introduced the investigation of EZR was published in \emph{Bone Marrow Transplantation} (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below.
  
 Yoshinobu Kanda (2013).
 Investigation of the freely available easy-to-use software EZR for medical statistics.

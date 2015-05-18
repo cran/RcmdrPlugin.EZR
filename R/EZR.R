@@ -14,7 +14,7 @@
 #library(aod, quietly=TRUE)
 
 require("datasets")
-require("car") 
+#requireNamespace("car") 
 require("methods")
 window.type <- "width=7, height=7"
 par.option <- 'lwd=1, las=1, family="sans", cex=1, mgp=c(3.0,1,0)'
@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.27", "\n")
+cat("   Version 1.28", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -4270,8 +4270,9 @@ trim.col.na <- function(dat){
 if(.Platform$OS.type == 'windows')
 StatMedImportRODBCtable <- function(){
 	# load the RODBC package and stops the program if not available
-	if(!require(RODBC))
-		stop("This function requires the RODBC package.")
+	Library("RODBC")
+	#if(!require(RODBC))
+	#	stop("This function requires the RODBC package.")
 	# close all databases in case of error
 	on.exit(odbcCloseAll())
 # Enter the name of data set, by default : Dataset
@@ -6572,7 +6573,7 @@ StatMedNumericalSummaries <- function(){
 	
 StatMedQQPlot <- function () {
 # this function modified by Martin Maechler
-	require("car")
+	requireNamespace("car")
 	defaults <- list(initial.x = NULL, initial.identify = 0, initial.dist = "norm", initial.df = "",
 			initial.chisqdf = "", initial.fdf1 = "", initial.fdf2 = "", initial.othername = "", 
 			initial.otherparam = "")
@@ -9334,8 +9335,18 @@ currentModel <- TRUE
         alternative <- as.character(tclvalue(alternativeVariable))
         test <- as.character(tclvalue(testVariable))
         subset <- tclvalue(subsetVariable)
-        subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) ""
-            else paste(", subset=", subset, sep="")
+#        subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) ""
+#            else paste(", subset=", subset, sep="")
+			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
+				subset1 <- ""
+				subset2 <- ""
+				subset <- ""
+			} else {
+				subset1 <- "subset("
+				subset2 <- paste(", ", subset, ")", sep="")
+				subset <- paste(", subset=", subset, sep="")
+			}			
+			
 putDialog("StatMedMannW", list(group=group, response=response, alternative=alternative, test=test, subset = tclvalue(subsetVariable)))
         if (length(group) == 0) {
             errorCondition(recall=StatMedMannW, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
@@ -9348,8 +9359,19 @@ putDialog("StatMedMannW", list(group=group, response=response, alternative=alter
 		closeDialog()
         .activeDataSet <- ActiveDataSet()
         nvar = length(group)
-		doItAndPrint("p.value <- NA")
-		doItAndPrint("groups <- NA")
+#		doItAndPrint("p.value <- NA")
+#		doItAndPrint("groups <- NA")
+		
+		doItAndPrint("group.names <- NULL")
+		doItAndPrint("group.median <- NULL")
+		doItAndPrint("group.min <- NULL")
+		doItAndPrint("group.max <- NULL")
+		doItAndPrint("group.1Q <- NULL")
+		doItAndPrint("group.3Q <- NULL")
+		doItAndPrint("group.p <- NULL")
+	
+		if(eval(parse(text=paste('"res" %in% objects()')))) doItAndPrint("remove(res)")
+	
 		for (i in 1:nvar) {
 			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 			command <- (paste("boxplot(", response, "~ factor(", group[i], '), ylab="', response,
@@ -9366,13 +9388,39 @@ putDialog("StatMedMannW", list(group=group, response=response, alternative=alter
 				alternative, "', exact=", test=="exact", 
 				", correct=", test=="correct",", data=", .activeDataSet, subset, "))", sep=""))
 			}
-			doItAndPrint(paste("p.value[", i, "] <- signif(res$p.value, digits=3)", sep=""))
-			doItAndPrint(paste("groups[", i, '] <- "', group[i], '"', sep=""))
+			
+#			doItAndPrint(paste("p.value[", i, "] <- signif(res$p.value, digits=3)", sep=""))
+#			doItAndPrint(paste("groups[", i, '] <- "', group[i], '"', sep=""))
+		
+			group.levels <- eval(parse(text=paste("levels(factor(", subset1, ActiveDataSet(), subset2, "$", group[i], "))", sep="")))
+			if(length(group.levels)!=2) next
+			for (j in 1:2){
+				doItAndPrint(paste('group.names <- c(group.names, "', group[i], "=", group.levels[j], '")', sep=""))
+				doItAndPrint(paste("group.min <- c(group.min, with(", subset1, ActiveDataSet(), subset2, ", min(", response, "[", group[i], "==", group.levels[j], "], na.rm=TRUE)))", sep=""))
+				doItAndPrint(paste("group.1Q <- c(group.1Q, with(", subset1, ActiveDataSet(), subset2, ", quantile(", response, "[", group[i], "==", group.levels[j], "], 0.25, na.rm=TRUE)))", sep=""))
+				doItAndPrint(paste("group.median <- c(group.median, with(", subset1, ActiveDataSet(), subset2, ", median(", response, "[", group[i], "==", group.levels[j], "], na.rm=TRUE)))", sep=""))
+				doItAndPrint(paste("group.3Q <- c(group.3Q, with(", subset1, ActiveDataSet(), subset2, ", quantile(", response, "[", group[i], "==", group.levels[j], "], 0.75, na.rm=TRUE)))", sep=""))
+				doItAndPrint(paste("group.max <- c(group.max, with(", subset1, ActiveDataSet(), subset2, ", max(", response, "[", group[i], "==", group.levels[j], "], na.rm=TRUE)))", sep=""))
+				
+				if (j == 1){
+					doItAndPrint("group.p <- c(group.p, signif(res$p.value,digits=3))")
+				} else {
+					doItAndPrint('group.p <- c(group.p, "")')	
+				}
 			}
-		doItAndPrint("mannwhitney.table <- data.frame(p.value=p.value)")
-		doItAndPrint('colnames(mannwhitney.table) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(mannwhitney.table))')
-		doItAndPrint("rownames(mannwhitney.table) <- groups")
-		doItAndPrint("mannwhitney.table")
+				doItAndPrint("remove(res)")
+			}
+#		doItAndPrint("mannwhitney.table <- data.frame(p.value=p.value)")
+#		doItAndPrint('colnames(mannwhitney.table) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(mannwhitney.table))')
+#		doItAndPrint("rownames(mannwhitney.table) <- groups")
+#		doItAndPrint("mannwhitney.table")
+		
+		doItAndPrint("mannwhitney.table <- data.frame(Minimum=group.min, Q1=group.1Q, Median=group.median, Q3=group.3Q, Maximum=group.max, p.value=group.p)")
+		doItAndPrint("rownames(mannwhitney.table) <- group.names")
+		doItAndPrint('colnames(mannwhitney.table)[c(2,4)] <- c("25%", "75%")') 
+		doItAndPrint('colnames(mannwhitney.table) <- gettext(domain="R-RcmdrPlugin.EZR",colnames(mannwhitney.table))')
+		doItAndPrint("mannwhitney.table")			
+		
 		tkfocus(CommanderWindow())
 		}
     OKCancelHelp(helpSubject="wilcox.test", apply="StatMedMannW", reset="StatMedMannW")
@@ -12014,14 +12062,14 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 		doItAndPrint(paste("legend(", place, ", compevents, ", line, ', box.lty=0, title="Competing events")', sep=""))
 	}else{
 		if (atrisk==0){
-			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, ', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 		} else {
 			doItAndPrint('mar <- par("mar")')
 			doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, ', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 			doItAndPrint("xticks <- axTicks(1)")
 			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
 			doItAndPrint("axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)")
@@ -14478,7 +14526,8 @@ putDialog("StatMedMeta", list(studyname=studyname, testpositive=testpositive, te
 	}else{
 		doItAndPrint(paste("TempDF <- subset(", dataSet, ", subset=", subset, ")[complete.cases(subset(", dataSet, ", subset=", subset, ")$", testpositive, ", subset(", dataSet, ", subset=", subset, ")$", testnumber, ", subset(", dataSet, ", subset=", subset, ")$", controlpositive, ", subset(", dataSet, ", subset=", subset, ")$", controlnumber, "),]", sep=""))
 	}
-    library(meta, quietly=TRUE)
+#    library(meta, quietly=TRUE)
+	Library("meta")
 	if (dsl==0) {
 		command <- paste("res <- metabin(", testpositive, ", ", testnumber, ", ", controlpositive, ", ", controlnumber, ', data=TempDF, sm="', endpoint, '", studlab=', studyname, group1, ", comb.fixed=TRUE, comb.random=FALSE)", sep="")
 	} else {
@@ -14605,7 +14654,8 @@ putDialog("StatMedMetaHazard",list(input=input, studyname=studyname, hazard=haza
 	} else {
 		doItAndPrint(paste("TempDF <- subset(", dataSet, ", subset=", subset, ")[complete.cases(subset(", dataSet, ", subset=", subset, ")$", hazard, ", subset(", dataSet, ", subset=", subset, ")$", upperci, "),]", sep=""))
 	}
-    library(meta, quietly=TRUE)
+#    library(meta, quietly=TRUE)
+	Library("meta")
 	if (input == "CI"){
 		doItAndPrint(paste("logHR <- log(TempDF$", hazard, ")", sep=""))
 		doItAndPrint(paste("logSE <- (log(TempDF$", upperci, ")-log(TempDF$", hazard, ")) / qnorm(0.975)", sep=""))				
@@ -14741,7 +14791,8 @@ putDialog("StatMedMetaCont", list(studyname=studyname, testmean=testmean, testnu
         message=gettext(domain="R-RcmdrPlugin.EZR","Pick all required variables"))
       return()
     }	
-    library(meta, quietly=TRUE)
+#    library(meta, quietly=TRUE)
+	Library("meta")
 	smd <- ifelse(smd==0, ', sm="MD"', ', sm="SMD"')
 	if (dsl==0) {
 		command <- paste("res <- metacont(", testnumber, ", ", testmean, ", ", testsd, ", ", controlnumber, ", ", controlmean, ", ", controlsd, ", data=TempDF, studlab=", studyname, group1, ", comb.fixed=TRUE, comb.random=FALSE", smd, ")", sep="")
@@ -14813,8 +14864,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.27", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","December 1, 2014"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.28", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","June 1, 2015"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -14928,7 +14979,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.27", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.28", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',

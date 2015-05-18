@@ -2,3 +2,11 @@ import(stats, Rcmdr)
 importFrom(tcltk, tkbutton, tkget)
 exportPattern("^[^\\.]")
 
+#just for cran check
+S3method(print, ci.summary)
+S3method(summary, ci)
+S3method(summary, km)
+S3method(summary, table.MH)
+S3method(summary, table.twoway)
+
+

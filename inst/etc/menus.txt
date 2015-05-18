@@ -4,7 +4,7 @@
 
     menu    FileMenu        topMenu         ""                                              ""                          ""          			""
     item    topMenu         cascade         "File"                                          FileMenu                    ""          			""
-    item    FileMenu        command         "New data set"               					newDataSet                  ""         				"!MacOSXP()"
+    item    FileMenu        command         "New data set"               					newDataSet                  ""         				"getRcmdr('editDataset.threshold') > 0"
     item    FileMenu        command         "Load data set"                        			StatMedLoadDataSet          ""          			""
     menu    ImportMenu      FileMenu        ""                                              ""                          ""          			""
     item    FileMenu        cascade         "Import data"                              		ImportMenu                  ""          			""
@@ -236,6 +236,7 @@
     item    topMenu         cascade         "Tools"                                         ToolsMenu                   ""          				""
     item    ToolsMenu       command         "Load package(s)..."                            loadPackages                ""          				""
     item    ToolsMenu       command         "Load Rcmdr plug-in(s)..."                      loadPlugins             "length(listPlugins()) > 0" ""
+    item    ToolsMenu       command         "Manage Mac OS X app nap for R.app..."          appNap                      ""    "RappP()  && mavericksP()"
     item    ToolsMenu       command         "Options..."                                    Options                     ""          				""
     item    ToolsMenu       command         "Save Rcmdr options..."                         saveOptions                 ""          ""
 
