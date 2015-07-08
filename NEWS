@@ -1,10 +1,14 @@
+Changes to Version 1.29
+
+  o Small bug fixes.
+
 Changes to Version 1.28
 
   o Enabled several menu items on EZR on OS X.
   
   o Man-Whitney U test now shows summary data.
   
-  o Chaged library() or require() to Library().
+  o Changed library() or require() to Library().
 
 Changes to Version 1.27
 

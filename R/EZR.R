@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.28", "\n")
+cat("   Version 1.29", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -3900,10 +3900,10 @@ listLMModels <- function(envir=.GlobalEnv, ...) {
 
 StatMedLoadDataSet <- function() {
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Load data set"), "#####", sep=""))
-	file <- tclvalue(tkgetOpenFile(filetypes=
-							gettext(domain="R-RcmdrPlugin.EZR",'{"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}} {"All Files" {"*"}}')))	
 #	file <- tclvalue(tkgetOpenFile(filetypes=
-#							gettextRcmdr('{"All Files" {"*"}} {"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}}')))
+#							gettext(domain="R-RcmdrPlugin.EZR",'{"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}} {"All Files" {"*"}}')))	
+	file <- tclvalue(tkgetOpenFile(filetypes=
+							gettextRcmdr('{"All Files" {"*"}} {"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}}')))
 	if (file == "") return()
 	setBusyCursor()
 	on.exit(setIdleCursor())
@@ -9396,11 +9396,11 @@ putDialog("StatMedMannW", list(group=group, response=response, alternative=alter
 			if(length(group.levels)!=2) next
 			for (j in 1:2){
 				doItAndPrint(paste('group.names <- c(group.names, "', group[i], "=", group.levels[j], '")', sep=""))
-				doItAndPrint(paste("group.min <- c(group.min, with(", subset1, ActiveDataSet(), subset2, ", min(", response, "[", group[i], "==", group.levels[j], "], na.rm=TRUE)))", sep=""))
-				doItAndPrint(paste("group.1Q <- c(group.1Q, with(", subset1, ActiveDataSet(), subset2, ", quantile(", response, "[", group[i], "==", group.levels[j], "], 0.25, na.rm=TRUE)))", sep=""))
-				doItAndPrint(paste("group.median <- c(group.median, with(", subset1, ActiveDataSet(), subset2, ", median(", response, "[", group[i], "==", group.levels[j], "], na.rm=TRUE)))", sep=""))
-				doItAndPrint(paste("group.3Q <- c(group.3Q, with(", subset1, ActiveDataSet(), subset2, ", quantile(", response, "[", group[i], "==", group.levels[j], "], 0.75, na.rm=TRUE)))", sep=""))
-				doItAndPrint(paste("group.max <- c(group.max, with(", subset1, ActiveDataSet(), subset2, ", max(", response, "[", group[i], "==", group.levels[j], "], na.rm=TRUE)))", sep=""))
+				doItAndPrint(paste("group.min <- c(group.min, with(", subset1, ActiveDataSet(), subset2, ", min(", response, "[", group[i], "=='", group.levels[j], "'], na.rm=TRUE)))", sep=""))
+				doItAndPrint(paste("group.1Q <- c(group.1Q, with(", subset1, ActiveDataSet(), subset2, ", quantile(", response, "[", group[i], "=='", group.levels[j], "'], 0.25, na.rm=TRUE)))", sep=""))
+				doItAndPrint(paste("group.median <- c(group.median, with(", subset1, ActiveDataSet(), subset2, ", median(", response, "[", group[i], "=='", group.levels[j], "'], na.rm=TRUE)))", sep=""))
+				doItAndPrint(paste("group.3Q <- c(group.3Q, with(", subset1, ActiveDataSet(), subset2, ", quantile(", response, "[", group[i], "=='", group.levels[j], "'], 0.75, na.rm=TRUE)))", sep=""))
+				doItAndPrint(paste("group.max <- c(group.max, with(", subset1, ActiveDataSet(), subset2, ", max(", response, "[", group[i], "=='", group.levels[j], "'], na.rm=TRUE)))", sep=""))
 				
 				if (j == 1){
 					doItAndPrint("group.p <- c(group.p, signif(res$p.value,digits=3))")
@@ -11523,7 +11523,7 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 	}
 	
 	if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
-		x <- strsplit(tclvalue(rhsVariable), split="\\+ ")
+		x <- strsplit(tclvalue(rhsVariable), split="\\+")
 		command <- paste("TempDF <- with(", ActiveDataSet(), ", ", ActiveDataSet(), "[complete.cases(", paste(x[[1]], collapse=","), "),])", sep="")
 		doItAndPrint(command)
 		command <- paste("coxph(", formula, ", data=TempDF", subset, ', method="breslow")', sep="")
@@ -12693,7 +12693,7 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 	}
 
 	if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
-		x <- strsplit(tclvalue(rhsVariable), split="\\+ ")
+		x <- strsplit(tclvalue(rhsVariable), split="\\+")
 		if (length(x[[1]]>0)){
 			command <- paste("TempDF <- with(TempTD, TempTD[complete.cases(covariate_td, ", paste(x[[1]], collapse=","), "),])", sep="")
 		} else{
@@ -12844,23 +12844,44 @@ putDialog("StatMedROC", list(response=response, predictor=predictor, threshold=t
         closeDialog()
    	if (tclvalue(thresholdVariable) == "1"){
 		pt <- paste(', print.thres="best", print.thres.best.method="', best, '", print.thres.best.weights=c(', cost, ", ", prevalence, ")", sep="")
-	}
+		cpt <- paste(', "best", best.method="', best, '", best.weights=c(', cost, ", ", prevalence, ")", sep="")
+		}
 	else{
 		pt <- ""
+		cpt <- ""
 	}
 	command <- paste("ROC <- roc(", response, "~", predictor, ", data=", subset1, ActiveDataSet(), subset2,
             	', ci=TRUE, direction="', direction, '")', sep="")
     doItAndPrint(command)
-	doItAndPrint("if(ROC$thresholds[1]==-Inf) {ROC$thresholds[1:(length(levels(factor(ROC$predictor))))] <- as.numeric(levels(factor(ROC$predictor)))}")
-	doItAndPrint("if(ROC$thresholds[1]==Inf) {ROC$thresholds[1:(length(levels(factor(ROC$predictor))))] <- rev(as.numeric(levels(factor(ROC$predictor))))}")	
+#	doItAndPrint("if(ROC$thresholds[1]==-Inf) {ROC$thresholds[1:(length(levels(factor(ROC$predictor))))] <- as.numeric(levels(factor(ROC$predictor)))}")
+#	doItAndPrint("if(ROC$thresholds[1]==Inf) {ROC$thresholds[1:(length(levels(factor(ROC$predictor))))] <- rev(as.numeric(levels(factor(ROC$predictor))))}")	
+
+	doItAndPrint("if(ROC$thresholds[1]==-Inf){thre <- c(unique(sort(ROC$predictor)), Inf)}")
+	doItAndPrint("if(ROC$thresholds[1]==Inf){thre <- c(unique(sort(ROC$predictor, decreasing=TRUE)), -Inf)}")
+
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
-	doItAndPrint('plot(ROC$thresholds, ROC$sensitivities, ylim=c(0,1), type="l", ylab="Sensitivity/Specificity", xlab="Threshold")')
+#	doItAndPrint('plot(ROC$thresholds, ROC$sensitivities, ylim=c(0,1), type="l", ylab="Sensitivity/Specificity", xlab="Threshold")')
+	doItAndPrint('plot(thre, ROC$sensitivities, ylim=c(0,1), type="l", ylab="Sensitivity/Specificity", xlab="Threshold")')
 	doItAndPrint("par(new=T)")
-	doItAndPrint('plot(ROC$thresholds,ROC$specificities, ylim=c(0,1), type="l", lty=2, ylab="", xlab="")')
+#	doItAndPrint('plot(ROC$thresholds,ROC$specificities, ylim=c(0,1), type="l", lty=2, ylab="", xlab="")')
+	doItAndPrint('plot(thre, ROC$specificities, ylim=c(0,1), type="l", lty=2, ylab="", xlab="")')
 	doItAndPrint('legend("bottom", horiz=TRUE, c("Sensitivity", "Specificity"), lty=1:2, box.lty=0)')			
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
-	doItAndPrint(paste("plot(ROC", pt, ", grid=TRUE)", sep=""))
-	doItAndPrint('coords(ROC, "all")')
+
+	doItAndPrint(paste("co <- coords(ROC", cpt, ")", sep=""))
+	if(eval(parse(text="class(co)"))=="matrix"){
+		doItAndPrint("if(ROC$thresholds[1]==-Inf){co[1,] <- min(ROC$predictor[ROC$predictor>co[1,]])}")	###Change to exact values
+		doItAndPrint("if(ROC$thresholds[1]==Inf)co[1,] <- max(ROC$predictor[ROC$predictor<co[1,]])")	###Change to exact values
+		doItAndPrint("plot(ROC, print.thres=co[1,], grid=TRUE)")
+		} else {
+		doItAndPrint("if(ROC$thresholds[1]==-Inf){co[1] <- min(ROC$predictor[ROC$predictor>co[1]])}")	###Change to exact values
+		doItAndPrint("if(ROC$thresholds[1]==Inf)co[1] <- max(ROC$predictor[ROC$predictor<co[1]])")	###Change to exact values
+		doItAndPrint("plot(ROC, print.thres=co[1], grid=TRUE)")
+	}
+#	doItAndPrint('coords(ROC, "all")')
+	doItAndPrint("if(ROC$thresholds[1]==-Inf){coords(ROC, x=c(-Inf, unique(sort(ROC$predictor)), Inf))}")
+	doItAndPrint("if(ROC$thresholds[1]==Inf){coords(ROC, x=c(Inf, unique(sort(ROC$predictor, decreasing=TRUE)), -Inf))}")
+
 	if(eval(parse(text="ROC$direction"))==">"){
 		logger(gettext(domain="R-RcmdrPlugin.EZR","### <= threshold is considered positive"))
 	}else{
@@ -13418,7 +13439,7 @@ putDialog("StatMedCLogistic", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(r
 		doItAndPrint('names(odds) <- gettext(domain="R-RcmdrPlugin.EZR",c("odds ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))')
 		doItAndPrint("odds")
 #		if (stepwise1 == 1 | stepwise2 == 1){
-#			x <- strsplit(tclvalue(rhsVariable), split="\\+ ")
+#			x <- strsplit(tclvalue(rhsVariable), split="\\+")
 #			command <- paste("TempDF <- with(", ActiveDataSet(), ", ", ActiveDataSet(), "[complete.cases(", paste(x[[1]], collapse=","), "),])", sep="")
 #			doItAndPrint(command)
 #			command <- paste("clogit(", formula, ", data=TempDF)", sep="")
@@ -13610,7 +13631,7 @@ putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 	}
 
 	if (stepwise1 == 1 | stepwise2 == 1){
-		x <- strsplit(tclvalue(rhsVariable), split="\\+ ")
+		x <- strsplit(tclvalue(rhsVariable), split="\\+")
 		command <- paste("TempDF <- with(", ActiveDataSet(), ", ", ActiveDataSet(), "[complete.cases(", paste(x[[1]], collapse=","), "),])", sep="")
 		doItAndPrint(command)
 		command <- paste("coxph(", formula, ', data=TempDF, method="breslow")', sep="")
@@ -14864,8 +14885,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.28", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","June 1, 2015"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.29", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","July 15, 2015"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -14979,7 +15000,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.28", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.29", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',

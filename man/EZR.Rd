@@ -79,8 +79,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.28\cr
-Date: \tab 2015-06-01\cr
+Version: \tab 1.29\cr
+Date: \tab 2015-07-15\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
