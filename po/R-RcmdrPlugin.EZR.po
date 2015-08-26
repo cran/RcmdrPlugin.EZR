@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2015-05-16 22:46+0900\n"
-"Last-Translator: Y. Kanda <ycanda-tky@umin.ac.jp>\n"
+"PO-Revision-Date: 2015-08-26 10:50+0900\n"
+"Last-Translator: \n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -1845,8 +1845,8 @@ msgstr "カイ２乗適合度検定"
 msgid "Table of Statistics"
 msgstr "統計量の表"
 
-#msgid "Median"
-#msgstr "メディアン"
+# msgid "Median"
+# msgstr "メディアン"
 msgid "Median"
 msgstr "中央値"
 
@@ -4444,7 +4444,7 @@ msgstr "文書を保存"
 msgid "Save document and exit?"
 msgstr "文書を保存して終了？"
 
-# ############################################# for EZR #########################################
+############################################## for EZR #########################################
 msgid "New data set"
 msgstr "新しいデータセットを作成する(直接入力)"
 
@@ -6421,4 +6421,10 @@ msgstr "列を結合するために照合する変数(1番目のデータセッ�
 
 msgid "Column name for matching in dataset 2(pick one)"
 msgstr "列を結合するために照合する変数(2番目のデータセット)"
+
+msgid "Drop unused factor levels"
+msgstr "利用されていない因子水準の削除"
+
+msgid "Drop Unused Factor Levels"
+msgstr "利用されていない因子水準の削除"
 

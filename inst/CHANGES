@@ -1,3 +1,11 @@
+Changes to Version 1.30
+
+  o Changed to use "readxl" package instead of "XLconnect" package to read Excel files for compatibility with R commander version 2.2-0. For R commander version 2.1-7 or earlier version, RcmdrPlugin.EZR version 1.29 is required to import Excel files.
+
+  o Changed to include all R commander original menu items of the latest version in the EZR menu (in "Original menu").
+
+  o Changed the scripts to draw adjusted survival curves for compatability with new version of "survival" package.
+
 Changes to Version 1.29
 
   o Small bug fixes.

@@ -23,6 +23,7 @@
 \alias{StatMedCumInc}
 \alias{StatMedDatediff}
 \alias{StatMedDeleteVariable}
+\alias{StatMedDropUnusedFactorLevels}
 \alias{StatMedDummy}
 \alias{StatMedEnterTable}
 \alias{StatMedExportDataSet}

@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.29", "\n")
+cat("   Version 1.30", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -5986,6 +5986,52 @@ StatMedReorderFactor <- function(){
 }
 
 
+StatMedDropUnusedFactorLevels <- function(){
+    dataSet <- activeDataSet()
+    initializeDialog(title=gettextRcmdr("Drop Unused Factor Levels"))
+    allfactorsVariable <- tclVar("0")
+    allFrame <- tkframe(top)
+    allfactorsCheckBox <- ttkcheckbutton(allFrame, variable = allfactorsVariable)
+    variablesBox <- variableListBox(top, Factors(),
+        title=gettextRcmdr("Factors(s) to drop levels (pick one or more)"), selectmode="multiple",
+        initialSelection=NULL)
+    onOK <- function(){
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Drop unused factor levels"), "#####", sep=""))
+        all <- tclvalue(allfactorsVariable)
+        variables <- getSelection(variablesBox)
+        closeDialog()
+        if (all == 0 && length(variables) == 0) {
+            errorCondition(recall=deleteVariable, message=gettextRcmdr("You must select one or more variables."))
+            return()
+        }
+        response <- tclvalue(RcmdrTkmessageBox(message=gettextRcmdr("Drop unused factor levels\nPlease confirm."), 
+            icon="warning", type="okcancel", default="cancel"))
+        if (response == "cancel") {
+            onCancel()
+            return()
+        }
+        if (all == 1) command <- paste(dataSet, " <- droplevels(", dataSet, ")", sep="")
+        else{
+            command <- paste(dataSet, " <- within(", dataSet, ", {", sep="")
+            for (variable in variables){
+                command <- paste(command, "\n  ", variable, " <- droplevels(", variable, ")", sep="")
+            }
+            command <- paste(command, "\n})")
+        }
+        doItAndPrint(command)
+        activeDataSet(dataSet, flushModel=FALSE, flushDialogMemory=FALSE)
+        tkfocus(CommanderWindow())
+    }
+    OKCancelHelp(helpSubject="droplevels")
+    tkgrid(allfactorsCheckBox, labelRcmdr(allFrame, text=gettextRcmdr("all factors")), sticky="w")
+    tkgrid(allFrame, sticky="w")
+    tkgrid(labelRcmdr(top, text=gettextRcmdr("OR"), fg="red"), sticky="w")
+    tkgrid(getFrame(variablesBox), sticky="nw")
+    tkgrid(buttonsFrame, sticky="w")
+    dialogSuffix()
+}
+
+
 StatMedSetContrasts <- function(){
 	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Define contrasts for a factor"))
 	variableBox <- variableListBox(top, Factors(), title=gettext(domain="R-RcmdrPlugin.EZR","Factor (pick one)"), listHeight=15)
@@ -10879,7 +10925,7 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
         doItAndPrint(paste(modelValue, " <- ", command, sep=""))
         doItAndPrint(paste("summary(", modelValue, ")", sep=""))	
 		x <- strsplit(tclvalue(rhsVariable), split="\\+")
-		command <- paste("TempDF <- with(", ActiveDataSet(), ", ", ActiveDataSet(), "[complete.cases(", paste(x[[1]], collapse=","), "),])", sep="")
+		command <- paste("TempDF <- with(", ActiveDataSet(), ", ", ActiveDataSet(), "[complete.cases(", tclvalue(lhsVariable), ", ", paste(x[[1]], collapse=","), "),])", sep="")
 		doItAndPrint(command)
 		doItAndPrint(paste("GLM.null <- glm(", tclvalue(lhsVariable), "~1, family=binomial(logit), data=TempDF", subset, ")", sep=""))
 		doItAndPrint(paste("anova(", modelValue, ', GLM.null, test="Chisq")', sep=""))
@@ -11745,10 +11791,14 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 	doItAndPrint(command)
 	doItAndPrint("cox <- survfit(coxmodel)")
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
-	if(length(group)==1){	
-			doItAndPrint(paste('len <- nchar("', group, '")', sep=""))
-			doItAndPrint("group.levels <- substring(names(cox$strata[cox$strata>0]), len+2)")
-#			doItAndPrint("group.levels <- levels(factor(substring(names(cox$strata[cox$strata>0]), len+2)))")
+	if(length(group)==1){		
+			check.type <- eval(parse(text=paste(subdataSet, "$", group, sep="")))
+			if(is.integer(check.type) | is.numeric(check.type)){
+				doItAndPrint(paste('len <- nchar("', group, '")', sep=""))
+				doItAndPrint("group.levels <- substring(names(cox$strata[cox$strata>0]),len+2)")
+			} else {
+				doItAndPrint("group.levels <- names(cox$strata[cox$strata>0])")
+			}
 	}
 	if(atrisk==1){
 		if(length(group)==0){
@@ -14885,8 +14935,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.29", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","July 15, 2015"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.30", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","September 1, 2015"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -15000,7 +15050,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.29", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.30", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -15066,4 +15116,5 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'odbcConnectAccess2007', 'odbcConnectDbase', 'sqlTables', '.Tcl.args',
 'cuminc', 'Anova', 'pmvt', 'wald.test', 'timepoints', 'ci', 'sqlQuery',
 'groupingVariable', 'groupingFrame', 'othervarVariable', 'rocVariable',
-'columnmergeVariable', 'column.name1', 'column.name2', 'columnmergeFrame'))
+'columnmergeVariable', 'column.name1', 'column.name2', 'columnmergeFrame',
+'deleteVariable'))
