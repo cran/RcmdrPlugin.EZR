@@ -1,3 +1,9 @@
+Changes to Version 1.31
+
+  o Added functions to calculate sample size for non-inferiority trial of two means and two survival curves.
+
+  o Small bug fixes.
+
 Changes to Version 1.30
 
   o Changed to use "readxl" package instead of "XLconnect" package to read Excel files for compatibility with R commander version 2.2-0. For R commander version 2.1-7 or earlier version, RcmdrPlugin.EZR version 1.29 is required to import Excel files.

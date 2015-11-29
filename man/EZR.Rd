@@ -13,7 +13,9 @@
 \alias{PowerProportionSingleArm}
 \alias{RemoveOutlier}
 \alias{SampleHazard}
+\alias{SampleHazardNonInf}
 \alias{SampleMean}
+\alias{SampleMeanNonInf}
 \alias{SampleMeanCI}
 \alias{SampleMeanPaired}
 \alias{SamplePhaseII}
@@ -79,8 +81,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.30\cr
-Date: \tab 2015-09-01\cr
+Version: \tab 1.31\cr
+Date: \tab 2015-12-01\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
@@ -171,8 +173,10 @@ Calculate sample size or power for comparison between two proportions\cr
 Calculate sample size for non-inferiority trial of two proportions\cr
 Calculate sample size from standard deviation and confidence interval\cr
 Calculate sample size or power for comparison between two means\cr
+Calculate sample size for non-inferiority trial of two means\cr
 Calculate sample size or power for comparison between two paired means\cr
-Calculate sample size or power for comparison between two survival curves\cr\cr
+Calculate sample size or power for comparison between two survival curves\cr
+Calculate sample size for non-inferiority trial of two survival curves\cr\cr
 \emph{For drawing graphs}\cr\cr
 Bar graph(Frequencies)\cr
 Pie chart(Frequencies)\cr

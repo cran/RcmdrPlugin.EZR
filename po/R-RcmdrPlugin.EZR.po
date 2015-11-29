@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2015-08-26 10:50+0900\n"
-"Last-Translator: \n"
+"PO-Revision-Date: 2015-11-28 09:01+0900\n"
+"Last-Translator: Y. Kanda <ycanda-tky@umin.ac.jp>\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -6427,4 +6427,28 @@ msgstr "利用されていない因子水準の削除"
 
 msgid "Drop Unused Factor Levels"
 msgstr "利用されていない因子水準の削除"
+
+msgid "Recode variables"
+msgstr "変数のコードを変更する"
+
+msgid "Calculate sample size for non-inferiority trial of two means"
+msgstr "2群の平均の比較(非劣性)のためのサンプルサイズの計算"
+
+msgid "Calculate sample size for non-inferiority trial of two survival curves"
+msgstr "2群の生存曲線の比較(非劣性)のためのサンプルサイズの計算"
+
+msgid "Non-inferiority lower limit"
+msgstr "非劣性下限 (0.0-1.0)"
+
+msgid "Meaningful difference in mean"
+msgstr "臨床的に意味のある差"
+
+msgid "Survival rate in control group"
+msgstr "対照群の生存率 (0.0-1.0)"
+
+msgid "Survival rate in test group"
+msgstr "被験群の生存率 (0.0-1.0)"
+
+msgid "Difference in means (test - control)"
+msgstr "平均値の差 (被験群 - 対照群)"
 

@@ -89,6 +89,7 @@
 \alias{StatMedROC}
 \alias{StatMedROCtest}
 \alias{StatMedReadDataSet}
+\alias{StatMedRecodeDialog}
 \alias{StatMedReliability}
 \alias{StatMedRenameVariables}
 \alias{StatMedRenewDataSet}
@@ -96,8 +97,10 @@
 \alias{StatMedRepANOVA}
 \alias{StatMedSG}
 \alias{StatMedSampleHazard}
+\alias{StatMedSampleHazardNonInf}
 \alias{StatMedSampleMeans}
 \alias{StatMedSampleMeansCI}
+\alias{StatMedSampleMeansNonInf}
 \alias{StatMedSampleMeansPaired}
 \alias{StatMedSamplePhaseII}
 \alias{StatMedSampleProportions}

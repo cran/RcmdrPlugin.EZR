@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.30", "\n")
+cat("   Version 1.31", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -3299,9 +3299,9 @@ SampleProportionNonInf <- function (group1, group2, delta, alpha, power, method)
 	ZB <- qnorm(power)
 	Mean <- (group1 + group2) / 2
 	N <- ceiling(((ZA*sqrt(2*Mean*(1-Mean))+ZB*sqrt(group1*(1-group1)+group2*(1-group2)))^2) / ((group1-group2-delta)^2))
-	res <- data.frame(c(group1, group2, delta, alpha, side, power, " ", gettext(domain="R-RcmdrPlugin.EZR","Estimated"), N))
+	res <- data.frame(c(group1, group2, delta, alpha, side, power, " ", gettext(domain="R-RcmdrPlugin.EZR","Estimated"), N, N))
 	colnames(res) <- gettext(domain="R-RcmdrPlugin.EZR","Assumptions")
-	rownames(res) <- gettext(domain="R-RcmdrPlugin.EZR",c("P1", "P2", "Delta", "Alpha", " ", "Power", "  ", "   ", "Required sample size"))
+	rownames(res) <- gettext(domain="R-RcmdrPlugin.EZR",c("P1", "P2", "Delta", "Alpha", " ", "Power", "  ", "Required sample size", "N1", "N2"))
 	y <- seq(0.2, 1, 0.05) 
 	plot(((ZA*sqrt(2*Mean*(1-Mean))+qnorm(y)*sqrt(group1*(1-group1)+group2*(1-group2)))^2) / ((group1-group2-delta)^2), y, ylim=c(0,1), type="l", ylab="Power", xlab="N")
 	abline(h=power, lty=2)
@@ -3340,10 +3340,11 @@ SampleHazard <- function (enrol, observe, followup, group1, group2, alpha, power
 	} else if (enrol > 0 && observe > enrol) {
 		N <- ((ZA * sqrt(P30 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P31/Q1 + P32/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
 	} else if (enrol == observe) {
-		N <- ((ZA * sqrt(P20 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P21/Q1 + P22/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
+#		N <- ((ZA * sqrt(P20 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P21/Q1 + P22/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
+		N <- ((ZA * sqrt(P30 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P31/Q1 + P32/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
 	}
-	N1 <- ceiling (N)
-	N2 <- N1 * ratio
+	N1 <- ceiling(N)
+	N2 <- ceiling(N * ratio)
 	res <- data.frame(c(group1, group2, followup, enrol, observe, alpha, side, power, ratio, " ", gettext(domain="R-RcmdrPlugin.EZR","Estimated"), N1, N2))
 	colnames(res) <- gettext(domain="R-RcmdrPlugin.EZR","Assumptions")
 	rownames(res) <- gettext(domain="R-RcmdrPlugin.EZR",c("P1", "P2", "(Follow-up duration for P1, P2)", "Enrollment duration", "Total study duration", "Alpha", " ", "Power", "N2/N1", "  ", "Required sample size", "N1", "N2"))
@@ -3357,7 +3358,8 @@ SampleHazard <- function (enrol, observe, followup, group1, group2, alpha, power
 		} else if (enrol > 0 && observe > enrol) {
 			x[i] <- ((ZA * sqrt(P30 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P31/Q1 + P32/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
 		} else if (enrol == observe) {
-			x[i] <- ((ZA * sqrt(P20 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P21/Q1 + P22/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
+#			x[i] <- ((ZA * sqrt(P20 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P21/Q1 + P22/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
+			x[i] <- ((ZA * sqrt(P30 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P31/Q1 + P32/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
 		}
 	}
 	plot(x, y, ylim=c(0,1), type="l", ylab="Power", xlab="N1")
@@ -3399,7 +3401,8 @@ PowerHazard <- function (enrol, observe, followup, group1, group2, alpha, sample
 		ZB <- (sqrt(sample * (1 + ratio)) * abs(L1 - L2) - ZA * sqrt(P30 * (1 / Q2 + 1 / Q1))) / sqrt(P31/Q1 + P32/Q2)
 #			N <- ((ZA * sqrt(P30 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P31/Q1 + P32/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
 	} else if (enrol == observe) {
-		ZB <- (sqrt(sample * (1 + ratio)) * abs(L1 - L2) - ZA * sqrt(P20 * (1 / Q2 + 1 / Q1))) / sqrt(P21/Q1 + P22/Q2)		
+#		ZB <- (sqrt(sample * (1 + ratio)) * abs(L1 - L2) - ZA * sqrt(P20 * (1 / Q2 + 1 / Q1))) / sqrt(P21/Q1 + P22/Q2)		
+		ZB <- (sqrt(sample * (1 + ratio)) * abs(L1 - L2) - ZA * sqrt(P30 * (1 / Q2 + 1 / Q1))) / sqrt(P31/Q1 + P32/Q2)
 #			N <- ((ZA * sqrt(P20 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P21/Q1 + P22/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
 	}
 	N1 <- sample
@@ -3418,7 +3421,8 @@ PowerHazard <- function (enrol, observe, followup, group1, group2, alpha, sample
 		} else if (enrol > 0 && observe > enrol) {
 			x[i] <- ((ZA * sqrt(P30 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P31/Q1 + P32/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
 		} else if (enrol == observe) {
-			x[i] <- ((ZA * sqrt(P20 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P21/Q1 + P22/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
+#			x[i] <- ((ZA * sqrt(P20 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P21/Q1 + P22/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
+			x[i] <- ((ZA * sqrt(P30 * (1 / Q2 + 1 / Q1)) + ZB * sqrt(P31/Q1 + P32/Q2)) / abs(L1 - L2)) ^ 2 / (1 + ratio)
 		}
 	}
 	plot(x, y, ylim=c(0,1), type="l", ylab="Power", xlab="N1")
@@ -3426,6 +3430,82 @@ PowerHazard <- function (enrol, observe, followup, group1, group2, alpha, sample
 
 	return(res)
 }		
+
+
+SampleMeanNonInf <- function (difference, delta, sd, alpha, power, method) {
+	#method = 2 for two sided, 1 for one sided, r for group2/group1 ratio
+	#from Jitsuyo SAS Seibutsu Tokei Handbook
+	side <- ifelse(method == 1, "one-sided", "two-sided")
+	side <- gettext(domain="R-RcmdrPlugin.EZR",side)
+	alpha2 <- alpha / method
+	ZA <- qnorm(1-alpha2)
+#	alpha <- alpha / method
+#	ZA <- qnorm(1-alpha)
+	ZB <- qnorm(power)
+	N1 <- ceiling(2*(((ZA+ZB)/((difference+delta)/sd))^2))
+	N2 <- N1
+
+	res <- data.frame(c(difference, delta, sd, alpha, side, power, " ", gettext(domain="R-RcmdrPlugin.EZR","Estimated"), N1, N2))
+	colnames(res) <- gettext(domain="R-RcmdrPlugin.EZR","Assumptions")
+	rownames(res) <- gettext(domain="R-RcmdrPlugin.EZR",c("Difference in means", "Delta", "Standard deviation", "Alpha", " ", "Power", "  ", "Required sample size", "N1", "N2"))
+	y <- seq(0.2, 1, 0.05) 
+	plot(2*(((ZA+qnorm(y))/((difference+delta)/sd))^2), y, ylim=c(0,1), type="l", ylab="Power", xlab="N1")
+	abline(h=power, lty=2)
+	return(res)
+}
+
+
+SampleHazardNonInf <- function (enrol, observe, followup, group1, group2, lowerlimit, alpha, power, method, ratio) {
+	#From SWOG https://stattools.crab.org/
+	side <- ifelse(method == 1, "one-sided", "two-sided")
+	side <- gettext(domain="R-RcmdrPlugin.EZR",side)
+	alpha2 <- alpha / method
+	ZA <- qnorm(1-alpha2)
+#	alpha <- alpha / method
+#	ZA <- qnorm(1-alpha)
+	ZB <- qnorm(power)
+	L1 <- -log(group1) / followup		#L1 hazard rate 1 (control)
+	L2 <- -log(group2) / followup		#L2 hazard rate 2 (experimental), thus L2/L1 is the hazard ratio
+	L3 <- -log(lowerlimit) / followup	#L3 hazard of lower limit
+
+	Q1 <- 1 / (1 + ratio)
+	Q2 <- ratio / (1 + ratio)
+	E11 <- 1 - exp(-L1 * observe)									#Event rate in 1 if (enrol == 0)
+	E12 <- 1 - exp(-L2 * observe)									#Event rate in 1 if (enrol == 0)
+	E21 <- (L1 * observe - 1 + exp(-L1 * observe)) / (L1*followup)			#Event rate in 1 if (enrol == observe)
+	E22 <- (L2 * observe - 1 + exp(-L2 * observe)) / (L2*followup)			#Event rate in 1 if (enrol == observe)
+	E31 <- 1 - (exp(-L1 * (observe - enrol)) - exp(-L1 * observe)) / (L1 * enrol)	#Event rate in 1 if (enrol > 0 && observe > enrol)
+	E32 <- 1 - (exp(-L2 * (observe - enrol)) - exp(-L2 * observe)) / (L2 * enrol)	#Event rate in 2 if (enrol > 0 && observe > enrol)
+	Delta <- log((L2/L1) / (L3/L1))
+	if (enrol == 0) {
+		E1 <- E11; E2 <- E12
+	} else if (enrol > 0 && observe > enrol) {
+		E1 <- E31; E2 <- E32
+	} else if (enrol == observe) {
+#		E1 <- E21; E2 <- E22
+		E1 <- E31; E2 <- E32
+	}
+
+	N <- (ZA + ZB)^2 * ((1/(Q1*E1)) + (1/(Q2*E2))) / (Delta^2)
+	N1 <- ceiling(N * Q1)
+	N2 <- ceiling(N * Q2)
+
+	res <- data.frame(c(group1, group2, lowerlimit, followup, enrol, observe, alpha, side, power, ratio, " ", gettext(domain="R-RcmdrPlugin.EZR","Estimated"), N1, N2))
+	colnames(res) <- gettext(domain="R-RcmdrPlugin.EZR","Assumptions")
+	rownames(res) <- gettext(domain="R-RcmdrPlugin.EZR",c("P1", "P2", "Non-inferiority lower limit", "(Follow-up duration for P1, P2)", "Enrollment duration", "Total study duration", "Alpha", " ", "Power", "N2/N1", "  ", "Required sample size", "N1", "N2"))
+
+	x <- NULL	
+	y <- seq(0.2, 1, 0.05) 
+	for (i in 1: length(y)){
+		ZB <- qnorm(y[i])
+		x[i] <- ((ZA + ZB)^2 * ((1/(Q1*E1)) + (1/(Q2*E2))) / (Delta^2)) * Q1
+	}
+	plot(x, y, ylim=c(0,1), type="l", ylab="Power", xlab="N1")
+	abline(h=power, lty=2)
+
+	return(res)	
+}
+
 
 StatMedGroupsBox <- defmacro(recall=NULL, label=gettext(domain="R-RcmdrPlugin.EZR","Plot by:"), initialLabel=gettext(domain="R-RcmdrPlugin.EZR","Plot by groups"),
 	plotLinesByGroup=FALSE, positionLegend=FALSE, plotLinesByGroupsText=gettext(domain="R-RcmdrPlugin.EZR","Plot lines by group"),
@@ -6001,7 +6081,7 @@ StatMedDropUnusedFactorLevels <- function(){
         variables <- getSelection(variablesBox)
         closeDialog()
         if (all == 0 && length(variables) == 0) {
-            errorCondition(recall=deleteVariable, message=gettextRcmdr("You must select one or more variables."))
+            errorCondition(recall=StatMedDropUnusedFactorLevels, message=gettextRcmdr("You must select one or more variables."))
             return()
         }
         response <- tclvalue(RcmdrTkmessageBox(message=gettextRcmdr("Drop unused factor levels\nPlease confirm."), 
@@ -6012,11 +6092,10 @@ StatMedDropUnusedFactorLevels <- function(){
         }
         if (all == 1) command <- paste(dataSet, " <- droplevels(", dataSet, ")", sep="")
         else{
-            command <- paste(dataSet, " <- within(", dataSet, ", {", sep="")
-            for (variable in variables){
-                command <- paste(command, "\n  ", variable, " <- droplevels(", variable, ")", sep="")
+				command <- ""
+				for (variable in variables){
+                command <- paste(command, dataSet, "$", variable, " <- droplevels(", dataSet, "$", variable, ")\n", sep="")
             }
-            command <- paste(command, "\n})")
         }
         doItAndPrint(command)
         activeDataSet(dataSet, flushModel=FALSE, flushDialogMemory=FALSE)
@@ -6029,6 +6108,128 @@ StatMedDropUnusedFactorLevels <- function(){
     tkgrid(getFrame(variablesBox), sticky="nw")
     tkgrid(buttonsFrame, sticky="w")
     dialogSuffix()
+}
+
+
+StatMedRecodeDialog <- function () {
+  processRecode <- function(recode) {
+    parts <- strsplit(recode, "=")[[1]]
+    if (length(grep(",", parts[1])) > 0) 
+      paste("c(", parts[1], ") = ", parts[2], sep = "")
+    else paste(parts, collapse = "=")
+  }
+  dataSet <- activeDataSet()
+  defaults <- list (initial.asFactor = 1, initial.variables = NULL, initial.name = gettextRcmdr ("variable"),
+                    initial.recode.directives="")
+  dialog.values <- getDialog ("StatMedRecodeDialog", defaults)
+  initializeDialog(title = gettextRcmdr("Recode Variables"))
+  variablesBox <- variableListBox(top, Variables(), selectmode = "multiple", 
+                                  title = gettextRcmdr("Variables to recode (pick one or more)"),
+                                  initialSelection = varPosn (dialog.values$initial.variables, "all"))
+  variablesFrame <- tkframe(top)
+  newVariableName <- tclVar(dialog.values$initial.name)
+  newVariable <- ttkentry(variablesFrame, width = "20", textvariable = newVariableName)
+  recodesFrame <- tkframe(top)
+  recodes <- tktext(recodesFrame, bg = "white", font = getRcmdr("logFont"), 
+                    height = "5", width = "40", wrap = "none")
+  recodesXscroll <- ttkscrollbar(recodesFrame, orient = "horizontal", 
+                                 command = function(...) tkxview(recodes, ...))
+  recodesYscroll <- ttkscrollbar(recodesFrame, command = function(...) tkyview(recodes, 
+                                                                               ...))
+  tkconfigure(recodes, xscrollcommand = function(...) tkset(recodesXscroll, 
+                                                            ...))
+  tkconfigure(recodes, yscrollcommand = function(...) tkset(recodesYscroll, 
+                                                            ...))
+  tkinsert(recodes, "1.0", dialog.values$initial.recode.directives)
+  asFactorFrame <- tkframe(top)
+  asFactorVariable <- tclVar(dialog.values$initial.asFactor)
+  asFactorCheckBox <- ttkcheckbutton(asFactorFrame, variable = asFactorVariable)
+  onOK <- function() {
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Recode variables"), "#####", sep=""))
+    asFactor <- tclvalue(asFactorVariable) == "1"
+    save.recodes <- trim.blanks(tclvalue(tkget(recodes, "1.0", "end")))
+    recode.directives <- gsub("\n", "; ", save.recodes)
+    check.empty <- gsub(";", "", gsub(" ", "", recode.directives))
+    if ("" == check.empty) {
+      errorCondition(recall = StatMedRecodeDialog, message = gettextRcmdr("No recode directives specified."))
+      return()
+    }
+    if (0 != length(grep("'", recode.directives))) {
+      errorCondition(recall = StatMedRecodeDialog, message = gettextRcmdr("Use only double-quotes (\" \") in recode directives"))
+      return()
+    }
+    recode.directives <- strsplit(recode.directives, ";")[[1]]
+    recode.directives <- paste(sapply(recode.directives, 
+                                      processRecode), collapse = ";")
+    recode.directives <- sub(" *; *$", "", recode.directives)
+    variables <- getSelection(variablesBox)
+    closeDialog()
+    if (length(variables) == 0) {
+      errorCondition(recall = StatMedRecodeDialog, message = gettextRcmdr("You must select a variable."))
+      return()
+    }
+    multiple <- if (length(variables) > 1) 
+      TRUE
+    else FALSE
+    name <- trim.blanks(tclvalue(newVariableName))
+    #        save.recodes <- gsub("; ", "\\\n", trim.blanks(recode.directives))  
+    putDialog ("StatMedRecodeDialog", list (initial.asFactor = asFactor, initial.variables = variables,
+                                     initial.name = name, initial.recode.directives=save.recodes))
+#    command <- paste(dataSet, " <- within(", dataSet, ", {", sep="")
+    nvar <- length(variables)
+    for (i in 1:nvar) {
+      variable <- variables[nvar - i + 1]
+      newVar <- if (multiple) 
+        paste(name, variable, sep = "")
+      else name
+      if (!is.valid.name(newVar)) {
+        errorCondition(recall = StatMedRecodeDialog, message = paste("\"", 
+                                                              newVar, "\" ", gettextRcmdr("is not a valid name."), 
+                                                              sep = ""))
+        return()
+      }
+      if (is.element(newVar, Variables())) {
+        if ("no" == tclvalue(checkReplace(newVar))) {
+          StatMedRecodeDialog()
+          return()
+        }
+      }
+#      command <- paste(command, "\n  ", newVar, " <- Recode(", variable, ", '", 
+#                       recode.directives, "', as.factor.result=", asFactor, 
+#                       ")", sep = "")  
+      command <- paste(dataSet, "$", newVar, " <- Recode(", dataSet, "$", variable, ", '", 
+                       recode.directives, "', as.factor.result=", asFactor, 
+                       ")\n", sep = "")  
+    }
+#    command <- paste(command, "\n})", sep="")
+    result <- doItAndPrint(command)
+    if (class(result)[1] != "try-error")
+      activeDataSet(dataSet, flushModel = FALSE, flushDialogMemory = FALSE)
+    #     else{
+    #       if (getRcmdr("use.markdown")) removeLastRmdBlock()
+    #       if (getRcmdr("use.knitr")) removeLastRnwBlock()
+    #    }
+    tkfocus(CommanderWindow())
+  }
+  OKCancelHelp(helpSubject = "StatMedRecodeDialog", reset = "StatMedRecodeDialog", apply = "StatMedRecodeDialog")
+  tkgrid(getFrame(variablesBox), sticky = "nw")
+  tkgrid(labelRcmdr(variablesFrame, text = ""))
+  tkgrid(labelRcmdr(variablesFrame, text = gettextRcmdr("New variable name or prefix for multiple recodes: ")), 
+         newVariable, sticky = "w")
+  tkgrid(asFactorCheckBox, labelRcmdr(asFactorFrame, text = gettextRcmdr("Make (each) new variable a factor")), 
+         sticky = "w")
+  tkgrid(labelRcmdr(asFactorFrame, text = ""))
+  tkgrid(labelRcmdr(recodesFrame, text = gettextRcmdr("Enter recode directives"), 
+                    fg = getRcmdr("title.color"), font="RcmdrTitleFont"), sticky = "w")
+  tkgrid(recodes, recodesYscroll, sticky = "nw")
+  tkgrid(recodesXscroll)
+  tkgrid(variablesFrame, sticky = "w")
+  tkgrid(asFactorFrame, sticky = "w")
+  tkgrid(recodesFrame, sticky = "w")
+  tkgrid(buttonsFrame, sticky = "w", columnspan = 2)
+  tkgrid.configure(recodesXscroll, sticky = "ew")
+  tkgrid.configure(recodesYscroll, sticky = "ns")
+  dialogSuffix(bindReturn = FALSE)
 }
 
 
@@ -11290,6 +11491,8 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
  		logger("p-value calculated in each strata")
 		doItAndPrint("strata.data")
 #		doItAndPrint("remove(strata.data)")		
+		command <- paste("km <- survfit(Surv(", timetoevent, ",", event, "==1)~", group[i], strata2, ", data=", ActiveDataSet(), subset, ', na.action = na.omit, conf.type="log-log")', sep="")
+		doItAndPrint(command)	#To create km.summary.table in all strata
 		}
 #	command <- paste("km <- survfit(Surv(", timetoevent, ",", event, "==1)~", group[i], strata2, ", data=", ActiveDataSet(), subset, ', na.action = na.omit, conf.type="log-log")', sep="")
 #	doItAndPrint(command)
@@ -14110,6 +14313,67 @@ StatMedPowerMeans <- function(){
 }
 
 
+StatMedSampleMeansNonInf <- function(){
+	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Calculate sample size for non-inferiority trial of two means"))
+	difference <- tclVar("")
+	differenceEntry <- ttkentry(top, width="20", textvariable=difference)
+	delta <- tclVar("")
+	deltaEntry <- ttkentry(top, width="20", textvariable=delta)
+	stddevi <- tclVar("")
+	stddeviEntry <- ttkentry(top, width="20", textvariable=stddevi)
+	alpha <- tclVar("0.05")
+	alphaEntry <- ttkentry(top, width="20", textvariable=alpha)
+	power <- tclVar("0.80")
+	powerEntry <- ttkentry(top, width="20", textvariable=power)
+#	ratio <- tclVar("1")
+#	ratioEntry <- ttkentry(top, width="20", textvariable=ratio)
+	radioButtons(name="method", buttons=c("Two.sided", "One.sided"), values=c(2, 1), initialValue=1, 
+labels=gettext(domain="R-RcmdrPlugin.EZR",c("Two-sided", "One-sided")),title=gettext(domain="R-RcmdrPlugin.EZR","Method"))
+	onOK <- function(){
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Calculate sample size for non-inferiority trial of two means"), "#####", sep=""))
+		difference <- tclvalue(difference)
+		delta <- tclvalue(delta)
+		stddevi <- tclvalue(stddevi)
+		alpha <- tclvalue(alpha)
+		power <- tclvalue(power)
+#		ratio <- tclvalue(ratio)
+		method <- tclvalue(methodVariable)
+		closeDialog()
+		if (length(difference) == 0 || length(delta) == 0 || length(stddevi) == 0){
+			errorCondition(recall=StatMedSampleMeans, message=gettext(domain="R-RcmdrPlugin.EZR","You
+must select a variable."))
+			return()
+		}
+		if (length(alpha) == 0 || length(power) == 0){
+			errorCondition(recall=StatMedSampleMeans, message=gettext(domain="R-RcmdrPlugin.EZR","You
+must select a variable."))
+			return()
+		}
+        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		command <- paste("SampleMeanNonInf(", difference, ", ", delta, ", ", stddevi, ", ",
+alpha, ", ", power, ", ", method, ")", sep="")
+		result <- doItAndPrint(command)
+		tkfocus(CommanderWindow())
+	}
+	OKCancelHelp()
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Difference in means (test - control)")), differenceEntry, sticky="w")
+	tkgrid.configure(differenceEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Meaningful difference in mean")), deltaEntry, sticky="w")
+	tkgrid.configure(deltaEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Standard deviation in each group")), stddeviEntry, sticky="w")
+	tkgrid.configure(stddeviEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Alpha error")), alphaEntry, sticky="w")
+	tkgrid.configure(alphaEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Power (1 - beta error)")), powerEntry, sticky="w")
+	tkgrid.configure(powerEntry, sticky="w")
+#	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Sample size ratio (1:X)")), ratioEntry, sticky="w")
+#	tkgrid.configure(ratioEntry, sticky="w")
+	tkgrid(methodFrame, sticky="w")
+	tkgrid(buttonsFrame, sticky="w")
+	dialogSuffix(rows=4, columns=1)
+}
+
+
 StatMedSampleMeansPaired <- function(){
 	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Calculate sample size for comparison between two paired means"))
 	difference <- tclVar("")
@@ -14531,6 +14795,82 @@ StatMedPowerHazard <- function(){
 }
 
 
+StatMedSampleHazardNonInf <- function(){
+	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Calculate sample size for non-inferiority trial of two survival curves"))
+	enrol <- tclVar("")
+	enrolEntry <- ttkentry(top, width="20", textvariable=enrol)
+	studyperiod <- tclVar("")
+	studyperiodEntry <- ttkentry(top, width="20", textvariable=studyperiod)
+	followup <- tclVar("")
+	followupEntry <- ttkentry(top, width="20", textvariable=followup)
+	group1 <- tclVar("")
+	group1Entry <- ttkentry(top, width="20", textvariable=group1)
+	group2 <- tclVar("")
+	group2Entry <- ttkentry(top, width="20", textvariable=group2)
+	lowerlimit <- tclVar("")
+	lowerlimitEntry <- ttkentry(top, width="20", textvariable=lowerlimit)
+	alpha <- tclVar("0.05")
+	alphaEntry <- ttkentry(top, width="20", textvariable=alpha)
+	power <- tclVar("0.80")
+	powerEntry <- ttkentry(top, width="20", textvariable=power)
+	ratio <- tclVar("1")
+	ratioEntry <- ttkentry(top, width="20", textvariable=ratio)
+	radioButtons(name="method", buttons=c("Two.sided", "One.sided"), values=c(2, 1), initialValue=1, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Two-sided", "One-sided")),title=gettext(domain="R-RcmdrPlugin.EZR","Method"))
+	onOK <- function(){
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Calculate sample size for non-inferiority trial of two survival curves"), "#####", sep=""))
+		enrol <- tclvalue(enrol)
+		studyperiod <- tclvalue(studyperiod)
+		followup <- tclvalue(followup)
+		group1 <- tclvalue(group1)
+		group2 <- tclvalue(group2)
+		lowerlimit <- tclvalue(lowerlimit)
+		alpha <- tclvalue(alpha)
+		power <- tclvalue(power)
+		ratio <- tclvalue(ratio)
+		method <- tclvalue(methodVariable)
+		closeDialog()
+		if (length(enrol) == 0 || length(studyperiod) == 0 || length(followup) == 0){
+			errorCondition(recall=StatMedSampleHazard, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
+			return()
+		}
+		if (length(group1) == 0 || length(group2) == 0 || length(lowerlimit) == 0){
+			errorCondition(recall=StatMedSampleHazard, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
+			return()
+		}
+		if (length(alpha) == 0 || length(power) == 0 || length(ratio) == 0){
+			errorCondition(recall=StatMedSampleHazard, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
+			return()
+		}
+        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		command <- paste("SampleHazardNonInf(", enrol, ", ", studyperiod, ", ", followup, ", ", group1, ", ", group2, ", ", lowerlimit, ", ", alpha, ", ", power, ", ", method, ", ", ratio, ")", sep="")
+		result <- doItAndPrint(command)
+		tkfocus(CommanderWindow())
+	}
+	OKCancelHelp()
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Accrual duration")), enrolEntry, sticky="w")
+	tkgrid.configure(enrolEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Total (accrual + follow-up) duration")), studyperiodEntry, sticky="w")
+	tkgrid.configure(studyperiodEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Survival ratio at n year in each group")), followupEntry, sticky="w")
+	tkgrid.configure(followupEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Survival rate in control group")), group1Entry, sticky="w")
+	tkgrid.configure(group1Entry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Survival rate in test group")), group2Entry, sticky="w")
+	tkgrid.configure(group2Entry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Non-inferiority lower limit")), lowerlimitEntry, sticky="w")
+	tkgrid.configure(lowerlimitEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Alpha error")), alphaEntry, sticky="w")
+	tkgrid.configure(alphaEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Power (1 - beta error)")), powerEntry, sticky="w")
+	tkgrid.configure(powerEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Sample size ratio (1:X)")), ratioEntry, sticky="w")
+	tkgrid.configure(ratioEntry, sticky="w")
+	tkgrid(methodFrame, sticky="w")
+	tkgrid(buttonsFrame, sticky="w")
+	dialogSuffix(rows=4, columns=1)
+}
+
+
 StatMedMeta  <- function(){
 defaults <- list(studyname=NULL, testpositive=NULL, testnumber=NULL, controlpositive=NULL, controlnumber=NULL, group=NULL, reg=NULL, endpoint="OR", dsl=1, detail=1, funnel=0, subset = "")
 dialog.values <- getDialog("StatMedMeta", defaults)
@@ -14935,8 +15275,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.30", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","September 1, 2015"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.31", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","December 1, 2015"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -15050,7 +15390,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.30", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.31", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -15117,4 +15457,4 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'cuminc', 'Anova', 'pmvt', 'wald.test', 'timepoints', 'ci', 'sqlQuery',
 'groupingVariable', 'groupingFrame', 'othervarVariable', 'rocVariable',
 'columnmergeVariable', 'column.name1', 'column.name2', 'columnmergeFrame',
-'deleteVariable'))
+'deleteVariable', 'RecodeDialog'))
