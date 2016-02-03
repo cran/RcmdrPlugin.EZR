@@ -1,3 +1,7 @@
+Changes to Version 1.32
+
+  o Changed to show summary table with text-based ruled lines. Added an option to draw Simon and Makuch plot in Mantel.Byar() function.
+
 Changes to Version 1.31
 
   o Added functions to calculate sample size for non-inferiority trial of two means and two survival curves.

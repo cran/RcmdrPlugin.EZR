@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.31", "\n")
+cat("   Version 1.32", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -111,8 +111,234 @@ HistEZR <- function (x, scale = c("frequency", "percent", "density"), xlab = dep
 }
 
 
+nchar.ZenToHan <- function(x) {
+	if(length(x)==1){
+		return(length(charToRaw(x)))
+	} else {
+		x2 <- NULL	
+		for(i in 1:length(x)){
+			x2[i] <- length(charToRaw(x[i]))
+		}		
+		return(x2)
+	}
+}
+
+
+###Print dataframe with ruled lines.
+dataframe_print <- function(x, printrow=1) {
+
+	row.number <- length(x[,1])
+	col.number <- length(colnames(x))
+
+	group.name.max.nchar <- max(nchar.ZenToHan(colnames(x)[1:col.number]))
+	group.data.max.nchar <- 0
+	for (i in 1:(col.number)){
+		if(max(nchar.ZenToHan(as.character(x[,i]))) > group.data.max.nchar){
+			group.data.max.nchar <- max(nchar.ZenToHan(as.character(x[,i])))
+		}
+	}
+	group.nchar <- max(group.name.max.nchar, group.data.max.nchar)
+	for (i in 1:(col.number)){
+		margin <- group.nchar - nchar.ZenToHan(colnames(x)[i])
+		colnames(x)[i] <- paste(paste(rep(" ", floor(margin/2)), collapse=""), colnames(x)[i], paste(rep(" ", ceiling(margin/2)), collapse=""), sep="")
+	}
+
+	if(printrow==1){
+		rownames.nchar <- max(nchar.ZenToHan(row.names(x)))
+		line.nchar <- rownames.nchar + group.nchar * col.number
+		line.nchar <- line.nchar + 3 * (col.number - 1)
+		table.line <- NULL
+		table.line[1] <- paste(rep("-", line.nchar), collapse="")
+		table.line.1 <- paste(rep(" ", rownames.nchar), collapse="")
+		table.line.2 <- paste(colnames(x), collapse=" | ")
+		table.line[2] <- paste(table.line.1, table.line.2, sep=" | ")
+		table.line[3] <- table.line[1]
+		substring(table.line[3], rownames.nchar + 2) <- "+"
+		for(i in 1:col.number - 1){
+			substring(table.line[3], rownames.nchar + 3 + (group.nchar +3 ) * (i - 1) + group.nchar + 2) <- "+"	
+		}
+		for(i in 1:row.number){
+			table.line[3+i] <- paste(rep(" ", rownames.nchar - nchar.ZenToHan(row.names(x)[i])), collapse="")
+			table.line[3+i] <- paste(row.names(x)[i], table.line[3+i], sep="")
+			for(j in 1:col.number){
+				cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,j]))), collapse="")
+				cell <- paste(cell, x[i,j], sep="")			
+				table.line[3+i] <- paste(table.line[3+i], " | ", cell, sep="")
+			}
+		}
+		table.line[4+row.number] <- table.line[1]
+	} else {
+		line.nchar <- group.nchar * col.number
+		line.nchar <- line.nchar + 3 * (col.number - 1)
+		table.line <- NULL
+		table.line[1] <- paste(rep("-", line.nchar), collapse="")
+		table.line[2] <- paste(colnames(x), collapse=" | ")
+		table.line[3] <- table.line[1]
+		for(i in 1:(col.number-1)){
+			substring(table.line[3], (group.nchar +3 ) * (i - 1) + group.nchar + 2) <- "+"	
+		}
+		for(i in 1:row.number){
+ 			cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,1]))), collapse="")
+			table.line[3+i] <- paste(cell, x[i,1], sep="")			
+			for(j in 2:col.number){
+				cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,j]))), collapse="")
+				cell <- paste(cell, x[i,j], sep="")			
+				table.line[3+i] <- paste(table.line[3+i], " | ", cell, sep="")
+			}
+		}
+		table.line[4+row.number] <- table.line[1]
+	}
+	cat(table.line, sep="\n")
+}
+
+
+###Print twoway dataframe with ruled lines.
+twoway_dataframe_print <- function(x) {
+
+	group.name <- x[1,3]
+	row.number <- length(row.names(x))
+	col.number <- length(colnames(x))
+	x <- x[3:row.number,]
+	row.number <- row.number-2
+
+	group.name.max.nchar <- max(nchar.ZenToHan(colnames(x)[1:col.number]))
+	group.name.max.nchar <- max(group.name.max.nchar, nchar.ZenToHan(group.name))
+	group.data.max.nchar <- 0
+	for (i in 1:(col.number)){
+		if(max(nchar.ZenToHan(as.character(x[,i]))) > group.data.max.nchar){
+			group.data.max.nchar <- max(nchar.ZenToHan(as.character(x[,i])))
+		}
+	}
+	group.nchar <- max(group.name.max.nchar, group.data.max.nchar)
+	for (i in 1:(col.number)){
+		margin <- group.nchar - nchar.ZenToHan(colnames(x)[i])
+		colnames(x)[i] <- paste(paste(rep(" ", floor(margin/2)), collapse=""), colnames(x)[i], paste(rep(" ", ceiling(margin/2)), collapse=""), sep="")
+	}
+	margin <- group.nchar - nchar.ZenToHan(group.name)
+	group.name <- paste(paste(rep(" ", floor(margin/2)), collapse=""), group.name, paste(rep(" ", ceiling(margin/2)), collapse=""), sep="")
+
+	rownames.nchar <- max(nchar.ZenToHan(row.names(x)))
+
+	line.nchar <- group.nchar * col.number
+	line.nchar <- line.nchar + 3 * (col.number - 1)
+	table.line <- NULL
+	table.line[1] <- paste(rep("-", line.nchar), collapse="")
+	dummy.colname <- paste(rep(" ", group.nchar), collapse="")
+	table.line[2] <- paste(paste(rep(dummy.colname, 2), collapse=" | "), paste(group.name, paste(rep(dummy.colname, col.number-4), collapse="   "), sep="   "), dummy.colname, sep=" | ")
+	table.line[3] <- paste(colnames(x)[1], colnames(x)[2], paste(colnames(x)[3:(col.number-1)], collapse="   "), colnames(x)[col.number], sep=" | ")
+	table.line[4] <- table.line[1]
+	for(i in c(1, 2, col.number-1)){
+		substring(table.line[4], (group.nchar +3 ) * (i - 1) + group.nchar + 2) <- "+"	
+	}
+	for(i in 1:row.number){
+		cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,1]))), collapse="")
+		table.line[4+i] <- paste(cell, x[i,1], sep="")			
+		for(j in 2:col.number){
+			cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,j]))), collapse="")
+			cell <- paste(cell, x[i,j], sep="")			
+			table.line[4+i] <- paste(table.line[4+i], " | ", cell, sep="")
+		}
+	}
+	table.line[5+row.number] <- table.line[1]
+
+	cat(table.line, sep="\n")
+}
+
+
+finaltable_dataframe_print <- function(x) {
+
+	grouping=1
+	if(x[1,1]!=""){	#No grouping
+		grouping=0
+		flag <- x[1,2]
+		group.name <- "Overall"
+	} else {		#Summary with grouping
+		flag <- x[2,2]
+		if(flag=="Group"){	#At least one categorical variable
+			group.name <- x[1,3]
+		} else {			#Only continuoue variables
+			group.name <- x[1,2]
+		}
+	}
+
+	row.number <- length(row.names(x))
+	col.number <- length(colnames(x))
+	if (grouping==1){
+		x <- x[3:row.number,]
+		row.number <- row.number-2
+	}
+
+	group.name.max.nchar <- max(nchar.ZenToHan(colnames(x)[1:col.number]))
+	group.name.max.nchar <- max(group.name.max.nchar, nchar.ZenToHan(group.name))
+	group.data.max.nchar <- 0
+	for (i in 1:(col.number)){
+		if(max(nchar.ZenToHan(as.character(x[,i]))) > group.data.max.nchar){
+			group.data.max.nchar <- max(nchar.ZenToHan(as.character(x[,i])))
+		}
+	}
+	group.nchar <- max(group.name.max.nchar, group.data.max.nchar)
+	for (i in 1:(col.number)){
+		margin <- group.nchar - nchar.ZenToHan(colnames(x)[i])
+		colnames(x)[i] <- paste(paste(rep(" ", floor(margin/2)), collapse=""), colnames(x)[i], paste(rep(" ", ceiling(margin/2)), collapse=""), sep="")
+	}
+	margin <- group.nchar - nchar.ZenToHan(group.name)
+	group.name <- paste(paste(rep(" ", floor(margin/2)), collapse=""), group.name, paste(rep(" ", ceiling(margin/2)), collapse=""), sep="")
+
+	rownames.nchar <- max(nchar.ZenToHan(row.names(x)))
+
+	line.nchar <- group.nchar * col.number
+	line.nchar <- line.nchar + 3 * (col.number - 1)
+	table.line <- NULL
+	table.line[1] <- paste(rep("-", line.nchar), collapse="")
+	dummy.colname <- paste(rep(" ", group.nchar), collapse="")
+	if (grouping==0){
+		table.line[2] <- ""
+		table.line[3] <- ""
+		table.line[4] <- ""
+	} else {
+		if(flag=="Group"){	#At least one categorical variable
+			table.line[2] <- paste(paste(rep(dummy.colname, 2), collapse=" | "), paste(group.name, paste(rep(dummy.colname, col.number-4), collapse="   "), sep="   "), dummy.colname, sep=" | ")
+			table.line[3] <- paste(colnames(x)[1], colnames(x)[2], paste(colnames(x)[3:(col.number-1)], collapse="   "), colnames(x)[col.number], sep=" | ")
+		} else {			#Only continuoue variables
+			table.line[2] <- paste(dummy.colname, paste(group.name, paste(rep(dummy.colname, col.number-3), collapse="   "), sep="   "), dummy.colname, sep=" | ")
+			table.line[3] <- paste(colnames(x)[1], paste(colnames(x)[2:(col.number-1)], collapse="   "), colnames(x)[col.number], sep=" | ")
+		}
+		table.line[4] <- table.line[1]
+		for(i in c(1, 2, col.number-1)){
+			substring(table.line[4], (group.nchar +3 ) * (i - 1) + group.nchar + 2) <- "+"	
+		}
+	}
+	cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[1,1]))), collapse="")
+	table.line[5] <- paste(cell, x[1,1], sep="")			
+	for(j in 2:col.number){
+			margin <- group.nchar - nchar.ZenToHan(as.character(x[1,j]))
+			cell1 <- paste(rep(" ", floor(margin/2)), collapse="")
+			cell2 <- paste(rep(" ", ceiling(margin/2)), collapse="")
+			cell <- paste(cell1, x[1,j], cell2, sep="")			
+			table.line[5] <- paste(table.line[5], " | ", cell, sep="")
+	}
+	cell <- paste(rep("-", group.nchar), collapse="")
+	table.line[6] <- paste(rep(cell, col.number), collapse="-+-")
+#	table.line[6] <- paste(table.line[6], paste(rep("-", 3 * (col.number)), collapse=""), sep="")
+	for(i in 2:row.number){
+		cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,1]))), collapse="")
+		table.line[5+i] <- paste(cell, x[i,1], sep="")			
+		for(j in 2:col.number){
+			cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,j]))), collapse="")
+			cell <- paste(cell, x[i,j], sep="")			
+			table.line[5+i] <- paste(table.line[5+i], " | ", cell, sep="")
+		}
+	}
+	table.line[6+row.number] <- table.line[1]
+	if(grouping==0) table.line <- c(table.line[1], table.line[5:7], table.line[6], table.line[8:length(table.line)])
+	cat(table.line, sep="\n")
+}
+
+
 ###Output the results of multivariate analysis to clipboard and files.
 w.multi <- function (table = cox.table, filename = "clipboard", CI = 0, signif = 0, en = 1) {
+	#Jan 2016 modified to work correctly when the number of independent covariate is only one
+
     table[, 4] <- as.numeric(table[, 4])
     if (signif > 0) {
         table <- signif(table, digits = signif)
@@ -127,6 +353,11 @@ w.multi <- function (table = cox.table, filename = "clipboard", CI = 0, signif =
         table[, 4] <- signif(as.numeric(table[, 4]), digits = 2)
         table[, 4] <- formatC(as.numeric(table[, 4]), format = "fg")
     }
+
+    if(length(rownames(table))==1){
+	  table <- rbind(table, c(" ", " ", " ", " "))
+    }
+
     table2 <- table
     if (CI == 0) {
         table2[, 1] <- paste(table[, 1], " (", table[, 2], "-", 
@@ -134,9 +365,12 @@ w.multi <- function (table = cox.table, filename = "clipboard", CI = 0, signif =
         table2[, 2] <- table[, 4]
         table2 <- table2[, 1:2]
     }
-    table2 <- cbind(rownames(table2), table2)
+
+    if(table2[2,1]=="  ( - )") table2[2,1] <- " "
+    table2 <- cbind(rownames(table), table2)
     colnames(table2)[1] <- ifelse(en == 1, "Factor", gettext(domain="R-RcmdrPlugin.EZR", 
         "Factor"))
+
     rownames(table2) <- NULL
     if (en == 1 & colnames(table2)[2] == gettext(domain="R-RcmdrPlugin.EZR", 
         "Hazard ratio")) 
@@ -152,7 +386,9 @@ w.multi <- function (table = cox.table, filename = "clipboard", CI = 0, signif =
     if (CI == 1) 
         colnames(table2)[5] <- ifelse(en == 1, "p.value", gettext(domain="R-RcmdrPlugin.EZR", 
             "p.value"))
-    print(data.frame(table2), quote=FALSE, row.names=FALSE, col.names=TRUE)
+     #print(data.frame(table2), quote=FALSE, row.names=FALSE, col.names=TRUE)
+	dataframe_print(table2, printrow=0)
+
 #    print(table2)
 #    print(paste("Write to ", filename, sep = ""))
     if (filename == "clipboard") {
@@ -186,7 +422,8 @@ w.multireg <- function (table = multireg.table, filename = "clipboard", CI = 0, 
 		colnames(table) <- gettext(domain="R-RcmdrPlugin.EZR", c("Factor", "Estimate", "Std. Error", "t value", "p.value"))
 	}
     rownames(table) <- NULL
-	print(data.frame(table), quote=FALSE, row.names=FALSE, col.names=TRUE)
+#	print(data.frame(table), quote=FALSE, row.names=FALSE, col.names=TRUE)
+	dataframe_print(table, printrow=0)
 #    print(paste("Write to ", filename, sep = ""))
     if (filename == "clipboard") {
         write.table(data.frame(table), "clipboard", sep = "\t", 
@@ -227,7 +464,7 @@ w.twoway <- function (table = Fisher.summary.table, filename = "clipboard", en =
     colnames(table)[length(colnames(table))] <- ifelse(en == 
         1, "p.value", gettextRcmdr("p.value"))
     if (en == 0) colnames(table) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(table))
-    print(data.frame(table), quote=F, row.names = FALSE, col.names = FALSE)
+#    print(data.frame(table), quote=F, row.names = FALSE, col.names = FALSE)
     ncol <- length(colnames(table))
     row1 <- colnames(table)
     row1 <- matrix(row1, ncol=ncol)
@@ -235,7 +472,8 @@ w.twoway <- function (table = Fisher.summary.table, filename = "clipboard", en =
     row0 <- rep(" ", ncol)
     row0[3] <- StratifyFactor[1]
     table <- rbind(row0, table)
-#    print(paste("Write to ", filename, sep = ""))
+	twoway_dataframe_print(table)
+	#    print(paste("Write to ", filename, sep = ""))
     if (filename == "clipboard") {
         write.table(data.frame(table), "clipboard", sep = "\t", 
             row.names = FALSE, col.names = FALSE)
@@ -277,7 +515,8 @@ w.ttest <- function (table = summary.ttest, filename = "clipboard", en = 1) {
     if (en == 0) 
         colnames(table)[1:3] <- gettext(domain="R-RcmdrPlugin.EZR", 
             c("Factor", "Group", "mean +- SD"))
-    print(data.frame(table), quote=FALSE, row.names=FALSE)
+#    print(data.frame(table), quote=FALSE, row.names=FALSE)
+	dataframe_print(table, printrow=0)
 #    print(table)
 #    print(paste("Write to ", filename, sep = ""))
     if (filename == "clipboard") {
@@ -340,7 +579,8 @@ w.survival <- function (table = km.summary.table, filename = "clipboard", en = 1
     if (en == 0) 
         colnames(table)[1:2] <- gettext(domain="R-RcmdrPlugin.EZR", 
             c("Factor", "Group"))
-    print(table, quote=FALSE, row.names=FALSE, col.names=TRUE)
+#    print(table, quote=FALSE, row.names=FALSE, col.names=TRUE)
+	dataframe_print(table, printrow=0)
 #    print(table)
 #    print(paste("Write to ", filename, sep = ""))
     if (filename == "clipboard") {
@@ -400,7 +640,8 @@ w.ci <- function (table = ci.summary.table, filename = "clipboard", en = 1) {
     if (en == 0) 
         colnames(table)[1:3] <- gettext(domain="R-RcmdrPlugin.EZR", 
             c("Factor", "Group", "Event"))
-    print(table, quote=FALSE, row.names=FALSE, col.names=TRUE)
+#    print(table, quote=FALSE, row.names=FALSE, col.names=TRUE)
+	dataframe_print(table, printrow=0)
 #    print(table)
 #    print(paste("Write to ", filename, sep = ""))
     if (filename == "clipboard") {
@@ -1782,7 +2023,7 @@ StatMedTableOne  <- function(){
 #	doItAndPrint("row.names(FinalTable) <- NULL")
 
 	if(length(cat)>0){
-		doItAndPrint("print(FinalTable[,2:length(FinalTable[1,])], quote=FALSE)")
+#		doItAndPrint("print(FinalTable[,2:length(FinalTable[1,])], quote=FALSE)")
 	} else if (length(group)==1){
 		if(levels>1){
 			if(length(cont)==1 && length(contnonnormal)==0){
@@ -1791,14 +2032,14 @@ StatMedTableOne  <- function(){
 			if(length(cont)==0 && length(contnonnormal)==1){
 				doItAndPrint(paste('rownames(FinalTable) <- c("n", "', contnonnormal[1], '")',sep="")) 
 			}
-			doItAndPrint("print(FinalTable[,2:length(FinalTable[1,])], quote=FALSE)")
+#			doItAndPrint("print(FinalTable[,2:length(FinalTable[1,])], quote=FALSE)")
 		} else {		
 			doItAndPrint('rownames(FinalTable) <- rep("", length(rownames(FinalTable)))')
-			doItAndPrint("print(FinalTable, quote=F)")
+#			doItAndPrint("print(FinalTable, quote=F)")
 		}
 	} else {
 			doItAndPrint('rownames(FinalTable) <- rep("", length(rownames(FinalTable)))')
-			doItAndPrint("print(FinalTable, quote=F)")
+#			doItAndPrint("print(FinalTable, quote=F)")
 	}	
 	#	doItAndPrint("FinalTable <- cbind(Factor=row.names(FinalTable), FinalTable)")
 	doItAndPrint("FinalTable <- rbind(row0, FinalTable)")
@@ -1813,6 +2054,7 @@ StatMedTableOne  <- function(){
 			doItAndPrint("FinalTable <- rbind(row0, FinalTable)")
 		}
 	}
+	doItAndPrint("finaltable_dataframe_print(FinalTable)")
 	if (output=="clipboard"){
 		doItAndPrint('write.table(FinalTable, "clipboard", sep="\t", row.names=FALSE, col.names=FALSE)')
 	} else {
@@ -1952,7 +2194,7 @@ stsplit <- function (dataframe, timetoevent, event, timeon, covariate, timeoff){
 }
 
 
-Mantel.Byar <- function(Group=TempTD$covariate_td, Event=TempTD$endpoint_td, StartTime=TempTD$start_td,	StopTime=TempTD$stop_td, method=c("SAS", "Tominaga"), plot=0) {
+Mantel.Byar <- function(Group=TempTD$covariate_td, Event=TempTD$endpoint_td, StartTime=TempTD$start_td,	StopTime=TempTD$stop_td, method=c("SAS", "Tominaga"), plot=0, landmark=0) {
 	#modified from logrank test in http://aoki2.si.gunma-u.ac.jp/R/logrank.html
 	#Reuire TempTD dataset created by Cox with TD variable in EZR
 	method <- match.arg(method)
@@ -2014,28 +2256,45 @@ Mantel.Byar <- function(Group=TempTD$covariate_td, Event=TempTD$endpoint_td, Sta
 #			print (paste("HR = ", HR, sep="") )			
 	}
 	P <- pchisq(chi, 1, lower.tail=FALSE)
-	if(plot==1){							#Currently, plot function does not work correctly, when subset was defined.
-		km <- survfit(Surv(StartTime,StopTime,Event)~Group, na.action = na.omit, conf.type="log-log")
-		diff <- survdiff(Surv(StopTime,Event)~Group)
+	if(plot>=1){							#If plot>=1, draw Simon Makuch plot with a landmark as specified.
+		StartTime2 <- StartTime[StopTime>=landmark]
+		StopTime2 <- StopTime[StopTime>=landmark]
+		Event2 <- Event[StopTime>=landmark]
+		Group2 <- Group[StopTime>=landmark]
+		km <- survfit(Surv(StartTime2,StopTime2,Event2)~Group2, na.action = na.omit, conf.type="log-log")
+		diff <- survdiff(Surv(StopTime2,Event2)~Group2)
 		summary(km)
 		km$n.risk[1] <- diff$n[1]			#To correct number at risk at zero point in no event group
-		len <- nchar("Group")
+		len <- nchar("Group2")
 		legend <- substring(names(km$strata), len+2)
 #		windows(width=7, height=7); par(lwd=1, las=1, family="sans", cex=1)
-		dev.new()
+#		dev.new()
+		if (.Platform$OS.type == 'windows'){
+			justDoIt(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
+		} else if (MacOSXP()==TRUE) {
+			justDoIt(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
+		} else {
+			justDoIt(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
+		}
 		mar <- par("mar")
 		mar[1] <- mar[1] + length(km$strata) + 0.5
 		mar[2] <- mar[2] + 2
 		par(mar=mar)
 		opar <- par(mar = mar)
 		on.exit(par(opar))
-		plot(km, ylab="Probability", bty="l", col=1:32, lty=1, lwd=1, conf.int=FALSE, mark.time=TRUE)
+#		plot(km, ylab="Probability", bty="l", col=1:32, lty=1, lwd=1, conf.int=FALSE, mark.time=TRUE)
+		if(plot==1) plot(km, ylab="Probability", bty="l", col=1:32, lty=1, lwd=1, conf.int=FALSE, mark.time=TRUE)
+		if(plot==2) plot(km, ylab="Probability", bty="l", col=1, lty=1:32, lwd=1, conf.int=FALSE, mark.time=TRUE)
+		if(plot>=3) plot(km, ylab="Probability", bty="l", col=1, lty=1, lwd=1:32, conf.int=FALSE, mark.time=TRUE)
 		xticks <- axTicks(1)
 		n.atrisk <- nrisk(km, xticks)
 		for (i in 1:length(km$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}
 		for (i in 1:length(km$strata)){mtext(legend[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i, cex=1)}
 		title(xlab = "Number at risk", line = 3.5, adj = 0)
-		legend ("topright", legend, col=1:32, lty=1, lwd=1,  box.lty=0, title="Time-dependent covariate")
+#		legend ("topright", legend, col=1:32, lty=1, lwd=1,  box.lty=0, title="Time-dependent covariate")
+		if(plot==1) legend ("topright", legend, col=1:32, lty=1, lwd=1,  box.lty=0, title="Time-dependent covariate")
+		if(plot==2) legend ("topright", legend, col=1, lty=1:32, lwd=1,  box.lty=0, title="Time-dependent covariate")
+		if(plot>=3) legend ("topright", legend, col=1, lty=1, lwd=1:32,  box.lty=0, title="Time-dependent covariate")
 	}
 	return(structure(list(statistic=c("X-squared"=chi), parameter=c(df=1), p.value=P, 
         method=method, data.name=data.name, result=result), class="htest"))
@@ -12854,15 +13113,15 @@ currentFields$subset <- dialog.values$subset
 		stepwise2 <- tclvalue(stepwise2Variable)
 		stepwise3 <- tclvalue(stepwise3Variable)
 		subset <- tclvalue(subsetVariable)
-    if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
-        || trim.blanks(subset) == ""){
-      subset <- ""
-      putRcmdr("modelWithSubset", FALSE)
-    }
-    else{
-      subset <- paste(", subset=", subset, sep="")
-      putRcmdr("modelWithSubset", TRUE)
-    }	
+#    if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
+#        || trim.blanks(subset) == ""){
+#      subset <- ""
+#      putRcmdr("modelWithSubset", FALSE)
+#    }
+#    else{
+#      subset <- paste(", subset=", subset, sep="")
+#      putRcmdr("modelWithSubset", TRUE)
+#    }	
 putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, basecurveVariable = basecurve, actmodelVariable = actmodel, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable), timedependentcovariate = timedependentcovariate, timepositive = timepositive, timenegative = timenegative))
 		if (length(timedependentcovariate) == 0 || length(timepositive) == 0){
   	        errorCondition(recall=StatMedCoxTD, message=gettext(domain="R-RcmdrPlugin.EZR","Pick all required variables"))
@@ -12911,15 +13170,24 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
     Library("survival")
 		Library("aod")
 	dataSet <- activeDataSet()
+    if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
+        || trim.blanks(subset) == ""){
+	  doItAndPrint(paste("TempDF <- ", dataSet, sep=""))
+    }
+   else{
+	  doItAndPrint(paste("TempDF <- subset(", dataSet, ", ",subset, ")", sep=""))
+    }		
 #		doItAndPrint(paste("attach(", dataSet, ")"))
-		command <-  paste("TempTD <- stsplit(", dataSet, ",", dataSet, "$", tclvalue(SurvivalTimeVariable), ",", dataSet, "$", tclvalue(StatusVariable), ",", dataSet, "$", timepositive, ",", dataSet, "$", timedependentcovariate, ",", dataSet, "$", timenegative, ")", sep="")
+		command <-  paste("TempTD <- stsplit(TempDF, TempDF$", tclvalue(SurvivalTimeVariable), ", TempDF$", tclvalue(StatusVariable), ", TempDF$", timepositive, ", TempDF$", timedependentcovariate, ", TempDF$", timenegative, ")", sep="")
 		result <- doItAndPrint(command)		
 #    library(survival)
 #    formula <- paste("Surv(", XXX, ", ", tclvalue(lhsVariable), ") ~ ", tclvalue(rhsVariable), sep="")
 #     formula <- paste("Surv(", tclvalue(SurvivalTimeVariable), ", ", tclvalue(StatusVariable), ")~ ", tclvalue(rhsVariable), sep="")
     formula <- paste("Surv(start_td, stop_td, endpoint_td==1) ~ ", covariates, sep="")	 
+#    command <- paste("coxph(", formula,
+#      ", data=TempTD", subset, ', method="breslow")', sep="")
     command <- paste("coxph(", formula,
-      ", data=TempTD", subset, ', method="breslow")', sep="")
+      ', data=TempTD, method="breslow")', sep="")	 	  
 #    logger(paste(modelValue, " <- ", command, sep=""))
 #    assign(modelValue, justDoIt(command), envir=.GlobalEnv)
     doItAndPrint(paste(modelValue, " <- ", command, sep=""))
@@ -15275,8 +15543,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.31", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","December 1, 2015"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.32", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","February 1, 2016"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -15390,7 +15658,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.31", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.32", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',

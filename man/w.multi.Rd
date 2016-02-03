@@ -5,6 +5,10 @@
 \alias{w.ci}
 \alias{w.multi}
 \alias{w.multireg}
+\alias{dataframe_print}
+\alias{finaltable_dataframe_print}
+\alias{twoway_dataframe_print}
+\alias{nchar.ZenToHan}
 
 \title{Create a formatted table for presentation}
 
