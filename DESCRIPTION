@@ -1,12 +1,12 @@
 Package: RcmdrPlugin.EZR
 Type: Package
 Title: R Commander Plug-in for the EZR (Easy R) Package
-Version: 1.32
-Date: 2016-02-01
+Version: 1.33
+Date: 2016-09-01
 Author: Yoshinobu Kanda
 Maintainer: Yoshinobu Kanda <ycanda-tky@umin.ac.jp>
 Depends: R (>= 3.0.0)
-Imports: Rcmdr (>= 2.2.0)
+Imports: Rcmdr (>= 2.3.0)
 Suggests: abind, aod, aplpack, car, clinfun, cmprsk, foreign, meta,
         metatest, multcomp, mvtnorm, optmatch, pROC, tableone, readxl
 Description: EZR (Easy R) adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to statistical functions, especially for medical statistics. EZR is platform-independent and runs on Windows, Mac OS X, and UNIX. Its complete manual is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8 or Nankodo, ISBN: 978-4-524-26158-1), but an report that introduced the investigation of EZR was published in Bone Marrow Transplantation (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below.
@@ -39,6 +39,6 @@ URL:
         http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf
         http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html
 NeedsCompilation: no
-Packaged: 2016-02-03 06:59:55 UTC; Yoshinobu_Kanda
+Packaged: 2016-08-29 06:51:11 UTC; Yoshinobu_Kanda
 Repository: CRAN
-Date/Publication: 2016-02-03 12:26:18
+Date/Publication: 2016-08-29 14:16:09

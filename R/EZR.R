@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.32", "\n")
+cat("   Version 1.33", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -82,7 +82,8 @@ hist2 <- function(x, breaks="scott", plot=TRUE, ...){
 	hist(x, breaks=breaks, plot=plot, ...)
 }
 
-###modified from original Hist() to use hist2() instead of hist()
+## modified from original Hist() to use hist2() instead of hist()
+## later changed to use original hist() from EZR ver 1.33
 HistEZR <- function (x, scale = c("frequency", "percent", "density"), xlab = deparse(substitute(x)), 
     ylab = scale, main = "", ...) 
 {
@@ -90,13 +91,18 @@ HistEZR <- function (x, scale = c("frequency", "percent", "density"), xlab = dep
     x <- na.omit(x)
     scale <- match.arg(scale)
     if (scale == "frequency") 
-        hist2(x, xlab = xlab, ylab = ylab, main = main, ...)
-    else if (scale == "density") 
-        hist2(x, freq = FALSE, xlab = xlab, ylab = ylab, main = main, 
-            ...)
+#        hist2(x, xlab = xlab, ylab = ylab, main = main, ...)
+		res <- hist(x, xlab = xlab, ylab = ylab, main = main, ...)
+		else if (scale == "density") 
+#        hist2(x, freq = FALSE, xlab = xlab, ylab = ylab, main = main, 
+#            ...)
+        res <- hist(x, freq = FALSE, xlab = xlab, ylab = ylab, main = main, 
+            ...)			
     else {
         n <- length(x)
-        hist2(x, axes = FALSE, xlab = xlab, ylab = ylab, main = main, 
+#        hist2(x, axes = FALSE, xlab = xlab, ylab = ylab, main = main, 
+#            ...)
+        res <- hist(x, axes = FALSE, xlab = xlab, ylab = ylab, main = main, 
             ...)
         axis(1)
         max <- ceiling(10 * par("usr")[4]/n)
@@ -105,9 +111,15 @@ HistEZR <- function (x, scale = c("frequency", "percent", "density"), xlab = dep
         else (0:max)/10
         axis(2, at = at * n, labels = at * 100)
     }
+	breaks <- NULL
+	for (i in 1:(length(res$breaks)-1)){
+		breaks[i] <- paste(res$breaks[i], "-", res$breaks[i+1], sep="")
+	}
+	names(res$counts) <- breaks
     box()
     abline(h = 0)
     invisible(NULL)
+	return(res$counts)
 }
 
 
@@ -409,13 +421,19 @@ w.multireg <- function (table = multireg.table, filename = "clipboard", CI = 0, 
         table[, 1] <- floor(table[, 1] * 100 + 0.5)/100
         table[, 2] <- floor(table[, 2] * 100 + 0.5)/100
         table[, 3] <- floor(table[, 3] * 100 + 0.5)/100
+        table[, 4] <- floor(table[, 4] * 100 + 0.5)/100
+        table[, 5] <- floor(table[, 5] * 100 + 0.5)/100
         table[, 1] <- formatC(table[, 1], format = "f", digits = 2)
         table[, 2] <- formatC(table[, 2], format = "f", digits = 2)
         table[, 3] <- formatC(table[, 3], format = "f", digits = 2)
-        table[, 4] <- signif(as.numeric(table[, 4]), digits = 2)
-        table[, 4] <- formatC(as.numeric(table[, 4]), format = "fg")
+        table[, 4] <- formatC(table[, 4], format = "f", digits = 2)
+        table[, 5] <- formatC(table[, 5], format = "f", digits = 2)
+        table[, 6] <- signif(as.numeric(table[, 6]), digits = 2)
+        table[, 6] <- formatC(as.numeric(table[, 6]), format = "fg")
     }
     table <- cbind(rownames(table), table)
+	table[, 2] <- paste(table[, 2], " (", table[, 3], "-", table[, 4], ")", sep="")
+	table <- table[, c(1,2,5,6,7)]
 	if(en==1){
 		colnames(table) <- c("Factor", "Estimate", "Std. Error", "t value", "p.value")
 	} else {
@@ -596,14 +614,10 @@ w.survival <- function (table = km.summary.table, filename = "clipboard", en = 1
 w.ci <- function (table = ci.summary.table, filename = "clipboard", en = 1) {
     rows <- length(table[, 1])
     columns <- length(table)
-    Group_Factor <- substring(row.names(table), regexpr(",", 
-        row.names(table)) + 2)
-    Factor <- substring(Group_Factor, 1, regexpr("=", Group_Factor) - 
-        1)
-    Group <- substring(Group_Factor, regexpr("=", Group_Factor) + 
-        1)
-    Event <- substring(row.names(table), 1, regexpr(",", row.names(table)) - 
-        1)
+    Group_Factor <- substring(row.names(table), 1, regexpr(",", row.names(table))-1)
+    Factor <- substring(Group_Factor, 1, regexpr("=", Group_Factor) - 1)
+    Group <- substring(Group_Factor, regexpr("=", Group_Factor)+1)
+    Event <- substring(row.names(table), regexpr(",", row.names(table)) + 2, nchar(row.names(table)))
     for (i in 1:(rows - 1)) {
         j <- 1
         while (Factor[i] == Factor[i + j]) {
@@ -1047,7 +1061,15 @@ nrisk <- function (x, times = pretty(x$time)) {
     if (!is.null(x$strata)){
 	ns <- length(x$strata)
     	idx <- rep.int(1:ns, x$strata)
-    	str.n.risk <- split(x$n.risk, idx)
+
+	if(is.matrix(x$n.risk)==TRUE){
+		str.n.risk <- split(x$n.risk[,length(x$n.risk[1,])], idx)	#for ci
+	} else {
+		str.n.risk <- split(x$n.risk, idx)							# for km
+	}
+#   change made according to the change in survival function
+#   str.n.risk <- split(x$n.risk, idx)
+
     	str.times <- split(x$time, idx)
     	m <- sapply(times, function(y) {
         sapply(1:ns, function(i) {
@@ -1058,7 +1080,15 @@ nrisk <- function (x, times = pretty(x$time)) {
 	rownames(m) <- names(x$strata)
     	colnames(m) <- times
  	} else {    
-	str.n.risk <- x$n.risk
+
+	if(is.matrix(x$n.risk)==TRUE){
+		str.n.risk <- x$n.risk[,length(x$n.risk[1,])]	#for ci
+	} else {
+		str.n.risk <- x$n.risk							# for km
+	}
+#   change made according to the change in survival function
+#	str.n.risk <- x$n.risk
+
 	str.times <- x$time
     	m <- sapply(times, function(y) {
             w <- which(str.times >= y)[1]
@@ -1626,15 +1656,15 @@ summary.km <- function (object, ..., survfit, survdiff=NULL, time=0){
 	if (is.null(survdiff)){
 		groups <- 1
 		samples <- km.table$table[1]
-		medians <- km.table$table[5]
-		med.ci <- paste(km.table$table[6], "-", km.table$table[7], sep="")
+		medians <- km.table$table[7]
+		med.ci <- paste(km.table$table[8], "-", km.table$table[9], sep="")
 		km$strata[1] <- samples
 	}else{
 		group.names <- row.names(km.table$table)
 		groups <- length(group.names)
 		samples <- km.table$table[,1]
-		medians <- km.table$table[,5]
-		med.ci <- paste(km.table$table[,6], "-", km.table$table[,7], sep="")
+		medians <- km.table$table[,7]
+		med.ci <- paste(km.table$table[,8], "-", km.table$table[,9], sep="")
 	}
 	surv <- NULL
 	surv.ci <- NULL	
@@ -1695,10 +1725,23 @@ summary.ci <- function (object, ..., ci, res, event=1, time=0){
 		ngroups <- length(groups)
 		p.value <- signif(res$Tests[event, 2],digits=3)	
 	}
+	
+    if (is.null(ci$surv)) 
+        ci$surv <- 1 - ci$prev
+    nevents <- length(ci$surv[1, ]) - 1
+#   changes made according to survival package upgrade to include no event group
+#	nevents <- length(ci$surv[1,])
 
-	nevents <- length(ci$surv[1,])
-	samples <- ci.table$table[as.numeric(substring(row.names(ci.table$table),1,1))==event,1]
-	medians <- ci.table$table[as.numeric(substring(row.names(ci.table$table),1,1))==event,5]
+    samples <- ci.table$table[as.numeric(substring(row.names(ci.table$table), 
+        nchar(row.names(ci.table$table)), nchar(row.names(ci.table$table)))) == event, 1]
+    samples <- samples[!is.na(samples)]
+#   changes made according to survival package upgrade to change the row.names
+#	samples <- ci.table$table[as.numeric(substring(row.names(ci.table$table),1,1))==event,1]
+		
+    medians <- get.median.ci(ci=ci, res=res, event=event)
+#   changes made according to survival package upgrade not to show medians 
+#	medians <- ci.table$table[as.numeric(substring(row.names(ci.table$table),1,1))==event,5]
+
 	surv <- NULL
 	surv.ci <- NULL	
 	if (time > 0){	# show survival rate at time
@@ -1742,12 +1785,134 @@ summary.ci <- function (object, ..., ci, res, event=1, time=0){
 }
 
 
+get.median.ci <- function (x, ..., ci, res, event=1) {
+    ngroups <- length(ci$n)
+    group.names <- names(ci$strata)
+    if (is.null(ci$surv)) 
+        ci$surv <- 1 - ci$prev
+    nevents <- length(ci$surv[1, ])	- 1
+#event column with no event left here in the new survival package
+#event column with no event should be deleted
+    zerocolumn <- NA
+    for (i in 1:nevents) {
+        zerocolumn[i] <- ifelse(sum(1-ci$surv[,i])==0, 0, 1)
+    }
+#    ci$surv <- ci$surv[,zerocolumn==1]
+    nevents <- sum(zerocolumn)
+
+	median.table <- NULL
+	median.CIL.table <- NULL
+	median.CIH.table <- NULL
+
+     i <- event
+#    for (i in 1:nevents) {
+
+        for (j in 1:ngroups) {
+
+            time <- res[[ngroups * (i - 1) + j]]$time
+            est <- res[[ngroups * (i - 1) + j]]$est
+            var <- res[[ngroups * (i - 1) + j]]$var
+		se <- sqrt(var)
+            hazard <- log(est)
+            lower <- est^exp(-qnorm(0.975) * se/(est * hazard))
+            upper <- est^exp(qnorm(0.975) * se/(est * hazard))
+            lower <- ifelse(is.nan(lower), 0, lower) 
+            lower <- ifelse(!is.na(lower) & lower>1, 1, lower) 
+            upper <- ifelse(is.nan(upper), 0, upper) 
+            upper <- ifelse(!is.na(upper) & upper>1, 1, upper) 
+
+		median <- NA
+		if(max(est)>=0.5){	
+			median.est <- min(which(est>=0.5)) 	
+			median <- time[median.est]		
+			if (0.5 %in% est & max(est)>0.5) {
+				#if the curve is flat at 0.5 until last observation,
+				#the median is the first point when the curve reaches 0.5
+				#same as the median survival in survival package
+				median.est.flat <- which(est==0.5)
+				if(length(median.est.flat)>1){
+					median <- (time[min(median.est.flat)]+time[max(median.est.flat)])/2
+				}
+			}
+		}
+		median.CIL <- NA
+		if(max(upper)>=0.5){	
+			median.lower <- min(which(upper>=0.5)) 	
+			median.CIL <- time[median.lower]		
+			if (0.5 %in% upper & max(upper)>0.5) {
+				median.lower.flat <- which(upper==0.5)
+				if(length(median.lower.flat)>1){
+					median.CIL <- (time[min(median.lower.flat)]+time[max(median.lower.flat)])/2
+				}
+			}
+		}
+		median.CIH <- NA
+		if(max(lower)>=0.5){	
+			median.upper <- min(which(lower>=0.5)) 	
+			median.CIH <- time[median.upper]		
+			if (0.5 %in% lower & max(lower)>0.5) {
+				median.upper.flat <- which(lower==0.5)
+				if(length(median.upper.flat)>1){
+					median.CIH <- (time[min(median.upper.flat)]+time[max(median.upper.flat)])/2
+				}
+			}
+		}
+
+#	  cat(paste(as.character(i), as.character(j), as.character(median), as.character(median.CIL), as.character(median.CIH), "\n", sep=", "))
+	  median.table <- c(median.table, median)
+	  median.CIL.table <- c(median.CIL.table, median.CIL)
+	  median.CIH.table <- c(median.CIH.table, median.CIH)
+
+	  #if(medifan.flag==1) { }	
+	  #when the curve is flat at 50% until the end of last observation,
+	  #the median value is set at the time when the curve first reached 50%	  
+	  #same as the median survival of survival package.
+        }
+#    }
+
+	median.table <- paste(median.table, " (", median.CIL.table, "-", median.CIH.table, ")", sep="")
+	return(median.table)
+}
+
+
+rmean.table <- function(x = km, rmean = "common"){
+	res <- summary(x, rmean=rmean)
+
+	if(!is.matrix(res$table)){
+		rmean.table <- res$table[c(1,5,6)]
+	} else {
+		rmean.table <- data.frame(res$table[,c(1,5,6)])
+		if(length(res$table[,1])==2){
+			n <- res$table[,1]	#numbers
+			rmean <- res$table[,5]	#means
+			se <- res$table[,6]	#standard errors
+			sd <- sqrt(n) * se	#standard deviations
+			v <- sd^2			#variances
+			df <- sum(n) - 1		#degrees of freedom
+			pv <- sum((n-1)*v)/df	#pooled variance
+			tstat <- abs(rmean[1]-rmean[2])/sqrt(pv*(1/n[1]+1/n[2]))
+			p <- signif(2*pt(tstat, df, lower.tail=FALSE), digits=3) 
+			difference <- signif(rmean[2]-rmean[1], digits=3)
+			pse <- sqrt(v[1]/n[1]+v[2]/n[2])
+			CIH <- signif(difference + qnorm(c(0.025), mean=0, sd=1, lower.tail=F)*pse, digits=3)
+			CIL <- signif(difference - qnorm(c(0.025), mean=0, sd=1, lower.tail=F)*pse, digits=3)
+			CI <- paste(CIL, " - ", CIH, sep="")
+			rmean.table <- cbind(rmean.table, rmean.difference=c(paste(difference, "(",CI,")",sep=""), ""), p.value=c(as.character(p), ""))
+		}
+	}
+	return(rmean.table)
+}
+
+
 print.ci.summary <- function (x, ..., ci, res) {
     ngroups <- length(ci$n)
     group.names <- names(ci$strata)
     if (is.null(ci$surv)) 
         ci$surv <- 1 - ci$prev
-    nevents <- length(ci$surv[1, ])	
+    nevents <- length(ci$surv[1, ])	- 1#   change made according to survival package upgrade to include no event group
+
+#	nevents <- length(ci$surv[1, ])	
+	
 #event column with no event left here in the new survival package
 #event column with no event should be deleted
     zerocolumn <- NA
@@ -1764,8 +1929,17 @@ print.ci.summary <- function (x, ..., ci, res) {
         } else {
             stop <- start + ci$strata[i] - 1
         }
-        ci.summary.table <- data.frame(time = ci$time[start:stop], 
-            n.risk = ci$n.risk[start:stop], n.event = ci$n.event[start:stop])
+#        ci.summary.table <- data.frame(time = ci$time[start:stop], 
+#            n.risk = ci$n.risk[start:stop], n.event = ci$n.event[start:stop])
+	if(stop > start){
+	      ci.summary.table <- data.frame(time = ci$time[start:stop], 
+            n.risk = ci$n.risk[start:stop, nevents+1], n.event = rowSums(ci$n.event[start:stop, 1:(nevents)]))
+	} else {
+	     ci.summary.table <- data.frame(time = ci$time[start:stop], 
+            n.risk = ci$n.risk[start:stop, nevents+1], n.event = sum(ci$n.event[start:stop, 1:(nevents)]))
+	}
+#   change made according to survival package upgrade
+
         for (j in 1:nevents) {
 		if (nevents >1){
 	            ci.summary.table <- cbind(ci.summary.table, incidence = round(1 - ci$surv[start:stop, j], 3))
@@ -1806,7 +1980,8 @@ print.ci.summary <- function (x, ..., ci, res) {
                 j, sep = "")
         }
         cat("\t\t", names(ci$strata[i]), "\n")
-        print(ci.summary.table)
+#        print(ci.summary.table)
+        print(ci.summary.table[ci.summary.table$n.event>0,])
         cat("\n")
         start <- stop + 1
     }
@@ -7041,6 +7216,7 @@ StatMedNumericalSummaries <- function(){
             }               
         command <- if (.groups != FALSE) {
             grps <- paste(.activeDataSet, "$", .groups, sep="")
+			doItAndPrint("res <- NULL")
             paste("res <- numSummary(", vars, ", groups=", grps, ", statistics=", stats, 
 				", quantiles=", quants, ")", sep="")
             }
@@ -7061,7 +7237,7 @@ StatMedNumericalSummaries <- function(){
 			}
 		}
 		doItAndPrint("res")
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
 		tkfocus(CommanderWindow())
         }
     OKCancelHelp(helpSubject="numSummary")
@@ -7281,18 +7457,23 @@ putDialog("StatMedHistogram", list(x=x, group=group, color=color, bins=tclvalue(
 			} else {
 				color <- paste(", col=c(2:", ngroup+1, ")", sep="")
 			}	
-			doItAndPrint(paste("breaks <- hist(", subset1, ActiveDataSet(), subset2, "$", x, ", breaks='scott', right=FALSE, plot=FALSE)$breaks", sep=""))
+			doItAndPrint(paste("res <- hist(", subset1, ActiveDataSet(), subset2, "$", x, ", breaks='scott', plot=FALSE)", sep=""))
 			command <- paste("temp.y <- ", subset1, ActiveDataSet(), subset2, "[", subset1, ActiveDataSet(), subset2, "$", group, '=="', groups[1], '",]$', x, sep="")
 			doItAndPrint(command)
-			doItAndPrint("temp.h <- hist(temp.y, breaks=breaks, right=FALSE, plot=FALSE)$counts")
+			doItAndPrint("temp.h <- hist(temp.y, breaks=res$breaks, plot=FALSE)$counts")
 			if (ngroup >=2){
 				for (i in 2:ngroup){
 					command <- paste("temp.y <- ", subset1, ActiveDataSet(), subset2, "[", subset1, ActiveDataSet(), subset2, "$", group, '=="', groups[i], '",]$', x, sep="")
 					doItAndPrint(command)
-					doItAndPrint("temp.h <- rbind(temp.h, hist(temp.y, breaks=breaks, right=FALSE, plot=FALSE)$counts)")			
+					doItAndPrint("temp.h <- rbind(temp.h, hist(temp.y, breaks=res$breaks, plot=FALSE)$counts)")			
 				}
-				command <- paste("barplot(temp.h, beside=TRUE, space=c(0, 0.4), names.arg=breaks[-length(temp.h[1])], legend=levels(factor(", ActiveDataSet(), "$", group, ')), args.legend=list(title="', group, '", box.lty=0), axis.lty=1, axisnames=TRUE', color, ")", sep="")
+				command <- paste("barplot(temp.h, beside=TRUE, space=c(0, 0.4), names.arg=res$breaks[-length(temp.h[1])], legend=levels(factor(", ActiveDataSet(), "$", group, ')), args.legend=list(title="', group, '", box.lty=0), axis.lty=1, axisnames=TRUE', color, ")", sep="")
 				doItAndPrint(command)					
+				doItAndPrint("breaks <- NULL")
+				doItAndPrint('for (i in 1:(length(res$breaks)-1)){breaks[i] <- paste(res$breaks[i], "-", res$breaks[i+1], sep="")}')
+				doItAndPrint("colnames(temp.h) <- breaks")
+				doItAndPrint(paste("rownames(temp.h) <- levels(as.factor(", subset1, ActiveDataSet(), subset2, "$", group, "))", sep=""))
+				doItAndPrint("temp.h")
 			}
 		}
 		activateMenus()
@@ -7314,7 +7495,7 @@ putDialog("StatMedHistogram", list(x=x, group=group, color=color, bins=tclvalue(
     tkgrid(buttonsFrame, sticky="w")
     tkgrid.configure(binsField, sticky="e")
     dialogSuffix(rows=4, columns=1)
-    }
+}
 
 	
 StatMedStemAndLeaf <- function(){
@@ -8551,11 +8732,12 @@ putDialog("StatMedSingleSampleTTest", list(x=x, mu=mu, confidence=tclvalue(confi
             return()
             }
 		closeDialog()
+		doItAndPrint("res <- NULL")
         doItAndPrint(paste("(res <- t.test(", subset1, ActiveDataSet(), subset2, "$", x,
             ", alternative='", alternative, "', mu=", mu, ", conf.level=", level,
             "))", sep=""))
 		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "mean"), " = ", res$estimate, ", ", gettext(domain="R-RcmdrPlugin.EZR", "95% CI"), " ", res$conf.int[1], "-", res$conf.int[2], ", ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
         tkdestroy(top)
         tkfocus(CommanderWindow())
         }
@@ -8675,11 +8857,12 @@ putDialog("StatMedFTest", list(group=group, response=response, confidence=level,
         .activeDataSet <- ActiveDataSet()
         doItAndPrint(paste("tapply(", subset1, .activeDataSet, subset2, "$", response, ", ", subset1,
             .activeDataSet, subset2, "$", group, ",  var, na.rm=TRUE)", sep=""))
+		doItAndPrint("res <- NULL")
         doItAndPrint(paste("(res <- var.test(", response, " ~ ", group,
             ", alternative='", alternative, "', conf.level=", level,
             ", data=", .activeDataSet, subset, "))", sep=""))
 		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "F test"), " ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
 		tkfocus(CommanderWindow())
         tkdestroy(top)
         }
@@ -8741,10 +8924,11 @@ putDialog("StatMedBartlett", list(group=group, response=response, subset = tclva
         .activeDataSet <- ActiveDataSet()
         doItAndPrint(paste("tapply(", subset1, .activeDataSet, subset2, "$", response, ", ", subset1,
             .activeDataSet, subset2, "$", group, ",  var, na.rm=TRUE)", sep=""))
+		doItAndPrint("res <- NULL")
         doItAndPrint(paste("(res <- bartlett.test(", response, " ~ ", group,
             ", data=", .activeDataSet, subset, "))", sep=""))
 		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "Bartlett test"), " ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
         tkfocus(CommanderWindow())
         tkdestroy(top)
         }
@@ -8805,6 +8989,7 @@ putDialog("StatMedTtest", list(group=group, response=response, confidence=tclval
 	doItAndPrint("group.sds <- NULL")
 	doItAndPrint("group.p <- NULL")
 	for (i in 1:nvar) {
+			doItAndPrint("res <- NULL")
 	        doItAndPrint(paste("(res <- t.test(", response, "~factor(", group[i],
         	    "), alternative='", alternative, "', conf.level=", level,
           	  ", var.equal=", variances,
@@ -8842,8 +9027,9 @@ putDialog("StatMedTtest", list(group=group, response=response, confidence=tclval
 					doItAndPrint('group.p <- c(group.p, "")')	
 				}
 			}
-			doItAndPrint("remove(res)")	
+#			doItAndPrint("remove(res)")	
 	}
+		doItAndPrint("summary.ttest <- NULL")
 		doItAndPrint("summary.ttest <- data.frame(mean=group.means, sd=group.sds, p.value=group.p)")
 		doItAndPrint("rownames(summary.ttest) <- group.names")
 		doItAndPrint('colnames(summary.ttest) <- gettext(domain="R-RcmdrPlugin.EZR",colnames(summary.ttest))')
@@ -8924,6 +9110,7 @@ putDialog("StatMedPairedTtest", list(xBox=x, yBox=y, confidence=level, alternati
         doItAndPrint(paste("mean2 <- mean(", subset1, .activeDataSet, subset2, "$", y, ", na.rm=TRUE)", sep=""))
         doItAndPrint(paste("sd1 <- sd(", subset1, .activeDataSet, subset2, "$", x, ", na.rm=TRUE)", sep=""))
         doItAndPrint(paste("sd2 <- sd(", subset1, .activeDataSet, subset2, "$", y, ", na.rm=TRUE)", sep=""))
+		doItAndPrint("summary.ttest <- NULL")	
 		doItAndPrint('summary.ttest <- data.frame(mean=c(mean1, mean2), sd=c(sd1, sd2), p.value=c(signif(res$p.value, digit=3),""))')
 		doItAndPrint(paste('rownames(summary.ttest) <- c("', x, '", "', y, '")', sep=""))
 		doItAndPrint('colnames(summary.ttest) <- gettext(domain="R-RcmdrPlugin.EZR",colnames(summary.ttest))')
@@ -9083,9 +9270,10 @@ if(length(x) != length(y) | length(y) !=length(lower) | length(lower) != length(
 				doItAndPrint(paste("group.means <- c(group.means, bar.means[", j, "])", sep=""))
 				doItAndPrint(paste("group.sds <- c(group.sds, bar.sds[", j, "])", sep=""))
 				if (j == 1 & variances=="TRUE"){
+					doItAndPrint("res <- NULL")
 					doItAndPrint(paste("res <- summary(lm(", response, " ~ factor(", group[i], "), data=", .activeDataSet, subset, "))", sep=""))
 					doItAndPrint('group.p <- c(group.p, signif(pf(res$fstatistic[1], res$fstatistic[2], res$fstatistic[3], lower.tail=FALSE), digits=3))')
-					doItAndPrint("remove(res)")
+					#doItAndPrint("remove(res)")
 				} else if(j == 1 & variances=="FALSE"){
 					doItAndPrint(paste("res <- oneway.test(", response, " ~ factor(", group[i], "), data=", .activeDataSet, subset, ", var.equal=FALSE)", sep=""))
 					doItAndPrint('group.p <- c(group.p, signif(res$p.value, digits=3))')				
@@ -9095,6 +9283,7 @@ if(length(x) != length(y) | length(y) !=length(lower) | length(lower) != length(
 				}	
 				if(variances=="TRUE") doItAndPrint(paste("summary(", modelValue, ")", sep=""))				
 			}
+			doItAndPrint("summary.anova <- NULL")	
 			doItAndPrint("summary.anova <- data.frame(mean=group.means, sd=group.sds, p.value=group.p)")
 			doItAndPrint("rownames(summary.anova) <- group.names")
 			doItAndPrint('colnames(summary.anova) <- gettext(domain="R-RcmdrPlugin.EZR",colnames(summary.anova))')
@@ -9312,6 +9501,7 @@ putDialog("StatMedRepANOVA", list(group=group, data=data, line=tclvalue(lineVari
 		doItAndPrint(paste(modelValue, " <- ", command, sep = ""))
 		doItAndPrint(paste("time <- factor(c(", RepeatedData2, "))", sep=""))
 		doItAndPrint("time <- data.frame(Time = time)")
+		doItAndPrint("res <- NULL")
 		doItAndPrint(paste("res <- Anova(", modelValue, ', idata=time, idesign=~Time, type="III")', sep=""))
 		if (actmodel==1) activeModel(modelValue)
 		doItAndPrint("summary(res, multivariate=FALSE)")
@@ -9332,7 +9522,7 @@ putDialog("StatMedRepANOVA", list(group=group, data=data, line=tclvalue(lineVari
 			command <- paste("pairwise.pairedt.test(with(TempDF, cbind(", RepeatedData, ")), TempDF$", factors, ', "', dataSet, '", p.adjust.method="holm")', sep="")
 			doItAndPrint(command)
 		}		
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
 		tkfocus(CommanderWindow())
         }
     OKCancelHelp(helpSubject="Anova", model=TRUE, apply="StatMedRepANOVA", reset="StatMedRepANOVA")
@@ -9652,12 +9842,13 @@ putDialog("StatMedCorrelation", list(x=x, alternative=alternative, subset = tclv
     command2 <- paste("scatterplot(", x[1], "~", x[2],
         ", reg.line=lm, smooth=FALSE, spread=FALSE, boxplots='xy', span=0.5, data=", .activeDataSet, subset, ")", sep="")
     doItAndPrint(command2)  
+	doItAndPrint("res <- NULL")
     command <- paste("(res <- cor.test(", subset1, .activeDataSet, subset2, "$", x[1], ", ", subset1, .activeDataSet, subset2, "$", x[2],
         ', alternative="', alternative, '", method="pearson"))', sep="")
     doItAndPrint(command) 
 	
 	doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "correlation coefficient"), " = ", signif(res$estimate, digits=3), ", ", gettext(domain="R-RcmdrPlugin.EZR", "95% CI"), " ", signif(res$conf.int[1],digits=3), "-", signif(res$conf.int[2],digits=3), ", ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
-	doItAndPrint("remove(res)")
+#	doItAndPrint("remove(res)")
 		
     tkfocus(CommanderWindow())
   }
@@ -9757,13 +9948,18 @@ putDialog("StatMedLinearRegression", list(x=x, y=y, wald=wald, actmodel=actmodel
 # 		logger(paste(modelValue, " <- ", command, sep = ""))
 # 		assign(modelValue, justDoIt(command), envir = .GlobalEnv)
 		doItAndPrint(paste(modelValue, " <- ", command, sep = ""))
+		doItAndPrint("res <- NULL")
         doItAndPrint(paste("(res <- summary(", modelValue, "))", sep=""))
         doItAndPrint(paste("vif(", modelValue, ")", sep=""))
 		logger("###variance inflation factors")
-		doItAndPrint('colnames(res$coefficients) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(res$coefficients))')
-		doItAndPrint("res$coefficients")
-		doItAndPrint("multireg.table <- res$coefficients")
-		doItAndPrint("remove(res)")
+		doItAndPrint("multireg.table <- NULL") 
+		doItAndPrint(paste("multireg.table <- cbind(res$coefficients[,1], confint(", modelValue, "),res$coefficients[,2:4])", sep=""))
+		doItAndPrint('colnames(multireg.table)[1] <- "Estimate"')
+		doItAndPrint('colnames(multireg.table) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(multireg.table))')
+#		doItAndPrint("res$coefficients")
+#		doItAndPrint("multireg.table <- res$coefficients")
+		doItAndPrint("multireg.table")
+#		doItAndPrint("remove(res)")
 		if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
 		if (diagnosis==1){
 			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
@@ -9778,16 +9974,18 @@ putDialog("StatMedLinearRegression", list(x=x, y=y, wald=wald, actmodel=actmodel
 			doItAndPrint(paste(modelValue, " <- ", command, sep=""))
 			}
 		if (stepwise1 == 1){
+			doItAndPrint("res <- NULL")
 			doItAndPrint(paste("res <- stepwise(", modelValue, ', direction="backward/forward", criterion="AIC")', sep=""))
 			doItAndPrint("summary(res)")
 			if (wald==1) doItAndPrint("waldtest(res)")
-			doItAndPrint("remove(res)")
+#			doItAndPrint("remove(res)")
 			}
 		if (stepwise2 == 1){
+		doItAndPrint("res <- NULL")
 			doItAndPrint(paste("res <- stepwise(", modelValue, ', direction="backward/forward", criterion="BIC")', sep=""))
 			doItAndPrint("summary(res)")
 			if (wald==1) doItAndPrint("waldtest(res)")
-			doItAndPrint("remove(res)")
+#			doItAndPrint("remove(res)")
 		}
 		if (stepwise3 == 1){
 			subset <- tclvalue(subsetVariable)
@@ -9914,13 +10112,14 @@ putDialog("StatMedMannW", list(group=group, response=response, alternative=alter
 					doItAndPrint('group.p <- c(group.p, "")')	
 				}
 			}
-				doItAndPrint("remove(res)")
+#				doItAndPrint("remove(res)")
 			}
 #		doItAndPrint("mannwhitney.table <- data.frame(p.value=p.value)")
 #		doItAndPrint('colnames(mannwhitney.table) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(mannwhitney.table))')
 #		doItAndPrint("rownames(mannwhitney.table) <- groups")
 #		doItAndPrint("mannwhitney.table")
 		
+		doItAndPrint("mannwhitney.table <- NULL")
 		doItAndPrint("mannwhitney.table <- data.frame(Minimum=group.min, Q1=group.1Q, Median=group.median, Q3=group.3Q, Maximum=group.max, p.value=group.p)")
 		doItAndPrint("rownames(mannwhitney.table) <- group.names")
 		doItAndPrint('colnames(mannwhitney.table)[c(2,4)] <- c("25%", "75%")') 
@@ -9982,6 +10181,7 @@ putDialog("StatMedWilSign", list(x=x, y=y, alternative=alternative, test=test, s
         .activeDataSet <- ActiveDataSet()
         doItAndPrint(paste("median(", subset1, .activeDataSet, subset2, "$", x, " - ", subset1, .activeDataSet, subset2, "$", y, 
             ", na.rm=TRUE) # median difference", sep=""))
+		doItAndPrint("res <- NULL")
         if (test == "default"){
              doItAndPrint(paste("(res <- wilcox.test(", subset1, .activeDataSet, subset2, "$", x, ", ", 
                 subset1, .activeDataSet, subset2, "$", y,
@@ -10002,7 +10202,7 @@ putDialog("StatMedWilSign", list(x=x, y=y, alternative=alternative, test=test, s
                 }
 		command <- paste('cat(gettext(domain="R-RcmdrPlugin.EZR", "Wilcoxon', "'", 's signed rank test")', ', "', gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), '\n")', sep="")
 		doItAndPrint(command)
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
 								
         tkfocus(CommanderWindow())
         }
@@ -10078,11 +10278,12 @@ putDialog("StatMedKruWalli", list(group=group, response=response, steeldwass=ste
         doItAndPrint(command)
         doItAndPrint(paste("tapply(", paste(subset1, .activeDataSet, subset2, "$", response, sep=""),
             ", ", paste(subset1, .activeDataSet, subset2, "$", group, sep=""), ", median, na.rm=TRUE)", sep=""))
+		doItAndPrint("res <- NULL")
         doItAndPrint(paste("(res <- kruskal.test(", response, " ~ factor(", group, "), data=",
             .activeDataSet, subset, "))", sep=""))
 			
 		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "Kruskal-Wallis test"), " ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
 			
 		if (bonferroni==1){
 			doItAndPrint(paste("pairwise.kruskal.test(", subset1, .activeDataSet, subset2, "$", response, ", ", subset1, .activeDataSet, subset2, "$", group, ', data.name="', .activeDataSet, '", p.adjust.method="bonferroni")', sep=""))
@@ -10158,9 +10359,10 @@ putDialog("StatMedFriedman", list(response=responses, bonferroni=bonferroni, hol
 #		assign(".Responses", justDoIt(command), envir=.GlobalEnv)
 		doItAndPrint(paste(".Responses <- ", command, sep=""))
 		doItAndPrint("apply(.Responses, 2, median)")
+		doItAndPrint("res <- NULL")
 		doItAndPrint("(res <- friedman.test(.Responses))")
 		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "Friedman test"), " ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
 		if (bonferroni==1){
 			doItAndPrint(paste('pairwise.friedman.test(.Responses, "', .activeDataSet, '", p.adjust.method="bonferroni")', sep=""))
 		}
@@ -10223,10 +10425,11 @@ putDialog("StatMedJT", list(response=response, group=group, alternative=alternat
                 ", data=", .subDataSet, ")", sep=""))
         logger(command)
         justDoIt(command)
+		doItAndPrint("res <- NULL")
 		command <- paste("(res <- jonckheere.test(", .subDataSet, "$", response, ", as.ordered(", .subDataSet, "$", group, '), alternative="', alternative, '"))', sep="")
         doItAndPrint(command)
 		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "Jonckheere-Terpstra test"), " ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
 		
         tkfocus(CommanderWindow())
     }
@@ -10289,13 +10492,14 @@ putDialog("StatMedSpearman", list(x=x, alternative=alternative, method=method, s
     command2 <- paste("scatterplot(", x[1], "~", x[2],
         ", reg.line=lm, smooth=FALSE, spread=FALSE, boxplots='xy', span=0.5, data=", .activeDataSet, subset, ")", sep="")
     doItAndPrint(command2)  
+	doItAndPrint("res <- NULL")
     command <- paste("(res <- cor.test(", subset1, .activeDataSet, subset2, "$", x[1], ", ", subset1, .activeDataSet, subset2, "$", x[2],
         ', alternative="', alternative, '", method="', method, '"))', sep="")
     doItAndPrint(command)  
 	
 	command <- paste('cat(gettext(domain="R-RcmdrPlugin.EZR", "Spearman', "'", 's rank correlation coefficient")', ', signif(res$estimate, digits=3), gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n")', sep="")
 	doItAndPrint(command)
-	doItAndPrint("remove(res)")
+#	doItAndPrint("remove(res)")
 
     tkfocus(CommanderWindow())
   }
@@ -10351,6 +10555,7 @@ StatMedFrequency <- function(){
         .activeDataSet <- ActiveDataSet()
         for (variable in x){
             command <- paste("table(", .activeDataSet, "$", variable, showna, ")", sep="")
+			doItAndPrint(".Table <- NULL")
             doItAndPrint(paste("(.Table <- ", command, gettext(domain="R-RcmdrPlugin.EZR",")  # counts for "), variable, sep=""))
 #            assign(".Table", justDoIt(command), envir=.GlobalEnv)
 #            doItAndPrint(paste(".Table  # counts for", variable))
@@ -10426,8 +10631,8 @@ StatMedFrequency <- function(){
             tkgrid(subButtonsFrame, sticky="w")
             dialogSuffix(subwin, rows=2, columns=1, onOK=onOKsub, focus=subwin)
             }            
-        logger("remove(.Table)") 
-        remove(.Table, envir=.GlobalEnv)  
+#        logger("remove(.Table)") 
+#        remove(.Table, envir=.GlobalEnv)  
         tkfocus(CommanderWindow())
         }
     OKCancelHelp(helpSubject="table")
@@ -10520,19 +10725,22 @@ putDialog("StatMedProbSingle", list(x=x, chisq=chisq, exact=exact, continuity=co
             return()
             }		
 		closeDialog()
+		doItAndPrint(".Table <- NULL")
 		doItAndPrint(paste("(.Table <- table(", subset1, ActiveDataSet(), subset2, "$", x, "))", sep="")) 
 		if(chisq==1){
+			doItAndPrint("res <- NULL")
 			command <- paste("(res <- prop.test(.Table[2], .Table[1]+ .Table[2], p=", p0, ', alternative="', alternative, '", conf.level=', level, ", correct=", continuity, "))", sep="")
 			doItAndPrint(command)
 		}
 		if(exact==1){
+			doItAndPrint("res <- NULL")
 			command <- paste("(res <- binom.test(.Table[2], .Table[1]+ .Table[2], p=", p0, ', alternative="', alternative, '", conf.level=', level, "))", sep="")
 			doItAndPrint(command)
 		}
 		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "Single-Sample Proportion Test"), " ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
-		doItAndPrint("remove(res)")	
+#		doItAndPrint("remove(res)")	
 
-		doItAndPrint("remove(.Table)")
+#		doItAndPrint("remove(.Table)")
 			tkfocus(CommanderWindow())
         }
     OKCancelHelp(helpSubject="binom.test", apply="StatMedProbSingle", reset="StatMedProbSingle")
@@ -10899,6 +11107,7 @@ StatMedEnterTable <- function(){
             ", byrow=TRUE)", sep="")
 #        assign(".Table", justDoIt(command), envir=.GlobalEnv)
 #        logger(paste(".Table <- ", command, sep=""))
+		doItAndPrint(".Table <- NULL")
         doItAndPrint(paste(".Table <- ", command, sep=""))
         command <- paste("c(",paste(paste("'", row.names, "'", sep=""), collapse=", "), ")", sep="")
         justDoIt(paste("rownames(.Table) <- ", command, sep=""))
@@ -10934,10 +11143,12 @@ StatMedEnterTable <- function(){
         if (fisher == 1) doItAndPrint("fisher.test(.Table)")
 
 		if (fisher == 0 & chisq == 1){
+			doItAndPrint("res <- NULL")
             doItAndPrint("res <- chisq.test(.Table, correct=TRUE)")
 			} else {
 			doItAndPrint("res <- fisher.test(.Table)")
 		}		
+		doItAndPrint("summary.table <- NULL")
 		doItAndPrint("summary.table <- data.frame(cbind(.Table, p.value=signif(res$p.value, digits=3)))")
 		doItAndPrint('summary.table$p.value[2:length(.Table[,1])] <- ""')
 		if(fisher == 0 & chisq == 1){
@@ -10945,10 +11156,10 @@ StatMedEnterTable <- function(){
 		} else {
 			doItAndPrint('colnames(summary.table)[length(.Table[1,])+1] <- gettext(domain="R-RcmdrPlugin.EZR", "Fisher.p.value")')
 		}	
-		doItAndPrint("remove(res)")	
+#		doItAndPrint("remove(res)")	
 		doItAndPrint("summary.table")
-        logger("remove(.Table)")
-        remove(.Table, envir=.GlobalEnv)
+#        logger("remove(.Table)")
+#        remove(.Table, envir=.GlobalEnv)
         tkfocus(CommanderWindow())
         }
     OKCancelHelp(helpSubject="fisher.test")
@@ -11013,6 +11224,7 @@ putDialog("StatMedTwoWayTable", list(row=row, column=column, percents=percents, 
 		closeDialog()
 	nvar = length(row)
 	doItAndPrint("Fisher.summary.table <- NULL")
+	doItAndPrint(".Table <- NULL")
 	for (i in 1:nvar) {
         	if (row[i] == column) {
             	errorCondition(recall=StatMedTwoWayTable, message=gettext(domain="R-RcmdrPlugin.EZR","Row and column variables are the same."))
@@ -11049,13 +11261,14 @@ putDialog("StatMedTwoWayTable", list(row=row, column=column, percents=percents, 
             remove(.Test, envir=.GlobalEnv)
             }
         if (fisher == 1) doItAndPrint("fisher.test(.Table)")
+		doItAndPrint("res <- NULL")
 		if (fisher == 0 & chisq==1){
             doItAndPrint(paste("res <- chisq.test(.Table, correct=", continuity, ")", sep=""))
 			} else {
 			doItAndPrint("res <- fisher.test(.Table)")
 		}
 			doItAndPrint("Fisher.summary.table <- rbind(Fisher.summary.table, summary.table.twoway(table=.Table, res=res))")		
-		doItAndPrint("remove(res)")	
+#		doItAndPrint("remove(res)")	
 		}        
 	doItAndPrint('colnames(Fisher.summary.table)[length(Fisher.summary.table)] <-  gettext(domain="R-RcmdrPlugin.EZR", colnames(Fisher.summary.table)[length(Fisher.summary.table)])')
 	doItAndPrint("Fisher.summary.table")
@@ -11080,8 +11293,8 @@ putDialog("StatMedTwoWayTable", list(row=row, column=column, percents=percents, 
 			doItAndPrint('pairwise.prop2.test(.Table, p.adj="holm", test.function=fisher.test)')
 		}
 	}
-        remove(.Table, envir=.GlobalEnv)
-		logger("remove(.Table)")
+#        remove(.Table, envir=.GlobalEnv)
+#		logger("remove(.Table)")
         tkfocus(CommanderWindow())
     }
     OKCancelHelp(helpSubject="xtabs", apply="StatMedTwoWayTable", reset="StatMedTwoWayTable")
@@ -11165,14 +11378,16 @@ putDialog("StatMedMcNemar", list(row=row, column=column, continuity=continuity, 
             	subset, ")", sep="")
 #       	logger(paste(".Table <- ", command, sep=""))
 #        		assign(".Table", justDoIt(command), envir=.GlobalEnv)
+		doItAndPrint(".Table <- NULL")
        	doItAndPrint(paste(".Table <- ", command, sep=""))
         doItAndPrint(".Table")
+		doItAndPrint("res <- NULL")
 		command <- paste("(res <- mcnemar.test(.Table, correct=", continuity, "))", sep="")
         doItAndPrint(command)
 		command <- paste('cat(gettext(domain="R-RcmdrPlugin.EZR", "McNemar', "'", 's test")', ', "', gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), '\n")', sep="")
 		doItAndPrint(command)
-		doItAndPrint("remove(res)")
-        remove(.Table, envir=.GlobalEnv)
+#		doItAndPrint("remove(res)")
+#        remove(.Table, envir=.GlobalEnv)
         tkfocus(CommanderWindow())
     }
     OKCancelHelp(helpSubject="mcnemar.test", apply="StatMedMcNemar", reset="StatMedMcNemar")
@@ -11217,17 +11432,19 @@ putDialog("StatMedCochranQ", list(response=responses, subset=tclvalue(subsetVari
 			return()
 			}
 		.activeDataSet <- ActiveDataSet()
+		doItAndPrint(".Table <- NULL")
 		command <- paste(".Table <- cbind(", subset1, .activeDataSet, subset2, "$", responses[1], sep="")
 		for (i in 2:length(responses)){
 			command <- paste(command, ", ", subset1, .activeDataSet, subset2, "$", responses[i], sep="")
 		}
 		command <- paste(command, ")", sep="")
 		doItAndPrint(command)
+		doItAndPrint("res <- NULL")
 		doItAndPrint("(res <- Cochran.Q.test(.Table))")
 		command <- paste('cat(gettext(domain="R-RcmdrPlugin.EZR", "Cochran', "'", 's Q test")', ', "', gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), '\n")', sep="")
 		doItAndPrint(command)
-		doItAndPrint("remove(res)")		
-        doItAndPrint("remove(.Table)")
+#		doItAndPrint("remove(res)")		
+#        doItAndPrint("remove(.Table)")
 		tkfocus(CommanderWindow())
 		}
 	OKCancelHelp(apply="StatMedCochranQ", reset="StatMedCochranQ")
@@ -11271,13 +11488,15 @@ putDialog("StatMedPropTrend", list(response=response, group=group, subset=tclval
             	subset, ")", sep="")
 #       	logger(paste(".Table <- ", command, sep=""))
 #        		assign(".Table", justDoIt(command), envir=.GlobalEnv)
+		doItAndPrint(".Table <- NULL")
        	doItAndPrint(paste(".Table <- ", command, sep=""))
         doItAndPrint(".Table")		
+		doItAndPrint("res <- NULL")
 		command <- "(res <- prop.trend.test(.Table[,1], .Table[,1]+.Table[,2]))"
         doItAndPrint(command)
 		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "Cochran-Armitage test for trend in proportions"), " ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
-		doItAndPrint("remove(res)")
-        remove(.Table, envir=.GlobalEnv)
+#		doItAndPrint("remove(res)")
+#        remove(.Table, envir=.GlobalEnv)
         tkfocus(CommanderWindow())
     }
     OKCancelHelp(helpSubject="prop.trend.test", apply="StatMedPropTrend", reset="StatMedPropTrend")
@@ -11391,6 +11610,7 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 		doItAndPrint(paste("anova(", modelValue, ', GLM.null, test="Chisq")', sep=""))
         doItAndPrint(paste("vif(", modelValue, ")", sep=""))
 		logger("###variance inflation factors")
+		doItAndPrint("odds <- NULL")
 		doItAndPrint(paste("odds <- data.frame(exp( summary(", modelValue, ")$coef[,1:2] %*% rbind(c(1,1,1), 1.96*c(0,-1,1))))", sep=""))
 		doItAndPrint(paste("odds <- cbind(odds, summary(", modelValue, ")$coefficients[,4])", sep=""))
 		doItAndPrint("odds <- signif(odds, digits=3)")
@@ -11399,11 +11619,12 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 		if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
 		if (roc==1){
 			Library("pROC")
+			doItAndPrint("ROC <- NULL")
 			doItAndPrint(paste("ROC <- roc(", tclvalue(lhsVariable), " ~ ", modelValue, "$fitted.values, data=TempDF", subset, ', ci=TRUE, direction="auto")', sep=""))
 			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
 			doItAndPrint("plot(ROC)")
 			doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR","Area under the curve"), signif(ROC$auc[1], digits=3), gettext(domain="R-RcmdrPlugin.EZR","95% CI"), signif(ROC$ci[1], digits=3), "-", signif(ROC$ci[3], digits=3), "\n")')
-			doItAndPrint("remove(ROC)")
+#			doItAndPrint("remove(ROC)")
 		}
 		if (diagnosis==1){
 			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
@@ -11416,6 +11637,7 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 			doItAndPrint(paste(modelValue, " <- ", command, sep=""))
 			}
 		if (stepwise1 == 1){
+			doItAndPrint("res <- NULL")
 			doItAndPrint(paste("res <- stepwise(", modelValue, ', direction="backward/forward", criterion="AIC")', sep=""))
 			doItAndPrint("odds <- data.frame(exp( summary(res)$coef[,1:2] %*% rbind(c(1,1,1), 1.96*c(0,-1,1))))")
 			doItAndPrint(paste("odds <- cbind(odds, summary(res)$coefficients[,4])", sep=""))
@@ -11424,9 +11646,10 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 			doItAndPrint("summary(res)")
 			doItAndPrint("odds")
 			if (wald==1) doItAndPrint("waldtest(res)")
-			doItAndPrint("remove(res)")
+#			doItAndPrint("remove(res)")
 		}
 		if (stepwise2 == 1){
+			doItAndPrint("res <- NULL")
 			doItAndPrint(paste("res <- stepwise(", modelValue, ', direction="backward/forward", criterion="BIC")', sep=""))
 			doItAndPrint("odds <- data.frame(exp( summary(res)$coef[,1:2] %*% rbind(c(1,1,1), 1.96*c(0,-1,1))))")
 			doItAndPrint(paste("odds <- cbind(odds, summary(res)$coefficients[,4])", sep=""))
@@ -11435,7 +11658,7 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 			doItAndPrint("summary(res)")
 			doItAndPrint("odds")
 			if (wald==1) doItAndPrint("waldtest(res)")
-			doItAndPrint("remove(res)")
+#			doItAndPrint("remove(res)")
 		}		
 		if (stepwise3 == 1){
 			subset <- tclvalue(subsetVariable)
@@ -11470,7 +11693,7 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 
 
 StatMedKaplanMeier  <- function(){
-defaults <- list(event = "", timetoevent = "", group = "", strata = "", test = 0,  line = "color", place = "topright", xscale = "", posthoc = "", censor = 1, ci = 0, separatestrata = 0, atrisk = 0, point = "<none>", xlim = "<auto>", ylim = "<auto>", xlabel = "<auto>", ylabel = "<auto>", subset = "")
+defaults <- list(event = "", timetoevent = "", group = "", strata = "", test = 0,  line = "color", place = "topright", xscale = "1", posthoc = "", censor = 1, ci = 0, separatestrata = 0, atrisk = 0, point = "<none>", xlim = "<auto>", ylim = "<auto>", xlabel = "<auto>", ylabel = "<auto>", subset = "")
 dialog.values <- getDialog("StatMedKaplanMeier", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -11489,7 +11712,7 @@ currentModel <- TRUE
         labels=gettext(domain="R-RcmdrPlugin.EZR",c("Color", "Line type", "Line width")), title=gettext(domain="R-RcmdrPlugin.EZR","Line discrimination"))
     radioButtons(plotoptionFrame, name="place", buttons=c("topright", "bottom", "mouse"), values=c("topright", "bottom", "mouse"), initialValue=dialog.values$place,
         labels=gettext(domain="R-RcmdrPlugin.EZR",c("Upper right", "Bottom", "Mouse click")), title=gettext(domain="R-RcmdrPlugin.EZR","Legend"))
-    radioButtons(plotoptionFrame, name="xscale", buttons=c("day", "daytomonth", "daytoyear", "monthtoyear"), values=c("", "30.4375", "365.25", "12"), initialValue=dialog.values$xscale,
+    radioButtons(plotoptionFrame, name="xscale", buttons=c("day", "daytomonth", "daytoyear", "monthtoyear"), values=c("1", "30.4375", "365.25", "12"), initialValue=dialog.values$xscale,
         labels=gettext(domain="R-RcmdrPlugin.EZR",c("As is", "Day to month", "Day to year", "Month to year")), title=gettext(domain="R-RcmdrPlugin.EZR","X axis"))
     radioButtons(plotoptionFrame, name="posthoc", buttons=c("No", "Bonferroni", "Holm"), values=c("", "bon", "holm"), initialValue=dialog.values$posthoc,
         labels=gettext(domain="R-RcmdrPlugin.EZR",c("No", "Bonferroni", "Holm")), title=gettext(domain="R-RcmdrPlugin.EZR","Post-hoc test\n(when only one grouping\nvariable picked)"))
@@ -11552,12 +11775,6 @@ currentModel <- TRUE
     separatestrata <- tclvalue(separatestrataVariable)
 	if (length(strata) == 0) separatestrata <- 0
     atrisk <- tclvalue(atriskVariable)
-	point <- tclvalue(pointVariable)
-	if (point == "<none>") {
-		point <- ""
-	} else {
-		point <- paste(", time=", point, sep="")
-	}
 	test <- as.character(tclvalue(testVariable))
 	line <- tclvalue(lineVariable)	
 	par.lwd <- get("par.lwd", envir=.GlobalEnv)
@@ -11574,11 +11791,17 @@ currentModel <- TRUE
 		place <- '"bottom", horiz=TRUE'
 	}
 	xscale <- tclvalue(xscaleVariable)
-	xscale2 <- ""
-	if (xscale!=""){
-		xscale2 <- paste(" * ", xscale, sep="")
-		xscale <- paste(", xscale=", xscale, sep="")
-	}
+#	xscale2 <- ""
+#	if (xscale!=""){
+#		xscale2 <- paste(" * ", xscale, sep="")
+#		xscale <- paste(", xscale=", xscale, sep="")
+#	}
+	point <- tclvalue(pointVariable)
+	if (point == "<none>") {
+		point <- ""
+	} else {
+#		point <- paste(", time=", point, xscale2, sep="")
+		point <- paste(", time=", point, sep="")	}
 	posthoc <- tclvalue(posthocVariable)
 	xlim <- tclvalue(xlimVariable)
 	ylim <- tclvalue(ylimVariable)
@@ -11632,29 +11855,34 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 	closeDialog()
     Library("survival")
     nvar <- length(group)
+	doItAndPrint("km <- NULL")
+	doItAndPrint("km.summary.table <- NULL")
     if (nvar == 0){
-	command <- paste("km <- survfit(Surv(", timetoevent, ",", event, "==1)~1, data=", ActiveDataSet(), subset, ', na.action = na.omit, conf.type="log-log")', sep="")
+	command <- paste("km <- survfit(Surv((", timetoevent, "/", xscale, "),", event, "==1)~1, data=", ActiveDataSet(), subset, ', na.action = na.omit, conf.type="log-log")', sep="")
 	doItAndPrint(command)
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
 	if (atrisk==0){
-		doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))
+#		doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))
+		doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, ")", sep=""))
 	} else {
 		doItAndPrint('mar <- par("mar")')
         doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
 		doItAndPrint("par(mar=mar)")
         doItAndPrint("opar <- par(mar = mar)")
         doItAndPrint("on.exit(par(opar))")
-		doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))	
+#		doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))	
+		doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, ")", sep=""))	
         doItAndPrint("xticks <- axTicks(1)")
-        doItAndPrint(paste("n.atrisk <- nrisk(km, xticks", xscale2, ")", sep=""))
+#        doItAndPrint(paste("n.atrisk <- nrisk(km, xticks", xscale2, ")", sep=""))
+        doItAndPrint("n.atrisk <- nrisk(km, xticks)")
         doItAndPrint("axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)")
         doItAndPrint('title(xlab = "Number at risk", line = 3, adj = 0)')
 	}
 	doItAndPrint("summary(km)")
-	doItAndPrint(paste("summary.km(survfit=km", point, xscale2, ")", sep=""))
+	doItAndPrint(paste("summary.km(survfit=km", point, ")", sep=""))
     } else {
 	for (i in 1:nvar) {
-	command <- paste("km <- survfit(Surv(", timetoevent, ",", event, "==1)~", group[i], strata2, ", data=", ActiveDataSet(), subset, ', na.action = na.omit, conf.type="log-log")', sep="")
+	command <- paste("km <- survfit(Surv((", timetoevent, "/", xscale, "),", event, "==1)~", group[i], strata2, ", data=", ActiveDataSet(), subset, ', na.action = na.omit, conf.type="log-log")', sep="")
 	doItAndPrint(command)
 	doItAndPrint("summary(km)")
 #	doItAndPrint('legend <- c("0", "1")') #to create a legend vector. "0", "1" are dummy.
@@ -11673,7 +11901,8 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
 	if (separatestrata == 0){
 		if (atrisk==0){
-			doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))
+#			doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))
+			doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, ")", sep=""))
 			doItAndPrint(paste("legend (", place, ", legend, ", line2, ' box.lty=0, title="', strata3, group[i], '")', sep=""))
 		} else{	
 			doItAndPrint('mar <- par("mar")')
@@ -11682,9 +11911,11 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))
+#			doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep=""))
+			doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, ")", sep=""))
 			doItAndPrint("xticks <- axTicks(1)")
-			doItAndPrint(paste("n.atrisk <- nrisk(km, xticks", xscale2, ")", sep=""))
+#			doItAndPrint(paste("n.atrisk <- nrisk(km, xticks", xscale2, ")", sep=""))
+			doItAndPrint("n.atrisk <- nrisk(km, xticks)")
 			doItAndPrint("for (i in 1:length(km$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")			
 #			doItAndPrint(paste('#for (i in 1:length(km$strata)){for (j in 1:(length(xticks)-1)) {axis(1, at=c(xticks[j]+(xticks[2]-xticks[1])/3, xticks[j+1]-+(xticks[2]-xticks[1])/3), labels=c(" ", " "), line=4.6+i, ', line2, "lwd.ticks=0, tick = TRUE)}}", sep=""))			
 			doItAndPrint(paste("for (i in 1:length(km$strata)){mtext(legend[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i, cex=", par.cex, ")}", sep=""))			
@@ -11702,7 +11933,7 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 		doItAndPrint("strata.p <- NULL")
 		for(j in 1: nstrata){
 #			command <- paste("km <- survfit(Surv(", timetoevent, ",", event, ")~", group[i], strata2, ", data=", dataSet, "[", dataSet, "$", strata, '=="', stratas[j], '",]', subset, ', na.action = na.omit, conf.type="log-log")', sep="")
-			command <- paste("km <- survfit(Surv(", timetoevent, ",", event, "==1)~", group[i], ", data=", dataSet, "[", dataSet, "$", strata, '=="', stratas[j], '",]', subset, ', na.action = na.omit, conf.type="log-log")', sep="")
+			command <- paste("km <- survfit(Surv((", timetoevent, "/", xscale, "),", event, "==1)~", group[i], ", data=", dataSet, "[", dataSet, "$", strata, '=="', stratas[j], '",]', subset, ', na.action = na.omit, conf.type="log-log")', sep="")
 			doItAndPrint(command)
 			doItAndPrint(paste('len <- nchar("', group[i], '")', sep=""))
 			doItAndPrint("nvar2 <- length(names(km$strata))")	
@@ -11711,7 +11942,8 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 			doItAndPrint("legend <- substring(names(km$strata), len+2)")
 			main <- paste(', main="', strata, "=", stratas[j], '"', sep="")
 			if (atrisk==0){
-				doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, main, xscale, ")", sep=""))
+#				doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, main, xscale, ")", sep=""))
+				doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, main, ")", sep=""))
 				doItAndPrint(paste("legend (", place, ", legend, ", line2, 'box.lty=0, title="', strata3, group[i], '")', sep=""))
 			}else{
 				doItAndPrint('mar <- par("mar")')
@@ -11720,9 +11952,11 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 				doItAndPrint("par(mar=mar)")
 				doItAndPrint("opar <- par(mar = mar)")
 				doItAndPrint("on.exit(par(opar))")
-				doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, main, xscale, ")", sep=""))
+#				doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, main, xscale, ")", sep=""))
+				doItAndPrint(paste('plot(km, bty="l", ', line, "conf.int=", conf.int, censor, xlim, ylim, xlabel, ylabel, main, ")", sep=""))
 				doItAndPrint("xticks <- axTicks(1)")
-				doItAndPrint(paste("n.atrisk <- nrisk(km, xticks", xscale2, ")", sep=""))
+#				doItAndPrint(paste("n.atrisk <- nrisk(km, xticks", xscale2, ")", sep=""))
+				doItAndPrint("n.atrisk <- nrisk(km, xticks)")
 				doItAndPrint("for (i in 1:length(km$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")
 #				doItAndPrint(paste('#for (i in 1:length(km$strata)){for (j in 1:(length(xticks)-1)) {axis(1, at=c(xticks[j]+(xticks[2]-xticks[1])/3, xticks[j+1]-+(xticks[2]-xticks[1])/3), labels=c(" ", " "), line=4.6+i, ', line2, "lwd.ticks=0, tick = TRUE)}}", sep=""))			
 				doItAndPrint(paste("for (i in 1:length(km$strata)){mtext(legend[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i, cex=", par.cex, ")}", sep=""))			
@@ -11738,11 +11972,12 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 				doItAndPrint(paste('strata.names <- c(strata.names, "', stratas[j], '")', sep=""))
 				doItAndPrint(paste("strata.p <- c(strata.p, NA)", sep=""))			
 			}else{
+				doItAndPrint("res <- NULL")
 				command2 <- paste("res <- survdiff(Surv(", timetoevent, ",", event, "==1)~", group[i], strata2, ", data=", dataSet, "[", dataSet, "$", strata, '=="', stratas[j], '",]', subset, ", rho=", test, ", na.action = na.omit)", sep="")
 				doItAndPrint(command2)
 				doItAndPrint(paste('strata.names <- c(strata.names, "', stratas[j], '")', sep=""))
 				doItAndPrint(paste("strata.p <- c(strata.p, signif(pchisq(c(res$chisq), df=length(res$n)-1, lower.tail=FALSE),digits=3))", sep=""))
-				doItAndPrint("remove(res)")
+#				doItAndPrint("remove(res)")
 			}
 			if (j < nstrata) 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
 		}
@@ -11750,17 +11985,18 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
  		logger("p-value calculated in each strata")
 		doItAndPrint("strata.data")
 #		doItAndPrint("remove(strata.data)")		
-		command <- paste("km <- survfit(Surv(", timetoevent, ",", event, "==1)~", group[i], strata2, ", data=", ActiveDataSet(), subset, ', na.action = na.omit, conf.type="log-log")', sep="")
+		command <- paste("km <- survfit(Surv((", timetoevent, "/", xscale, "),", event, "==1)~", group[i], strata2, ", data=", ActiveDataSet(), subset, ', na.action = na.omit, conf.type="log-log")', sep="")
 		doItAndPrint(command)	#To create km.summary.table in all strata
 		}
 #	command <- paste("km <- survfit(Surv(", timetoevent, ",", event, "==1)~", group[i], strata2, ", data=", ActiveDataSet(), subset, ', na.action = na.omit, conf.type="log-log")', sep="")
 #	doItAndPrint(command)
+	doItAndPrint("res <- NULL")
 	command2 <- paste("(res <- survdiff(Surv(", timetoevent, ",", event, "==1)~", group[i], strata2, ", data=", dataSet, subset, ", rho=", test, ', na.action = na.omit))', sep="")
 	doItAndPrint(command2)
 	if (i == 1){
-		doItAndPrint(paste("km.summary.table <- summary.km(survfit=km, survdiff=res", point, xscale2, ")", sep=""))
+		doItAndPrint(paste("km.summary.table <- summary.km(survfit=km, survdiff=res", point, ")", sep=""))
 	} else {
-		doItAndPrint(paste("km.summary.table <- rbind(km.summary.table, summary.km(survfit=km, survdiff=res", point, xscale2, "))", sep=""))
+		doItAndPrint(paste("km.summary.table <- rbind(km.summary.table, summary.km(survfit=km, survdiff=res", point, "))", sep=""))
 	}
 	if(nvar==1 & posthoc!=""){
 		if (length(strata)==0) {
@@ -11770,12 +12006,12 @@ putDialog("StatMedKaplanMeier", list(event = event, timetoevent = timetoevent, g
 		}
 		doItAndPrint(command)
 	}
-	doItAndPrint("remove(res)")	
+#	doItAndPrint("remove(res)")	
     }
 	doItAndPrint("km.summary.table")
 #	doItAndPrint("remove(km.summary.table)")	
 	}
-	doItAndPrint("remove(km)")
+#	doItAndPrint("remove(km)")
     tkfocus(CommanderWindow())
   }
   OKCancelHelp(helpSubject="survfit", model=TRUE, apply="StatMedKaplanMeier", reset="StatMedKaplanMeier")
@@ -11863,10 +12099,11 @@ dialog.values <- getDialog("StatMedLogrankTrend", defaults)
     closeDialog()
 	Library("survival")
     nvar <- length(group)
+	doItAndPrint("res <- NULL")
 	command <- paste("(res <- survdiff(Surv(", timetoevent, ",", event, "==1)~", group, ", data=", dataSet, subset, ', na.action = na.omit))', sep="")
 	doItAndPrint(command)
 	doItAndPrint("logrank.trend(res)")
-	doItAndPrint("remove(res)")
+#	doItAndPrint("remove(res)")
     tkfocus(CommanderWindow())
   }
   OKCancelHelp(helpSubject="survdiff", model=TRUE, apply="StatMedLogrankTrend", reset="StatMedLogrankTrend")
@@ -11997,6 +12234,7 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 
      formula <- paste("Surv(", tclvalue(SurvivalTimeVariable), ", ", tclvalue(StatusVariable), "==1)~ ", tclvalue(rhsVariable), sep="")
 
+	doItAndPrint("res <- NULL")
     command <- paste("coxph(", formula,
       ", data=", ActiveDataSet(), subset, ', method="breslow")', sep="")
 #    logger(paste(modelValue, " <- ", command, sep=""))
@@ -12005,6 +12243,7 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
     doItAndPrint(paste("(res <- summary(", modelValue, "))", sep=""))
 #	doItAndPrint(paste("res <- ", command, sep=""))
 #	doItAndPrint("res <- summary(res)")
+	doItAndPrint("cox.table <- NULL")
 	if(eval(parse(text="length(res$coefficients[,1])"))==1){
 		doItAndPrint("cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,5]), digits=4)")
 		doItAndPrint("rownames(cox.table) <- rownames(res$coefficients)")
@@ -12023,7 +12262,27 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 		doItAndPrint("abline(h=0, lty=3)")	
 		}
 	if (prophaz == 1){
-			doItAndPrint(paste("print(cox.zph(", modelValue, "))", sep=""))
+		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+		nvar <- (eval(parse(text="length(cox.table[,1])")))
+		mfrow <- paste("c(4,", ceiling(nvar/4), ")", sep="")
+		switch(as.character(nvar),
+			"1"=mfrow <- "c(1,1)",
+			"2"=mfrow <- "c(2,1)",
+			"3"=mfrow <- "c(2,2)",
+			"4"=mfrow <- "c(2,2)",
+			"5"=mfrow <- "c(3,2)",
+			"6"=mfrow <- "c(3,2)",
+			"7"=mfrow <- "c(3,3)",
+			"8"=mfrow <- "c(3,3)",
+			"9"=mfrow <- "c(3,3)",
+			"10"=mfrow <- "c(4,3)",
+			"11"=mfrow <- "c(4,3)",
+			"12"=mfrow <- "c(4,3)"
+		)		
+		doItAndPrint(paste("oldpar <- par(oma=c(0,0,3,0), mfrow=", mfrow, ")", sep=""))
+		doItAndPrint(paste("plot(cox.zph(", modelValue, "), df=2)", sep=""))
+		doItAndPrint("par(oldpar)")
+		doItAndPrint(paste("print(cox.zph(", modelValue, "))", sep=""))			
 	}
 	if (basecurve ==1){
 		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
@@ -12082,7 +12341,7 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 			}
 			doItAndPrint(paste('step.p.cox(', modelValue, ', "TempDF", wald=', wald, subset, ")", sep=""))
 	}
-	doItAndPrint("remove(res)")
+#	doItAndPrint("remove(res)")
 #	doItAndPrint("remove(cox.table)")
 	if (actmodel==1) activeModel(modelValue)
     tkfocus(CommanderWindow())
@@ -12117,7 +12376,7 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 
 
 StatMedAdjustedSurvival  <- function(){
-defaults <- list(event = "", timetoevent = "", group = "", adjust = "", line = "color", place = "topright", xscale = "", censor = 1, atrisk = 0, xlim = "<auto>", ylim = "<auto>", xlabel = "<auto>", ylabel = "<auto>", subset = "")
+defaults <- list(event = "", timetoevent = "", group = "", adjust = "", line = "color", place = "topright", xscale = "1", censor = 1, atrisk = 0, xlim = "<auto>", ylim = "<auto>", xlabel = "<auto>", ylabel = "<auto>", subset = "")
 dialog.values <- getDialog("StatMedAdjustedSurvival", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -12133,7 +12392,7 @@ currentModel <- TRUE
     radioButtons(plotoptionFrame, name="line", buttons=c("color", "type", "width"), values=c("color", "type", "width"), initialValue=dialog.values$line,
         labels=gettext(domain="R-RcmdrPlugin.EZR",c("Color", "Line type", "Line width")), title=gettext(domain="R-RcmdrPlugin.EZR","Line discrimination"))
     radioButtons(plotoptionFrame, name="place", buttons=c("topright", "bottom", "mouse"), values=c("topright", "bottom", "mouse"), initialValue=dialog.values$place, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Upper right", "Bottom", "Mouse click")), title=gettext(domain="R-RcmdrPlugin.EZR","Legend"))
-    radioButtons(plotoptionFrame, name="xscale", buttons=c("day", "daytomonth", "daytoyear", "monthtoyear"), values=c("", "30.4375", "365.25", "12"), initialValue=dialog.values$xscale, labels=gettext(domain="R-RcmdrPlugin.EZR",c("As is", "Day to month", "Day to year", "Month to year")), title=gettext(domain="R-RcmdrPlugin.EZR","X axis"))
+    radioButtons(plotoptionFrame, name="xscale", buttons=c("day", "daytomonth", "daytoyear", "monthtoyear"), values=c("1", "30.4375", "365.25", "12"), initialValue=dialog.values$xscale, labels=gettext(domain="R-RcmdrPlugin.EZR",c("As is", "Day to month", "Day to year", "Month to year")), title=gettext(domain="R-RcmdrPlugin.EZR","X axis"))
 	plotoption2Frame <- tkframe(top)
     checkBoxes(window=plotoption2Frame, frame="censor", boxes=c("censor"),initialValues=dialog.values$censor,labels=gettext(domain="R-RcmdrPlugin.EZR",c("Show censoring marks")), title=gettext(domain="R-RcmdrPlugin.EZR","Options"))
     checkBoxes(window=plotoption2Frame, frame="atrisk", boxes=c("atrisk"),initialValues=dialog.values$atrisk,labels=gettext(domain="R-RcmdrPlugin.EZR",c("Show number at risk")), title=gettext(domain="R-RcmdrPlugin.EZR"," "))
@@ -12186,11 +12445,11 @@ onOK <- function(){
     censor <- tclvalue(censorVariable)
     atrisk <- tclvalue(atriskVariable)
 	xscale <- tclvalue(xscaleVariable)
-	xscale2 <- ""
-	if (xscale!=""){
-		xscale2 <- paste(" * ", xscale, sep="")
-		xscale <- paste(", xscale=", xscale, sep="")
-	}
+#	xscale2 <- ""
+#	if (xscale!=""){
+#		xscale2 <- paste(" * ", xscale, sep="")
+#		xscale <- paste(", xscale=", xscale, sep="")
+#	}
 	xlim <- tclvalue(xlimVariable)
 	ylim <- tclvalue(ylimVariable)
 	if (xlim == "<auto>") {
@@ -12249,8 +12508,10 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 	factor2 <- factor
 	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "))", sep="")
 	if (length(group)==1) factor2 <- paste(factor, " + strata(", group, ")", sep="")	
-	command <- paste("coxmodel <- coxph(Surv(", timetoevent, ", ", event, "==1)~ ", factor2, ", data=", subdataSet, ', method="breslow")', sep="")
+	command <- paste("coxmodel <- coxph(Surv((", timetoevent, "/", xscale, "), ", event, "==1)~ ", factor2, ", data=", subdataSet, ', method="breslow")', sep="")
+	doItAndPrint("coxmodel <- NULL")
 	doItAndPrint(command)
+	doItAndPrint("cox <- NULL")
 	doItAndPrint("cox <- survfit(coxmodel)")
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
 	if(length(group)==1){		
@@ -12269,10 +12530,12 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep="") 
+#			command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep="") 
+			command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, ")", sep="") 
 			doItAndPrint(command3)
 			doItAndPrint("xticks <- axTicks(1)")
-			doItAndPrint(paste("n.atrisk <- nrisk(cox, xticks", xscale2, ")", sep=""))
+#			doItAndPrint(paste("n.atrisk <- nrisk(cox, xticks", xscale2, ")", sep=""))
+			doItAndPrint("n.atrisk <- nrisk(cox, xticks)")
 			doItAndPrint("axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)")
 			doItAndPrint('title(xlab = "Number at risk", line = 3, adj = 0)')
 		} else {
@@ -12282,10 +12545,12 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep="") 			
+#			command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep="") 			
+			command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, ")", sep="")
 			doItAndPrint(command3)			
 			doItAndPrint("xticks <- axTicks(1)")
-			doItAndPrint(paste("n.atrisk <- nrisk(cox, xticks", xscale2, ")", sep=""))
+#			doItAndPrint(paste("n.atrisk <- nrisk(cox, xticks", xscale2, ")", sep=""))
+			doItAndPrint("n.atrisk <- nrisk(cox, xticks)")
 			doItAndPrint("for (i in 1:length(cox$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")
 #			doItAndPrint(paste('#for (i in 1:length(cox$strata)){for (j in 1:(length(xticks)-1)) {axis(1, at=c(xticks[j]+(xticks[2]-xticks[1])/3, xticks[j+1]-+(xticks[2]-xticks[1])/3), labels=c(" ", " "), line=4.6+i, ', line2, "lwd.ticks=0, tick = TRUE)}}", sep=""))			
 			doItAndPrint(paste("for (i in 1:length(cox$strata)){mtext(group.levels[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i, cex=", par.cex, ")}", sep=""))			
@@ -12293,7 +12558,8 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 #			doItAndPrint(paste("legend (", place, ", legend, ", line, ' box.lty=0, title="', strata3, group[i], '")', sep=""))			
 		}
 	} else {
-		command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep="") 
+#		command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, xscale, ")", sep="") 
+		command3 <- paste("plot(cox, ", line, 'bty="l"', censor, xlim, ylim, xlabel, ylabel, ")", sep="") 
 		doItAndPrint(command3)
 	}
 	if(length(group)==1){	
@@ -12301,8 +12567,8 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 	}
 	doItAndPrint(paste('title("Survival curve adjusted for ', factor, '")', sep=""))
 	doItAndPrint("summary(cox)")
-	doItAndPrint("remove(cox)")
-	doItAndPrint("remove(coxmodel)")
+#	doItAndPrint("remove(cox)")
+#	doItAndPrint("remove(coxmodel)")
     tkfocus(CommanderWindow())
 	}
   OKCancelHelp(helpSubject="coxph", model=TRUE, apply="StatMedAdjustedSurvival", reset="StatMedAdjustedSurvival")
@@ -12337,7 +12603,7 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 
 
 StatMedCumInc  <- function(){
-defaults <- list(event = "", timetoevent = "", group = "", line = "color", place = "topright", xscale = "", posthoc = "", censor = 1, atrisk = 0, point = "<none>", plotevent = "<all>", xlim = "<auto>", ylim = "<auto>", xlabel = "<auto>", ylabel = "<auto>", subset = "")
+defaults <- list(event = "", timetoevent = "", group = "", line = "color", place = "topright", xscale = "1", posthoc = "", censor = 1, atrisk = 0, point = "<none>", plotevent = "<all>", xlim = "<auto>", ylim = "<auto>", xlabel = "<auto>", ylabel = "<auto>", subset = "")
 dialog.values <- getDialog("StatMedCumInc", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -12353,7 +12619,7 @@ currentModel <- TRUE
         labels=gettext(domain="R-RcmdrPlugin.EZR",c("Color", "Line type", "Line width")), title=gettext(domain="R-RcmdrPlugin.EZR","Line discrimination"))
     radioButtons(plotoptionFrame, name="place", buttons=c("topright", "bottom", "mouse"), values=c("topright", "bottom", "mouse"), initialValue=dialog.values$place,
         labels=gettext(domain="R-RcmdrPlugin.EZR",c("Upper right", "Bottom", "Mouse click")), title=gettext(domain="R-RcmdrPlugin.EZR","Legend"))
-    radioButtons(plotoptionFrame, name="xscale", buttons=c("day", "daytomonth", "daytoyear", "monthtoyear"), values=c("", "30.4375", "365.25", "12"), initialValue=dialog.values$xscale,
+    radioButtons(plotoptionFrame, name="xscale", buttons=c("day", "daytomonth", "daytoyear", "monthtoyear"), values=c("1", "30.4375", "365.25", "12"), initialValue=dialog.values$xscale,
         labels=gettext(domain="R-RcmdrPlugin.EZR",c("As is", "Day to month", "Day to year", "Month to year")), title=gettext(domain="R-RcmdrPlugin.EZR","X axis"))
     radioButtons(plotoptionFrame, name="posthoc", buttons=c("No", "Bonferroni", "Holm"), values=c("", "bon", "holm"), initialValue=dialog.values$posthoc,
         labels=gettext(domain="R-RcmdrPlugin.EZR",c("No", "Bonferroni", "Holm")), title=gettext(domain="R-RcmdrPlugin.EZR","Post-hoc test (one event to show,\none grouping variable)"))
@@ -12449,11 +12715,11 @@ currentModel <- TRUE
 		}
 	}	
 	xscale <- tclvalue(xscaleVariable)
-	xscale2 <- ""
-	if (xscale!=""){
-		xscale2 <- paste(" * ", xscale, sep="")
-		xscale <- paste(", xscale=", xscale, sep="")
-	}
+#	xscale2 <- ""
+#	if (xscale!=""){
+#		xscale2 <- paste(" * ", xscale, sep="")
+#		xscale <- paste(", xscale=", xscale, sep="")
+#	}
 	posthoc <- tclvalue(posthocVariable)
 	xlim <- tclvalue(xlimVariable)
 	ylim <- tclvalue(ylimVariable)
@@ -12514,11 +12780,14 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 		doItAndPrint("DummyEventForCI <- as.factor(DummyEventForCI) #Required for Surv() with mstate option")			
 	}
 
+	doItAndPrint("res <- NULL")
+	doItAndPrint("ci <- NULL")
+	doItAndPrint("ci.summary.table <- NULL")
     nvar <- length(group)
 	nevent <- eval(parse(text=paste("length(levels(factor(", subdataSet, "$", event, "[", subdataSet, "$", event, ">0])))", sep="")))
     if (nvar == 0){	
 	if(nevent==1){
-		command <- paste("ci <- survfit(Surv(", timetoevent, ", ", event, ">0)~1, data=", dataSet, subset, ")", sep="")
+		command <- paste("ci <- survfit(Surv((", timetoevent, "/", xscale, "), ", event, ">0)~1, data=", dataSet, subset, ")", sep="")
 		#Error message appears when etype option is chosen and there is only single group with only 1 event type.
 		doItAndPrint(command)
 		plotline <- 0
@@ -12533,22 +12802,26 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 		doItAndPrint("ci$upper <- tempCI")		
 	} else {
 #		command <- paste("ci <- survfit(Surv(", timetoevent, ", ", event, ">0)~1, data=", dataSet, subset, ", etype=", event, ")", sep="")
-		command <- paste("ci <- survfit(Surv(", timetoevent, ', DummyEventForCI, type="mstate")~1, data=', dataSet, subset, ")", sep="")
+		command <- paste("ci <- survfit(Surv((", timetoevent, "/", xscale, '), DummyEventForCI, type="mstate")~1, data=', dataSet, subset, ")", sep="")
 		doItAndPrint(command)
-		command <- paste("res <- with(", dataSet, ", cuminc(", timetoevent, ", ", event, ", cencode=0", subset, ", na.action = na.omit))", sep="")
+		command <- paste("res <- with(", dataSet, ", cuminc((", timetoevent, "/", xscale, "), ", event, ", cencode=0", subset, ", na.action = na.omit))", sep="")
 		doItAndPrint(command)
 		doItAndPrint("print.ci.summary(ci=ci, res=res)")
 	}
 	if(nevent>1){
 	if(plotline==0){
 		for (j in 1:nevent){
-			if(j==1) {doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", j, point, xscale2, ")", sep=""))	
+#			if(j==1) {doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", j, point, xscale2, ")", sep=""))	
+			if(j==1) {doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", j, point, ")", sep=""))	
 			} else {
-			doItAndPrint(paste("ci.summary.table <- rbind(ci.summary.table, summary.ci(ci=ci, res=res, event=", j, point, xscale2, "))", sep=""))		
+#			doItAndPrint(paste("ci.summary.table <- rbind(ci.summary.table, summary.ci(ci=ci, res=res, event=", j, point, xscale2, "))", sep=""))		
+			doItAndPrint(paste("ci.summary.table <- rbind(ci.summary.table, summary.ci(ci=ci, res=res, event=", j, point, "))", sep=""))		
 			}
 		}
 	} else {
-		doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", plotline, point, xscale2, ")", sep=""))	
+#		doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", plotline, point, xscale2, ")", sep=""
+		doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", plotline, point, ")", sep=""
+		))	
 	}
 	}
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
@@ -12558,32 +12831,38 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 	if (plotline==0){
 		if(eval(parse(text=paste("length(levels(factor(", subdataSet, "$", event, "[", subdataSet, "$", event, ">0])))", sep="")))==1){line <- paste("col=1, lty=1, ", par.lwd, sep="")}
 		if (atrisk==0){
-			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+#			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, ")", sep=""))
 		} else {
 			doItAndPrint('mar <- par("mar")')
 			doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+#			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, ")", sep=""))
 			doItAndPrint("xticks <- axTicks(1)")
-			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
+#			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
+			doItAndPrint("n.atrisk <- nrisk(ci, xticks)")
 			doItAndPrint("axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)")
 			doItAndPrint('title(xlab = "Number at risk", line = 3, adj = 0)')
 		}
 		doItAndPrint(paste("legend(", place, ", compevents, ", line, ', box.lty=0, title="Competing events")', sep=""))
 	}else{
 		if (atrisk==0){
-			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+#			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, ")", sep=""))
 		} else {
 			doItAndPrint('mar <- par("mar")')
 			doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
-			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+#			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, ")", sep=""))
 			doItAndPrint("xticks <- axTicks(1)")
-			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
+#			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
+			doItAndPrint("n.atrisk <- nrisk(ci, xticks)")
 			doItAndPrint("axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)")
 			doItAndPrint('title(xlab = "Number at risk", line = 3, adj = 0)')
 		}
@@ -12591,7 +12870,7 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
     } else {
 	for (i in 1:nvar) {
 	if(nevent==1){
-		command <- paste("ci <- survfit(Surv(", timetoevent, ", ", event, ">0)~", group[i], ", data=", dataSet, subset, ")", sep="")
+		command <- paste("ci <- survfit(Surv((", timetoevent, "/", xscale, "), ", event, ">0)~", group[i], ", data=", dataSet, subset, ")", sep="")
 		#Error message appears when etype option is chosen and there is only single group with only 1 event type.
 		doItAndPrint(command)
 		plotline <- 0
@@ -12604,13 +12883,13 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 		doItAndPrint("tempCI <- 1-ci$lower")
 		doItAndPrint("ci$lower <- 1-ci$upper")
 		doItAndPrint("ci$upper <- tempCI")		
-		command <- paste("res <- with(", dataSet, ", cuminc(", timetoevent, ", ", event, ", ", group[i], ", cencode=0", subset, ", na.action = na.omit))", sep="")
+		command <- paste("res <- with(", dataSet, ", cuminc((", timetoevent, "/", xscale, "), ", event, ", ", group[i], ", cencode=0", subset, ", na.action = na.omit))", sep="")
 		doItAndPrint(command)
 	} else {
 #	command <- paste("ci <- survfit(Surv(", timetoevent, ", ", event, ">0)~", group[i], ", data=", dataSet, subset, ", etype=", event, ")", sep="")
-	command <- paste("ci <- survfit(Surv(", timetoevent, ', DummyEventForCI, type="mstate")~', group[i], ", data=", dataSet, subset, ")", sep="")
+	command <- paste("ci <- survfit(Surv((", timetoevent, "/", xscale, '), DummyEventForCI, type="mstate")~', group[i], ", data=", dataSet, subset, ")", sep="")
 	doItAndPrint(command)
-	command <- paste("res <- with(", dataSet, ", cuminc(", timetoevent, ", ", event, ", ", group[i], ", cencode=0", subset, ", na.action = na.omit))", sep="")
+	command <- paste("res <- with(", dataSet, ", cuminc((", timetoevent, "/", xscale, "), ", event, ", ", group[i], ", cencode=0", subset, ", na.action = na.omit))", sep="")
 	doItAndPrint(command)
 	doItAndPrint("print.ci.summary(ci=ci, res=res)")
 	}
@@ -12623,7 +12902,7 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 	doItAndPrint("ngroups <- length(groups)")
 	if(plotline==0){
 		doItAndPrint('k <- 1; l <- 1; legend <- ""')
-		doItAndPrint('for(j in 1:nevents){for(i in 1:ngroups){legend[k] <- paste(groups[i], ":", compevents[j]); ifelse(k==1,legendline <- (i-1)*nevents+j, legendline <- c(legendline, (i-1)*nevents+j)); k <- k+1 }}')	
+		doItAndPrint('for(i in 1:nevents){for(j in 1:ngroups){legend[k] <- paste(groups[j], ":", compevents[i]); ifelse(k==1,legendline <- (i-1)*ngroups+j, legendline <- c(legendline, (i-1)*ngroups+j)); k <- k+1 }}')	
 		}else{		
 #		doItAndPrint(paste("legend <- levels(factor(", subdataSet, "$", group[i], "))", sep=""))
 		doItAndPrint("legend <- groups")
@@ -12635,7 +12914,8 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 			if (line==paste("col=1, lty=legendline, ", par.lwd, sep="")) line <- paste("col=1, lty=1:32, ", par.lwd, sep="")
 			if (line=="col=1, lty=1, lwd=legendline") line <- paste("col=1, lty=1, ", par.lwd, ":8", sep="")
 			if (atrisk==0){
-				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+#				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, ")", sep=""))
 #				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))
 			}else{
 				doItAndPrint('mar <- par("mar")')
@@ -12644,9 +12924,11 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 				doItAndPrint("par(mar=mar)")
 				doItAndPrint("opar <- par(mar = mar)")
 				doItAndPrint("on.exit(par(opar))")
-				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+#				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, ")", sep=""))
 				doItAndPrint("xticks <- axTicks(1)")
-				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
+#				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
+				doItAndPrint("n.atrisk <- nrisk(ci, xticks)")
 				doItAndPrint("for (i in 1:length(ci$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")
 				doItAndPrint(paste("for (i in 1:length(ci$strata)){mtext(groups[i], side=1, at=-(xticks[2]-xticks[1])/2, line=4+i, cex=", par.cex, ")}", sep=""))
 				doItAndPrint('title(xlab = "Number at risk", line = 3.5, adj = 0)')
@@ -12658,7 +12940,8 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 			doItAndPrint(paste("legend(", place, ", legend, box.lty=0, ", line, ', title="', group[i], ' : Competing events")', sep=""))
 	}else{
 			if (atrisk==0){
-				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, 	ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+#				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, 	ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, 	ylim, xlabel, ylabel, censor, ")", sep=""))
 #				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))
 			}else{
 				doItAndPrint('mar <- par("mar")')
@@ -12667,9 +12950,11 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 				doItAndPrint("par(mar=mar)")
 				doItAndPrint("opar <- par(mar = mar)")
 				doItAndPrint("on.exit(par(opar))")
-				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+#				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
+				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, ")", sep=""))
 				doItAndPrint("xticks <- axTicks(1)")
-				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
+#				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
+				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", ")", sep=""))
 				doItAndPrint("for (i in 1:length(ci$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")
 				doItAndPrint(paste("for (i in 1:length(ci$strata)){mtext(groups[i], side=1, at=-(xticks[2]-xticks[1])/2, line=4+i, cex=", par.cex, ")}", sep=""))
 				doItAndPrint('title(xlab = "Number at risk", line = 3.5, adj = 0)')
@@ -12681,17 +12966,21 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 	if(nevent>1){
 	if(plotline==0){
 		for (j in 1:nevent){
-			if(i==1 & j==1) {doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", j, point, xscale2, ")", sep=""))	
+#			if(i==1 & j==1) {doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", j, point, xscale2, ")", sep=""))	
+			if(i==1 & j==1) {doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", j, point, ")", sep=""))	
 			} else {
-			doItAndPrint(paste("ci.summary.table <- rbind(ci.summary.table, summary.ci(ci=ci, res=res, event=", j, point, xscale2, "))", sep=""))	
+#			doItAndPrint(paste("ci.summary.table <- rbind(ci.summary.table, summary.ci(ci=ci, res=res, event=", j, point, xscale2, "))", sep=""))	
+			doItAndPrint(paste("ci.summary.table <- rbind(ci.summary.table, summary.ci(ci=ci, res=res, event=", j, point,"))", sep=""))	
 			}
 		}
 	} else {
 		if (i == 1){
-			if(plotline>0) doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", plotline, point, xscale2, ")", sep=""))	
+#			if(plotline>0) doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", plotline, point, xscale2, ")", sep=""))	
+			if(plotline>0) doItAndPrint(paste("ci.summary.table <- summary.ci(ci=ci, res=res, event=", plotline, point, ")", sep=""))	
 		} else {
-			if(plotline>0) doItAndPrint(paste("ci.summary.table <- rbind(ci.summary.table, summary.ci(ci=ci, res=res, event=", plotline, point, xscale2, "))", sep=""))	
-		}
+#			if(plotline>0) doItAndPrint(paste("ci.summary.table <- rbind(ci.summary.table, summary.ci(ci=ci, res=res, event=", plotline, point, xscale2, "))", sep=""))	
+			if(plotline>0) doItAndPrint(paste("ci.summary.table <- rbind(ci.summary.table, summary.ci(ci=ci, res=res, event=", plotline, point, "))", sep=""))	
+			}
 	}
 	}
    }
@@ -12699,13 +12988,13 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 		command <- paste("pairwise.gray.test(", subdataSet, "$", timetoevent, ", ", subdataSet, "$", event, ", ", subdataSet, "$", group[i], ', "', dataSet, '", p.adjust.method="', posthoc, '", endpoint=', plotline, ")", sep="")
 		doItAndPrint(command)
 	}
-	doItAndPrint("remove(res)")
+#	doItAndPrint("remove(res)")
     }
 #	if(plotline>0){
 		if(nevent>1) doItAndPrint("ci.summary.table")
 #		doItAndPrint("remove(ci.summary.table)")	
 #	}
-	doItAndPrint("remove(ci)")
+#	doItAndPrint("remove(ci)")
     tkfocus(CommanderWindow())
   }
   OKCancelHelp(helpSubject="cuminc", apply="StatMedCumInc", reset="StatMedCumInc")
@@ -12973,10 +13262,12 @@ putDialog("StatMedCrr", list(event = event, timetoevent = timetoevent, group = g
     }
     command <- paste(command, ")", sep="")
     doItAndPrint(command)
+	doItAndPrint("crr <- NULL")
     command2 <- paste("crr <- with(", dataSet, ", crr(", timetoevent, ", ", event, ", cov.matrix, failcode=", fcode, ", cencode=0", subset, ", na.action = na.omit))", sep="")
     doItAndPrint(command2)
     doItAndPrint("summary(crr)")
 	
+	doItAndPrint("crr.table <- NULL")
 	if(eval(parse(text="length(summary(crr)$coef[,1])"))==1){
 		doItAndPrint("crr.table <- signif(cbind(t(summary(crr)$conf.int[,c(1,3,4)]), p.value=summary(crr)$coef[,5]), digits=4)")
 		doItAndPrint(paste('rownames(crr.table) <- "', group[1], '"', sep=""))
@@ -13018,7 +13309,7 @@ putDialog("StatMedCrr", list(event = event, timetoevent = timetoevent, group = g
 		doItAndPrint(paste('step.p.crr(crr, cov, "TempDF", wald=', wald, subset, ")", sep=""))
 	}
 	
-	doItAndPrint("remove(crr)")
+#	doItAndPrint("remove(crr)")
     tkfocus(CommanderWindow())
   }
   OKCancelHelp(helpSubject="crr", apply="StatMedCrr", reset="StatMedCrr")
@@ -13191,9 +13482,11 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 #    logger(paste(modelValue, " <- ", command, sep=""))
 #    assign(modelValue, justDoIt(command), envir=.GlobalEnv)
     doItAndPrint(paste(modelValue, " <- ", command, sep=""))
+	doItAndPrint("res <- NULL")
     doItAndPrint(paste("(res <- summary(", modelValue, "))", sep=""))
 #	doItAndPrint(paste("res <- ", command, sep=""))
 #	doItAndPrint("res <- summary(res)")
+	doItAndPrint("cox.table <- NULL")
 	if(eval(parse(text="length(res$coefficients[,1])"))==1){
 		doItAndPrint("cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,5]), digits=4)")
 		doItAndPrint("rownames(cox.table) <- rownames(res$coefficients)")
@@ -13206,11 +13499,32 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 #	doItAndPrint("cox.table <- signif(cox.table, digits=3)")
 	doItAndPrint("cox.table")
 	if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
-	if (prophaz == 1){
-			doItAndPrint(paste("print(cox.zph(", modelValue, "))", sep=""))
+	if (prophaz == 1){	
+		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+		nvar <- (eval(parse(text="length(cox.table[,1])")))
+		mfrow <- paste("c(4,", ceiling(nvar/4), ")", sep="")
+		switch(as.character(nvar),
+			"1"=mfrow <- "c(1,1)",
+			"2"=mfrow <- "c(2,1)",
+			"3"=mfrow <- "c(2,2)",
+			"4"=mfrow <- "c(2,2)",
+			"5"=mfrow <- "c(3,2)",
+			"6"=mfrow <- "c(3,2)",
+			"7"=mfrow <- "c(3,3)",
+			"8"=mfrow <- "c(3,3)",
+			"9"=mfrow <- "c(3,3)",
+			"10"=mfrow <- "c(4,3)",
+			"11"=mfrow <- "c(4,3)",
+			"12"=mfrow <- "c(4,3)"
+		)		
+		doItAndPrint(paste("oldpar <- par(oma=c(0,0,3,0), mfrow=", mfrow, ")", sep=""))
+		doItAndPrint(paste("plot(cox.zph(", modelValue, "), df=2)", sep=""))
+		doItAndPrint("par(oldpar)")
+		doItAndPrint(paste("print(cox.zph(", modelValue, "))", sep=""))			
 	}
 	if (basecurve ==1){
-			doItAndPrint(paste("plot(survfit(", modelValue, "))", sep=""))
+		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+		doItAndPrint(paste("plot(survfit(", modelValue, "))", sep=""))
 	}
 
 	if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
@@ -13270,7 +13584,7 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 			}
 			doItAndPrint(paste('step.p.coxtd(', modelValue, ', "TempDF", wald=', wald, subset, ")", sep=""))
 	}
-	doItAndPrint("remove(res)")
+#	doItAndPrint("remove(res)")
 	if (actmodel==1) activeModel(modelValue)
     tkfocus(CommanderWindow())
   }
@@ -13371,6 +13685,7 @@ putDialog("StatMedROC", list(response=response, predictor=predictor, threshold=t
 		pt <- ""
 		cpt <- ""
 	}
+	doItAndPrint("ROC <- NULL")
 	command <- paste("ROC <- roc(", response, "~", predictor, ", data=", subset1, ActiveDataSet(), subset2,
             	', ci=TRUE, direction="', direction, '")', sep="")
     doItAndPrint(command)
@@ -13410,7 +13725,7 @@ putDialog("StatMedROC", list(response=response, predictor=predictor, threshold=t
 	}
 	doItAndPrint("ROC")
 	doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR","Area under the curve"), signif(ROC$auc[1], digits=3), gettext(domain="R-RcmdrPlugin.EZR","95% CI"), signif(ROC$ci[1], digits=3), "-", signif(ROC$ci[3], digits=3), "\n")')
-	doItAndPrint("remove(ROC)")
+#	doItAndPrint("remove(ROC)")
         tkfocus(CommanderWindow())
     }
     OKCancelHelp(helpSubject="roc", apply="StatMedROC", reset="StatMedROC")
@@ -13631,17 +13946,19 @@ StatMedKappa <- function(){
 			return()
 		}		
 #		library(epiR, quietly=TRUE)
+		doItAndPrint(".Table <- NULL")
 		doItAndPrint(paste(".Table <- matrix(c(", pospos, ", ", posneg, ", ", negpos, ", ", negneg, "), 2, 2, byrow=TRUE)", sep=""))
 		doItAndPrint('colnames(.Table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Test2 (+)", "Test2 (-)"))')
 		doItAndPrint('rownames(.Table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Test1 (+)", "Test1 (-)"))')
 		doItAndPrint(".Table")
 		command <- "res <- epi.kappa(.Table, conf.level = 0.95)"
+		doItAndPrint("res <- NULL")
 		doItAndPrint(command)
-		doItAndPrint("remove(.Table)")
+#		doItAndPrint("remove(.Table)")
 		doItAndPrint('colnames(res$kappa) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(res$kappa))')
 #		doItAndPrint('colnames(res$mcnemar) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(res$mcnemar))')
 		doItAndPrint("res[1]")
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
 		tkfocus(CommanderWindow())
 	}
 	OKCancelHelp(helpSubject="epi.kappa")
@@ -13675,6 +13992,7 @@ putDialog("StatMedReliability", list(x=x))
             return()
             }
         x <- paste('"', x, '"', sep="")
+		doItAndPrint("res <- NULL")
         doItAndPrint(paste("res <- reliability(cov(", ActiveDataSet(), "[,c(", paste(x, collapse=","),
             ')], use="complete.obs"))', sep=""))
 		doItAndPrint("res$rel.matrix <- signif(res$rel.matrix, digits=4)")
@@ -13684,7 +14002,7 @@ putDialog("StatMedReliability", list(x=x))
 		doItAndPrint('colnames(res$rel.matrix)[1] <- gettext(domain="R-RcmdrPlugin.EZR","Deleted item")')
 		doItAndPrint('cat("\n", gettext(domain="R-RcmdrPlugin.EZR","Alpha reliability"), "=", signif(res$alpha, digits=4), ", ", gettext(domain="R-RcmdrPlugin.EZR","Standardized alpha"), "=", signif(res$st.alpha, digits=4), "\n\n", gettext(domain="R-RcmdrPlugin.EZR","Reliability deleting each item in turn:"), "\n\n"); data.frame(res$rel.matrix)')
 #		doItAndPrint("res$rel.matrix")
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
         tkfocus(CommanderWindow())
         }
     OKCancelHelp(helpSubject="reliability", apply="StatMedReliability", reset="StatMedReliability")
@@ -13831,17 +14149,19 @@ putDialog("StatMedMH", list(group=group, var=var, strata=strata, continuity=cont
 			command <- paste("xtabs(~", var[i], "+", group, ", data=", .activeDataSet, ")", sep="")
 #       	 	logger(paste(".Table <- ", command, sep=""))
 #        	assign(".Table", justDoIt(command), envir=.GlobalEnv)
+			doItAndPrint(".Table <- NULL")
        	 	doItAndPrint(paste(".Table <- ", command, sep=""))
         	doItAndPrint(".Table")
+			doItAndPrint("res <- NULL")
 			command <- paste("(res <- mantelhaen.test(", .activeDataSet, "$", group, ", ", .activeDataSet, "$", var[i], ", ", .activeDataSet, "$", strata, ", correct=", continuity, "))", sep="")			
 			doItAndPrint(command)
 			doItAndPrint("MH.summary.table <- rbind(MH.summary.table, summary.table.MH(table=.Table, res=res))")		
-			doItAndPrint("remove(res)")	
+#			doItAndPrint("remove(res)")	
 		}        
 		doItAndPrint("MH.summary.table")
 #		doItAndPrint("remove(MH.summary.table)")				
-		logger("remove(.Table)")
-        remove(.Table, envir=.GlobalEnv)
+#		logger("remove(.Table)")
+#        remove(.Table, envir=.GlobalEnv)
         tkfocus(CommanderWindow())
 		tkfocus(CommanderWindow())
 	}
@@ -13945,8 +14265,10 @@ putDialog("StatMedCLogistic", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(r
 #        logger(paste(modelValue, " <- ", command, sep=""))
 #        assign(modelValue, justDoIt(command), envir=.GlobalEnv)
         doItAndPrint(paste(modelValue, " <- ", command, sep=""))
+		doItAndPrint("res <- NULL")
         doItAndPrint(paste("(res <- summary(", modelValue, "))", sep=""))
 		
+		doItAndPrint("odds <- NULL")
 	if(eval(parse(text="length(res$coefficients[,1])"))==1){
 			doItAndPrint(paste("odds <- signif(c(res$conf.int[,c(1,3,4)], res$coefficients[,5]), digits=4)", sep=""))
 			doItAndPrint("odds <- t(odds)")
@@ -13986,7 +14308,7 @@ putDialog("StatMedCLogistic", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(r
 #			doItAndPrint("remove(res)")
 #			}		
 #		doItAndPrint("remove(odds)")
-		doItAndPrint("remove(res)")
+#		doItAndPrint("remove(res)")
 		if (actmodel==1) activeModel(modelValue)
         tkfocus(CommanderWindow())
         }
@@ -14122,6 +14444,7 @@ putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 #    assign(modelValue, justDoIt(command), envir=.GlobalEnv)
     doItAndPrint(paste(modelValue, " <- ", command, sep=""))
     doItAndPrint(paste("summary(", modelValue, ")", sep=""))
+	doItAndPrint("res <- NULL")
 	doItAndPrint(paste("res <- ", command, sep=""))
 	doItAndPrint("res <- summary(res)")
 #	if(eval(parse(text="length(res$coefficients[,1])"))==1){
@@ -14134,6 +14457,7 @@ putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 #		doItAndPrint('names(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')
 #	}
 
+	doItAndPrint("cox.table <- NULL")
 	if(eval(parse(text="length(res$coefficients[,1])"))==1){
 		doItAndPrint("cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,5]), digits=4)")
 		doItAndPrint("rownames(cox.table) <- rownames(res$coefficients)")
@@ -14148,7 +14472,27 @@ putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 	doItAndPrint("cox.table")
 	if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
 	if (prophaz == 1){
-			doItAndPrint(paste("print(cox.zph(", modelValue, "))", sep=""))
+		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+		nvar <- (eval(parse(text="length(cox.table[,1])")))
+		mfrow <- paste("c(4,", ceiling(nvar/4), ")", sep="")
+		switch(as.character(nvar),
+			"1"=mfrow <- "c(1,1)",
+			"2"=mfrow <- "c(2,1)",
+			"3"=mfrow <- "c(2,2)",
+			"4"=mfrow <- "c(2,2)",
+			"5"=mfrow <- "c(3,2)",
+			"6"=mfrow <- "c(3,2)",
+			"7"=mfrow <- "c(3,3)",
+			"8"=mfrow <- "c(3,3)",
+			"9"=mfrow <- "c(3,3)",
+			"10"=mfrow <- "c(4,3)",
+			"11"=mfrow <- "c(4,3)",
+			"12"=mfrow <- "c(4,3)"
+		)		
+		doItAndPrint(paste("oldpar <- par(oma=c(0,0,3,0), mfrow=", mfrow, ")", sep=""))
+		doItAndPrint(paste("plot(cox.zph(", modelValue, "), df=2)", sep=""))
+		doItAndPrint("par(oldpar)")
+		doItAndPrint(paste("print(cox.zph(", modelValue, "))", sep=""))			
 	}
 
 	if (stepwise1 == 1 | stepwise2 == 1){
@@ -14193,7 +14537,7 @@ putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 			if (wald==1) doItAndPrint("waldtest(res)")
 	}
 
-	doItAndPrint("remove(res)")
+#	doItAndPrint("remove(res)")
 #	doItAndPrint("remove(cox.table)")
 	if (actmodel==1) activeModel(modelValue)
     tkfocus(CommanderWindow())
@@ -15207,6 +15551,7 @@ putDialog("StatMedMeta", list(studyname=studyname, testpositive=testpositive, te
 	}
 #    library(meta, quietly=TRUE)
 	Library("meta")
+	doItAndPrint("res <- NULL")
 	if (dsl==0) {
 		command <- paste("res <- metabin(", testpositive, ", ", testnumber, ", ", controlpositive, ", ", controlnumber, ', data=TempDF, sm="', endpoint, '", studlab=', studyname, group1, ", comb.fixed=TRUE, comb.random=FALSE)", sep="")
 	} else {
@@ -15246,7 +15591,7 @@ putDialog("StatMedMeta", list(studyname=studyname, testpositive=testpositive, te
 #			doItAndPrint("remove(metareg.table)")
 		}
 	}
-	doItAndPrint("remove(res)")
+#	doItAndPrint("remove(res)")
     tkfocus(CommanderWindow())
   }
   OKCancelHelp(helpSubject="metabin", apply="StatMedMeta", reset="StatMedMeta")
@@ -15342,6 +15687,7 @@ putDialog("StatMedMetaHazard",list(input=input, studyname=studyname, hazard=haza
 		doItAndPrint(paste("logHR <- TempDF$", hazard, sep=""))
 		doItAndPrint(paste("logSE <- TempDF$", upperci, sep=""))		
 	}
+	doItAndPrint("res <- NULL")
 	if (dsl==0) {
 		command <- paste('res <- metagen(logHR, logSE, data=TempDF, sm="HR", studlab=', studyname, group1, ", comb.fixed=TRUE, comb.random=FALSE)", sep="")
 	} else {
@@ -15382,7 +15728,7 @@ putDialog("StatMedMetaHazard",list(input=input, studyname=studyname, hazard=haza
 #			doItAndPrint("remove(metareg.table)")
 		}
 	}
-	doItAndPrint("remove(res)")
+#	doItAndPrint("remove(res)")
     tkfocus(CommanderWindow())
   }
   OKCancelHelp(helpSubject="metagen", apply="StatMedMetaHazard", reset="StatMedMetaHazard")
@@ -15473,6 +15819,7 @@ putDialog("StatMedMetaCont", list(studyname=studyname, testmean=testmean, testnu
 #    library(meta, quietly=TRUE)
 	Library("meta")
 	smd <- ifelse(smd==0, ', sm="MD"', ', sm="SMD"')
+	doItAndPrint("res <- NULL")
 	if (dsl==0) {
 		command <- paste("res <- metacont(", testnumber, ", ", testmean, ", ", testsd, ", ", controlnumber, ", ", controlmean, ", ", controlsd, ", data=TempDF, studlab=", studyname, group1, ", comb.fixed=TRUE, comb.random=FALSE", smd, ")", sep="")
 	} else {
@@ -15513,7 +15860,7 @@ putDialog("StatMedMetaCont", list(studyname=studyname, testmean=testmean, testnu
 #			doItAndPrint("remove(metareg.table)")
 		}
 	}
-	doItAndPrint("remove(res)")
+#	doItAndPrint("remove(res)")
     tkfocus(CommanderWindow())
   }
   OKCancelHelp(helpSubject="metacont", apply="StatMedMetaCont", reset="StatMedMetaCont")
@@ -15543,8 +15890,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.32", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","February 1, 2016"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.33", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","September 1, 2016"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -15658,7 +16005,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.32", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.33", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -15725,4 +16072,4 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'cuminc', 'Anova', 'pmvt', 'wald.test', 'timepoints', 'ci', 'sqlQuery',
 'groupingVariable', 'groupingFrame', 'othervarVariable', 'rocVariable',
 'columnmergeVariable', 'column.name1', 'column.name2', 'columnmergeFrame',
-'deleteVariable', 'RecodeDialog'))
+'deleteVariable', 'RecodeDialog', 'km'))

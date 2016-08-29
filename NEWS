@@ -1,3 +1,11 @@
+Changes to Version 1.33
+
+  o Changed the scripts of survival and cumulative incidence functions for compatability with new version (2.39) of "survival" package. Added rmean.table() function to calcurate and compare restriction mean survival time.
+
+  o Changed to use original hist() instead of hist2().
+
+  o Small bug fixes.
+
 Changes to Version 1.32
 
   o Changed to show summary table with text-based ruled lines. Added an option to draw Simon and Makuch plot in Mantel.Byar() function.
