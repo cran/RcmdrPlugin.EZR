@@ -1,8 +1,8 @@
 Package: RcmdrPlugin.EZR
 Type: Package
 Title: R Commander Plug-in for the EZR (Easy R) Package
-Version: 1.33
-Date: 2016-09-01
+Version: 1.34
+Date: 2017-02-01
 Author: Yoshinobu Kanda
 Maintainer: Yoshinobu Kanda <ycanda-tky@umin.ac.jp>
 Depends: R (>= 3.0.0)
@@ -39,6 +39,6 @@ URL:
         http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf
         http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html
 NeedsCompilation: no
-Packaged: 2016-08-29 06:51:11 UTC; Yoshinobu_Kanda
+Packaged: 2017-01-18 06:02:56 UTC; Yoshinobu_Kanda
 Repository: CRAN
-Date/Publication: 2016-08-29 14:16:09
+Date/Publication: 2017-01-18 08:45:03

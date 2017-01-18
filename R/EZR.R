@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.33", "\n")
+cat("   Version 1.34", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -3423,6 +3423,10 @@ stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), xlab=NULL, y
 		ci <- survfit(Surv(timetoevent, event, type="mstate")~1, na.action=na.omit)	
 	}
 
+	if(is.null(ci$surv)){
+		ci$surv <- 1-ci$pstate
+	}
+	
 	time <- rep(ci$time[1], 2)
 	for (i in 2:length(ci$time)){
 		time <- c(time, rep(ci$time[i], 2))
@@ -6610,6 +6614,7 @@ StatMedRecodeDialog <- function () {
     putDialog ("StatMedRecodeDialog", list (initial.asFactor = asFactor, initial.variables = variables,
                                      initial.name = name, initial.recode.directives=save.recodes))
 #    command <- paste(dataSet, " <- within(", dataSet, ", {", sep="")
+    command <- paste(dataSet, " <- within(", dataSet, ", {", sep="")
     nvar <- length(variables)
     for (i in 1:nvar) {
       variable <- variables[nvar - i + 1]
@@ -6628,14 +6633,14 @@ StatMedRecodeDialog <- function () {
           return()
         }
       }
-#      command <- paste(command, "\n  ", newVar, " <- Recode(", variable, ", '", 
+#      command <- paste(dataSet, "$", newVar, " <- Recode(", dataSet, "$", variable, ", '", 
 #                       recode.directives, "', as.factor.result=", asFactor, 
-#                       ")", sep = "")  
-      command <- paste(dataSet, "$", newVar, " <- Recode(", dataSet, "$", variable, ", '", 
+#                       ")\n", sep = "")  
+      command <- paste(command, "\n  ", newVar, " <- Recode(", variable, ", '", 
                        recode.directives, "', as.factor.result=", asFactor, 
-                       ")\n", sep = "")  
+                       ")", sep = "")  
     }
-#    command <- paste(command, "\n})", sep="")
+    command <- paste(command, "\n})", sep="")
     result <- doItAndPrint(command)
     if (class(result)[1] != "try-error")
       activeDataSet(dataSet, flushModel = FALSE, flushDialogMemory = FALSE)
@@ -12787,9 +12792,10 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 	nevent <- eval(parse(text=paste("length(levels(factor(", subdataSet, "$", event, "[", subdataSet, "$", event, ">0])))", sep="")))
     if (nvar == 0){	
 	if(nevent==1){
-		command <- paste("ci <- survfit(Surv((", timetoevent, "/", xscale, "), ", event, ">0)~1, data=", dataSet, subset, ")", sep="")
+		command <- paste("ci <- survfit(Surv((", timetoevent, "/", xscale, "), ", event, ">0)~1, data=", dataSet, subset, ")", sep="")			
 		#Error message appears when etype option is chosen and there is only single group with only 1 event type.
 		doItAndPrint(command)
+		doItAndPrint("if(is.null(ci$surv) & is.null(ci$prev)) ci$surv <- 1-ci$pstate")
 		plotline <- 0
 		doItAndPrint("ci$surv <- 1-ci$surv")
 		doItAndPrint("tempCI <- 1-ci$lower")
@@ -12804,6 +12810,7 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 #		command <- paste("ci <- survfit(Surv(", timetoevent, ", ", event, ">0)~1, data=", dataSet, subset, ", etype=", event, ")", sep="")
 		command <- paste("ci <- survfit(Surv((", timetoevent, "/", xscale, '), DummyEventForCI, type="mstate")~1, data=', dataSet, subset, ")", sep="")
 		doItAndPrint(command)
+		doItAndPrint("if(is.null(ci$surv) & is.null(ci$prev)) ci$surv <- 1-ci$pstate")
 		command <- paste("res <- with(", dataSet, ", cuminc((", timetoevent, "/", xscale, "), ", event, ", cencode=0", subset, ", na.action = na.omit))", sep="")
 		doItAndPrint(command)
 		doItAndPrint("print.ci.summary(ci=ci, res=res)")
@@ -12873,6 +12880,7 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 		command <- paste("ci <- survfit(Surv((", timetoevent, "/", xscale, "), ", event, ">0)~", group[i], ", data=", dataSet, subset, ")", sep="")
 		#Error message appears when etype option is chosen and there is only single group with only 1 event type.
 		doItAndPrint(command)
+		doItAndPrint("if(is.null(ci$surv) & is.null(ci$prev)) ci$surv <- 1-ci$pstate")
 		plotline <- 0
 		doItAndPrint("ci$surv <- 1-ci$surv")
 		doItAndPrint("tempCI <- 1-ci$lower")
@@ -12889,6 +12897,7 @@ putDialog("StatMedCumInc", list(event = event, timetoevent = timetoevent, group 
 #	command <- paste("ci <- survfit(Surv(", timetoevent, ", ", event, ">0)~", group[i], ", data=", dataSet, subset, ", etype=", event, ")", sep="")
 	command <- paste("ci <- survfit(Surv((", timetoevent, "/", xscale, '), DummyEventForCI, type="mstate")~', group[i], ", data=", dataSet, subset, ")", sep="")
 	doItAndPrint(command)
+	doItAndPrint("if(is.null(ci$surv) & is.null(ci$prev)) ci$surv <- 1-ci$pstate")
 	command <- paste("res <- with(", dataSet, ", cuminc((", timetoevent, "/", xscale, "), ", event, ", ", group[i], ", cencode=0", subset, ", na.action = na.omit))", sep="")
 	doItAndPrint(command)
 	doItAndPrint("print.ci.summary(ci=ci, res=res)")
@@ -15890,8 +15899,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.33", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","September 1, 2016"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.34", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","February 1, 2017"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -16005,7 +16014,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.33", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.34", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
