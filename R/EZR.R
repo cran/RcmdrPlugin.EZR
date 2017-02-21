@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.34", "\n")
+cat("   Version 1.35", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -1875,32 +1875,101 @@ get.median.ci <- function (x, ..., ci, res, event=1) {
 }
 
 
-rmean.table <- function(x = km, rmean = "common"){
-	res <- summary(x, rmean=rmean)
+rmean.table <- function(x=km, tau=NULL){
+	Library("survRM2")
+	if (is.null(tau)) tau <- "NULL"
+	formula <- as.character(x$call)[2]
+	dataset <- as.character(x$call)[3]
+	time <- substr(formula, 6, regexpr(",", formula)-1)
+	if(substr(time, 1, 1)=="("){
+		time <- substring(time, 2, regexpr("/", time)-1)
+	}
+	status <- substr(formula, regexpr(",", formula)+2, regexpr("==", formula)-2)
+	arm <- substr(formula, regexpr("~", formula)+2, nchar(formula))
+	dataset <- paste(dataset, "[complete.cases(", dataset, "$", time, ", ", dataset, "$", status, ", ", dataset, "$", arm, "),]", sep="")
 
-	if(!is.matrix(res$table)){
-		rmean.table <- res$table[c(1,5,6)]
+	if (length(x$call)==6){
+		subset <- 	as.character(x$call[4])
+		if (regexpr('\"', subset)==TRUE){
+			subset <- paste(substring(subset, 1, regexpr('\"', subset)-1), "'", substring(subset, regexpr('\"', subset)+1, nchar(subset)), sep="")
+			subset <- paste(substring(subset, 1, regexpr('\"', subset)-1), "'", substring(subset, regexpr('\"', subset)+1, nchar(subset)), sep="")
+		}
+		dataset <- paste("subset(", dataset, ", subset=", subset, ")", sep="")
+	}
+
+	if(eval(parse(text=paste("length(levels(droplevels(as.factor(", dataset, "$", arm, "))))", sep="")))==2){
+	#survRM2 can be used only when the number of arms is 2 (group names should be 0 and 1)
+		groups <- eval(parse(text=paste("levels(droplevels(as.factor(", dataset, "$", arm, ")))", sep="")))
+		group <- ifelse(eval(parse(text=paste("droplevels(as.factor(", dataset, "$", arm, "))", sep="")))==groups[1], 0, 1)
+		cat(paste("arm 0 = ", groups[1], "\n", sep=""))
+		cat(paste("arm 1 = ", groups[2], "\n", sep=""))
+			command <- paste("rmst2(", dataset, "$", time, ", ", dataset, "$", status, ", group, tau=", tau, ", alpha=0.05)", sep="")
+		eval(parse(text=command))
 	} else {
-		rmean.table <- data.frame(res$table[,c(1,5,6)])
-		if(length(res$table[,1])==2){
+
+	#The "common" option uses the maximum time for all curves in the object 
+	#as a common upper limit for the auc calculation in survival package,
+	#but this is different from the default of survRM2 package, which uses
+	#the minimum of the largest observed event time on each of the two groups.
+	#In this function, the definition of survRM2 package was applied, because
+	#the package was written by Mr. Hajime Uno, who published several articles
+	#with regard to restricted mean survival.
+
+		if (tau=="NULL"){
+			res <- summary(x)
+			LatestEventTime <- NULL
+			for (i in 1:length(x$strata)){
+				LatestEventTime[i] <- max(res$time[res$strata==names(x$strata[i])])
+			}
+			tau <- min(LatestEventTime)
+		}
+	
+		res <- summary(x, rmean=tau)
+	
+		if(!is.matrix(res$table)){
+			rmean.table <- res$table[c(1,5,6)]
+		} else {
+			rmean.table <- data.frame(res$table[,c(1,5,6)])
 			n <- res$table[,1]	#numbers
 			rmean <- res$table[,5]	#means
 			se <- res$table[,6]	#standard errors
-			sd <- sqrt(n) * se	#standard deviations
-			v <- sd^2			#variances
-			df <- sum(n) - 1		#degrees of freedom
-			pv <- sum((n-1)*v)/df	#pooled variance
-			tstat <- abs(rmean[1]-rmean[2])/sqrt(pv*(1/n[1]+1/n[2]))
-			p <- signif(2*pt(tstat, df, lower.tail=FALSE), digits=3) 
-			difference <- signif(rmean[2]-rmean[1], digits=3)
-			pse <- sqrt(v[1]/n[1]+v[2]/n[2])
-			CIH <- signif(difference + qnorm(c(0.025), mean=0, sd=1, lower.tail=F)*pse, digits=3)
-			CIL <- signif(difference - qnorm(c(0.025), mean=0, sd=1, lower.tail=F)*pse, digits=3)
+			CIH <- signif(rmean + qnorm(c(0.025), mean=0, sd=1, lower.tail=F)*se, digits=3)
+			CIL <- signif(rmean - qnorm(c(0.025), mean=0, sd=1, lower.tail=F)*se, digits=3)
 			CI <- paste(CIL, " - ", CIH, sep="")
-			rmean.table <- cbind(rmean.table, rmean.difference=c(paste(difference, "(",CI,")",sep=""), ""), p.value=c(as.character(p), ""))
+			rmean.table <- cbind(rmean.table, rmean.CI=c(paste("(", CI, ")", sep="")))
+			colnames(rmean.table) <- c("n", "rmean", "se", "95% CI")
+		}
+		print(paste("Restricted mean survival until ", tau, sep=""))
+		return(rmean.table)
+	}
+}
+
+
+rmean.table.adjusted <- function(x=coxmodel, tau=NULL){
+	Library("survRM2")
+	formula <- as.character(x$call)[2]
+	dataset <- as.character(x$call)[3]
+	time <- substr(formula, 6, regexpr(",", formula)-1)
+	status <- substr(formula, regexpr(",", formula)+2, regexpr("==", formula)-2)
+	arm <- substr(formula, regexpr("strata", formula)+7, nchar(formula)-1)
+
+	covariate <- substr(formula, regexpr("~", formula)+2, regexpr("strata", formula)-4)	
+	covariates <- strsplit(covariate, split=" + ", fixed=TRUE)
+	covariate <- paste("cbind(", covariates[[1]][1], "=", dataset, "$", covariates[[1]][1], sep="")
+	if (length(covariates[[1]])>1){
+		for (i in 2:length(covariates[[1]])){
+			covariate <- paste(covariate, ", ", covariates[[1]][i], "=", dataset, "$", covariates[[1]][i], sep="")
 		}
 	}
-	return(rmean.table)
+	covariate <- paste(covariate, ")", sep="")
+
+	if(substr(time, 1, 1)=="("){
+		command <- paste("rmst2((", dataset, "$", substr(time, 2, nchar(time)-1), "), ", dataset, "$", status, ", ", dataset, "$", arm, ", tau=", tau, ", covariates=", covariate, ", alpha=0.05)", sep="")
+	} else {
+		command <- paste("rmst2(", dataset, "$", substr(time, 2, nchar(time)-1), ", ", dataset, "$", status, ", ", dataset, "$", arm, ", tau=", tau, ", covariates=", covariate, ", alpha=0.05)", sep="")
+	}
+
+	eval(parse(text=command))
 }
 
 
@@ -6557,7 +6626,7 @@ StatMedRecodeDialog <- function () {
     else paste(parts, collapse = "=")
   }
   dataSet <- activeDataSet()
-  defaults <- list (initial.asFactor = 1, initial.variables = NULL, initial.name = gettextRcmdr ("variable"),
+  defaults <- list (initial.asFactor = 1, initial.variables = NULL, initial.name = "variable",
                     initial.recode.directives="")
   dialog.values <- getDialog ("StatMedRecodeDialog", defaults)
   initializeDialog(title = gettextRcmdr("Recode Variables"))
@@ -6613,7 +6682,6 @@ StatMedRecodeDialog <- function () {
     #        save.recodes <- gsub("; ", "\\\n", trim.blanks(recode.directives))  
     putDialog ("StatMedRecodeDialog", list (initial.asFactor = asFactor, initial.variables = variables,
                                      initial.name = name, initial.recode.directives=save.recodes))
-#    command <- paste(dataSet, " <- within(", dataSet, ", {", sep="")
     command <- paste(dataSet, " <- within(", dataSet, ", {", sep="")
     nvar <- length(variables)
     for (i in 1:nvar) {
@@ -6633,9 +6701,6 @@ StatMedRecodeDialog <- function () {
           return()
         }
       }
-#      command <- paste(dataSet, "$", newVar, " <- Recode(", dataSet, "$", variable, ", '", 
-#                       recode.directives, "', as.factor.result=", asFactor, 
-#                       ")\n", sep = "")  
       command <- paste(command, "\n  ", newVar, " <- Recode(", variable, ", '", 
                        recode.directives, "', as.factor.result=", asFactor, 
                        ")", sep = "")  
@@ -15899,8 +15964,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.34", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","February 1, 2017"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.35", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","March 1, 2017"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -16014,7 +16079,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.34", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.35", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -16081,4 +16146,4 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'cuminc', 'Anova', 'pmvt', 'wald.test', 'timepoints', 'ci', 'sqlQuery',
 'groupingVariable', 'groupingFrame', 'othervarVariable', 'rocVariable',
 'columnmergeVariable', 'column.name1', 'column.name2', 'columnmergeFrame',
-'deleteVariable', 'RecodeDialog', 'km'))
+'deleteVariable', 'RecodeDialog', 'km', 'coxmodel'))

@@ -82,8 +82,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.34\cr
-Date: \tab 2017-02-01\cr
+Version: \tab 1.35\cr
+Date: \tab 2017-03-01\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
@@ -227,6 +227,8 @@ Following functions are built to create a formatted table for presentation.\cr\c
 "table" can be omitted except for logistic regression analysis and Fine & Gray proportinal hazard regression analysis, in which "odds" and "crr.table" should be specified for "table"(default is "cox.table" to copy the results of Cox proportional hazard regression analysis).\cr
 If "filename" is omitted, the formatted table will be copied to the clopboard, which can be pasted into a spreadsheet.\cr\cr
    \code{Mantel.Byar()} functon is for Mantel-Byar test and Simon and Makuch plot, which should be performed after executing "Cox proportional hazard modeling with time-dependent covariate".\cr\cr
+   \code{rmean.table()} functon is for restricted mean survival time analysis, that should be used after "Kaplan-Meier survival curve and logrank test" analysis.\cr\cr
+   \code{rmean.table.adjusted()} functon is for adjusted restricted mean survival time analysis, that should be used after "Adjusted survival curve" analysis.\cr\cr
 }
 
 \author{
