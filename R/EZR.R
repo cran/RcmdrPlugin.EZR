@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.35", "\n")
+cat("   Version 1.36", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -480,7 +480,7 @@ w.twoway <- function (table = Fisher.summary.table, filename = "clipboard", en =
     table <- cbind(Factor, Group, table)
 #    rownames(table) <- NULL
     colnames(table)[length(colnames(table))] <- ifelse(en == 
-        1, "p.value", gettextRcmdr("p.value"))
+        1, "p.value", gettext(domain="R-RcmdrPlugin.EZR","p.value"))
     if (en == 0) colnames(table) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(table))
 #    print(data.frame(table), quote=F, row.names = FALSE, col.names = FALSE)
     ncol <- length(colnames(table))
@@ -4487,10 +4487,10 @@ listLMModels <- function(envir=.GlobalEnv, ...) {
 
 StatMedLoadDataSet <- function() {
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Load data set"), "#####", sep=""))
-#	file <- tclvalue(tkgetOpenFile(filetypes=
-#							gettext(domain="R-RcmdrPlugin.EZR",'{"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}} {"All Files" {"*"}}')))	
 	file <- tclvalue(tkgetOpenFile(filetypes=
-							gettextRcmdr('{"All Files" {"*"}} {"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}}')))
+							gettext(domain="R-RcmdrPlugin.EZR",'{"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}} {"All Files" {"*"}}')))	
+#	file <- tclvalue(tkgetOpenFile(filetypes=
+#							gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}}')))
 	if (file == "") return()
 	setBusyCursor()
 	on.exit(setIdleCursor())
@@ -4551,8 +4551,9 @@ StatMedReadDataSet <- function() {
 		location <- tclvalue(locationVariable)
 		file <- if (location == "clipboard") "clipboard" 
 			else if (location == "local") tclvalue(tkgetOpenFile(filetypes=
-							gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Text Files" {".txt" ".TXT" ".dat" ".DAT" ".csv" ".CSV"}}')))
-			else {
+#							gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Text Files" {".txt" ".TXT" ".dat" ".DAT" ".csv" ".CSV"}}')))
+							gettext(domain="R-RcmdrPlugin.EZR",'{"Text Files" {".txt" ".TXT" ".dat" ".DAT" ".csv" ".CSV"}} {"All Files" {"*"}}')))
+							else {
 				initializeDialog(subdialog, title=gettext(domain="R-RcmdrPlugin.EZR","Internet URL"))
 				onOKsub <- function(){
 					closeDialog(subdialog)
@@ -4627,65 +4628,74 @@ StatMedReadDataSet <- function() {
 
 
 StatMedImportSPSS <- function() {
-	Library("foreign")
-	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Import SPSS Data Set"))
-	dsname <- tclVar(gettext(domain="R-RcmdrPlugin.EZR","Dataset"))
-	entryDsname <- ttkentry(top, width="20", textvariable=dsname)
-	asFactor <- tclVar("1")
-	asFactorCheckBox <- tkcheckbutton(top, variable=asFactor)
-	maxLevels <- tclVar("Inf")
-	entryMaxLevels <- ttkentry(top, width="5", textvariable=maxLevels)
-	onOK <- function(){
-	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Import SPSS Data Set"), "#####", sep=""))
-		closeDialog()
-		dsnameValue <- trim.blanks(tclvalue(dsname))
-		if (dsnameValue == ""){
-			errorCondition(recall=StatMedImportSPSS,
-				message=gettext(domain="R-RcmdrPlugin.EZR","You must enter the name of a data set."))
-			return()
-		}
-		if (!is.valid.name(dsnameValue)){
-			errorCondition(recall=StatMedImportSPSS,
-				message=paste('"', dsnameValue, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
-			return()
-		}
-		if (is.element(dsnameValue, listDataSets())) {
-			if ("no" == tclvalue(checkReplace(dsnameValue, gettext(domain="R-RcmdrPlugin.EZR","Data set")))){
-				importSPSS()
-				return()
-			}
-		}
-		file <- tclvalue(tkgetOpenFile(
-				filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"SPSS files" {".sav" ".SAV" ".por" ".POR"}}')))
-		if (file == "") {
-			tkfocus(CommanderWindow())
-			return()
-		}
-		factor <- tclvalue(asFactor) == "1"
-		levels <- as.numeric(tclvalue(maxLevels))
-		command <- paste('read.spss("', file,'", use.value.labels=', factor,
-			", max.value.labels=", levels, ", to.data.frame=TRUE)", sep="")
-		logger(paste(dsnameValue, " <- ", command, sep=""))
-		result <- justDoIt(command)
-		if (class(result)[1] !=  "try-error"){
-# 			assign(dsnameValue, result, envir=.GlobalEnv)
-# 			logger(paste(dsnameValue, "<-", command))
-		    doItAndPrint(paste(dsnameValue, "<-", command))
-			activeDataSet(dsnameValue)
-		}
-		tkfocus(CommanderWindow())
-	}
-	OKCancelHelp(helpSubject="read.spss")
-	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Enter name for data set:")), entryDsname, sticky="w")
-	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Convert value labels\nto factor levels"), justify="left"),
-		asFactorCheckBox, sticky="w")
-	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Maximum number\nof value labels\nfor factor conversion"), justify="left"),
-		entryMaxLevels, sticky="w")
-	tkgrid(buttonsFrame, columnspan="2", sticky="w")
-	tkgrid.configure(entryDsname, sticky="w")
-	tkgrid.configure(asFactorCheckBox, sticky="w")
-	tkgrid.configure(entryMaxLevels, sticky="w")
-	dialogSuffix(rows=4, columns=2, focus=entryDsname)
+    initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Import SPSS Data Set"))
+    dsnameFrame <- tkframe(top)
+    dsname <- tclVar("Dataset")
+    entryDsname <- ttkentry(dsnameFrame, width="20", textvariable=dsname)
+    asFactorFrame <- tkframe(top)
+    asFactor <- tclVar("1")
+    asFactorCheckBox <- ttkcheckbutton(asFactorFrame, variable=asFactor)
+    toLowerFrame <- tkframe(top)
+    toLower <- tclVar("0")
+    toLowerCheckBox <- ttkcheckbutton(toLowerFrame, variable=toLower)
+    rowNamesFrame <- tkframe(top)
+    rownames <- tclVar("0")
+    rownamesCheckBox <- ttkcheckbutton(rowNamesFrame, variable=rownames)
+    onOK <- function(){
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Import SPSS Data Set"), "#####", sep=""))
+        closeDialog()
+        setBusyCursor()
+        on.exit(setIdleCursor())
+        dsnameValue <- trim.blanks(tclvalue(dsname))
+        if (dsnameValue == ""){
+            errorCondition(recall=importSPSS,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must enter the name of a data set."))
+            return()
+        }
+        if (!is.valid.name(dsnameValue)){
+            errorCondition(recall=importSPSS,
+                           message=paste('"', dsnameValue, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
+            return()
+        }
+        if (is.element(dsnameValue, listDataSets())) {
+            if ("no" == tclvalue(checkReplace(dsnameValue, gettext(domain="R-RcmdrPlugin.EZR","Data set")))){
+                importSPSS()
+                return()
+            }
+        }
+        file <- tclvalue(tkgetOpenFile(
+#            filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"SPSS portable files" {".por" ".POR"}} {"SPSS save files" {".sav" ".SAV"}}')))
+            filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"SPSS save files" {".sav" ".SAV"}} {"SPSS portable files" {".por" ".POR"}} {"All Files" {"*"}}')))
+        if (file == "") {
+            tkfocus(CommanderWindow())
+            return()
+        }
+        factor <- tclvalue(asFactor) == "1"
+        lower <- tclvalue(toLower) == "1"
+        rows <- tclvalue(rownames) == "1"
+        command <- paste('readSPSS("', file,'", rownames=', rows, ", stringsAsFactors=", factor, ", tolower=", lower, ")", sep="")
+        logger(paste(dsnameValue, " <- ", command, sep=""))
+        result <- justDoIt(command)
+        if (class(result)[1] !=  "try-error"){
+            gassign(dsnameValue, result)
+            activeDataSet(dsnameValue)
+        }
+        tkfocus(CommanderWindow())
+    }
+    OKCancelHelp(helpSubject="readSPSS")
+    tkgrid(labelRcmdr(dsnameFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Enter name for data set:  ")), entryDsname, sticky="w")
+    tkgrid(dsnameFrame, sticky="w")
+    tkgrid(asFactorCheckBox, labelRcmdr(asFactorFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Convert character variables to factors"), justify="left"),
+           sticky="nw")
+    tkgrid(asFactorFrame, sticky="w")
+    tkgrid(rownamesCheckBox, labelRcmdr(rowNamesFrame, text=gettext(domain="R-RcmdrPlugin.EZR","First column contains row names"), justify="left"),
+           sticky="w")
+    tkgrid(rowNamesFrame, sticky="w")
+    tkgrid(toLowerCheckBox, labelRcmdr(toLowerFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Convert variable names to lower case"), justify="left"),
+           sticky="nw")
+    tkgrid(toLowerFrame, sticky="w")
+    tkgrid(buttonsFrame, sticky="ew")
+    dialogSuffix(focus=entryDsname)
 }
 
 
@@ -4715,7 +4725,8 @@ StatMedImportMinitab <- function() {
 			}
 		}
 		file <- tclvalue(tkgetOpenFile(
-				filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Minitab portable files" {".mtp" ".MTP"}}')))
+#				filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Minitab portable files" {".mtp" ".MTP"}}')))
+				filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"Minitab portable files" {".mtp" ".MTP"}} {"All Files" {"*"}}')))
 		if (file == "") {
 			tkfocus(CommanderWindow())
 			return()
@@ -4748,83 +4759,71 @@ StatMedImportMinitab <- function() {
 
 
 StatMedImportSTATA <- function() {
-	Library("foreign")
-	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Import Stata Data Set"))
-	dsname <- tclVar(gettext(domain="R-RcmdrPlugin.EZR","Dataset"))
-	entryDsname <- ttkentry(top, width="20", textvariable=dsname)
-	asFactor <- tclVar("1")
-	asFactorCheckBox <- tkcheckbutton(top, variable=asFactor)
-	asDate <- tclVar("1")
-	asDateCheckBox <- tkcheckbutton(top, variable=asDate)
-	asMissingType <- tclVar("1")
-	asMissingTypeCheckBox <- tkcheckbutton(top, variable=asMissingType)
-	asConvertUnderscore <- tclVar("1")
-	asConvertUnderscoreCheckBox <- tkcheckbutton(top, variable=asConvertUnderscore)
-	asWarnMissingLabels <- tclVar("1")
-	asWarnMissingLabelsCheckBox <- tkcheckbutton(top, variable=asWarnMissingLabels)
-	onOK <- function(){
-	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Import Stata Data Set"), "#####", sep=""))	
-		closeDialog()
-		dsnameValue <- trim.blanks(tclvalue(dsname))
-		if (dsnameValue == ""){
-			errorCondition(recall=StatMedImportSTATA,
-				message=gettext(domain="R-RcmdrPlugin.EZR","You must enter the name of a data set."))
-			return()
-		}
-		if (!is.valid.name(dsnameValue)){
-			errorCondition(recall=StatMedImportSTATA,
-				message=paste('"', dsnameValue, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
-			return()
-		}
-		if (is.element(dsnameValue, listDataSets())) {
-			if ("no" == tclvalue(checkReplace(dsnameValue, gettext(domain="R-RcmdrPlugin.EZR","Data set")))){
-				importSTATA()
-				return()
-			}
-		}
-		file <- tclvalue(tkgetOpenFile(
-				filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Stata datasets" {".dta" ".DTA"}}')))
-		if (file == "") {
-			tkfocus(CommanderWindow())
-			return()
-		}
-		convert.date <- tclvalue(asDate) == "1"
-		factor <- tclvalue(asFactor) == "1"
-		missingtype <- tclvalue(asMissingType) == "1"
-		convertunderscore <- tclvalue(asConvertUnderscore) == "1"
-		warnmissinglabels <- tclvalue(asWarnMissingLabels) == "1"
-		command <- paste('read.dta("', file,'", convert.dates=', convert.date,
-			", convert.factors=", factor, ", missing.type=", missingtype,
-			", convert.underscore=", convertunderscore, ", warn.missing.labels=TRUE)", sep="")
-		logger(paste(dsnameValue, " <- ", command, sep=""))
-		result <- justDoIt(command)
-		if (class(result)[1] !=  "try-error"){
-# 			assign(dsnameValue, result, envir=.GlobalEnv)
-# 			logger(paste(dsnameValue, "<-", command))
-		    doItAndPrint(paste(dsnameValue, "<-", command))
-			activeDataSet(dsnameValue)
-		}
-		tkfocus(CommanderWindow())
-	}
-	OKCancelHelp(helpSubject="read.dta")
-	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Enter name for data set:")), entryDsname, sticky="w")
-	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Convert value labels\nto factor levels"), justify="left"),
-		asFactorCheckBox, sticky="w")
-	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Convert dates to R format"), justify="left"),
-		asDateCheckBox, sticky="w")
-	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Multiple missing types (>=Stata 8)"), justify="left"),
-		asMissingTypeCheckBox, sticky="w")
-	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Convert underscore to period"), justify="left"),
-		asConvertUnderscoreCheckBox, sticky="w")
-	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Warn on missing labels"), justify="left"),
-		asWarnMissingLabelsCheckBox, sticky="w")
-	tkgrid(buttonsFrame, columnspan="2", sticky="w")
-	tkgrid.configure(entryDsname, sticky="w")
-	tkgrid.configure(asFactorCheckBox, sticky="w")
-	tkgrid.configure(asDateCheckBox, sticky="w")
-	tkgrid.configure(asMissingTypeCheckBox, sticky="w")
-	tkgrid.configure(asWarnMissingLabelsCheckBox, sticky="w")
-	dialogSuffix(rows=4, columns=2, focus=entryDsname)
+    initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Import STATA Data Set"))
+    dsname <- tclVar("Dataset")
+    dsnameFrame <- tkframe(top)
+    entryDsname <- ttkentry(dsnameFrame, width="20", textvariable=dsname)
+    optionsFrame <- tkframe(top)
+    asFactor <- tclVar("1")
+    asFactorCheckBox <- ttkcheckbutton(optionsFrame, variable=asFactor)
+    asDate <- tclVar("1")
+    asDateCheckBox <- ttkcheckbutton(optionsFrame, variable=asDate)
+    rownames <- tclVar("0")
+    rownamesCheckBox <- ttkcheckbutton(optionsFrame, variable=rownames)
+    onOK <- function(){
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Import Stata Data Set"), "#####", sep=""))	
+        closeDialog()
+        setBusyCursor()
+        on.exit(setIdleCursor())
+        dsnameValue <- trim.blanks(tclvalue(dsname))
+        if (dsnameValue == ""){
+            errorCondition(recall=importSTATA,
+                           message=gettext(domain="R-RcmdrPlugin.EZR","You must enter the name of a data set."))
+            return()
+        }
+        if (!is.valid.name(dsnameValue)){
+            errorCondition(recall=importSTATA,
+                           message=paste('"', dsnameValue, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
+            return()
+        }
+        if (is.element(dsnameValue, listDataSets())) {
+            if ("no" == tclvalue(checkReplace(dsnameValue, gettext(domain="R-RcmdrPlugin.EZR","Data set")))){
+                StatMedImportSTATA()
+                return()
+            }
+        }
+        file <- tclvalue(tkgetOpenFile(
+#            filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"STATA datasets" {".dta" ".DTA"}}')))
+            filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"STATA datasets" {".dta" ".DTA"}} {"All Files" {"*"}}')))
+        if (file == "") {
+            tkfocus(CommanderWindow())
+            return()
+        }
+        convert.date <- tclvalue(asDate) == "1"
+        factor <- tclvalue(asFactor) == "1"
+        has.rownames <- tclvalue(rownames) ==  "1"
+        command <- paste('readStata("', file,'", convert.dates=', convert.date,
+                         ", stringsAsFactors=", factor, ", rownames=", has.rownames, ")", sep="")
+        logger(paste(dsnameValue, " <- ", command, sep=""))
+        result <- justDoIt(command)
+        if (class(result)[1] !=  "try-error"){
+            gassign(dsnameValue, result)
+            activeDataSet(dsnameValue)
+        }
+        tkfocus(CommanderWindow())
+    }
+    OKCancelHelp(helpSubject="readStata")
+    tkgrid(labelRcmdr(dsnameFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Enter name for data set:  ")), entryDsname, sticky="w")
+    tkgrid(dsnameFrame, columnspan=2, sticky="w")
+    tkgrid(asFactorCheckBox, labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Convert character variables to factors"), justify="left"),
+           sticky="nw")
+    tkgrid(asDateCheckBox, labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Convert dates to R format"), justify="left"),
+           sticky="w")
+    tkgrid(rownamesCheckBox, labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","First column contains row names"), justify="left"),
+           sticky="w")
+    tkgrid(optionsFrame, sticky="w")
+    tkgrid(buttonsFrame, columnspan="2", sticky="ew")
+    dialogSuffix(focus=entryDsname)
 }
 
 
@@ -4961,8 +4960,8 @@ StatMedImportRODBCtable <- function(){
 StatMedImportExcel <- function(){
     Library("XLConnect")
 	Library("methods")
-    initializeDialog(title = gettextRcmdr("Import Excel Data Set"))
-    dsname <- tclVar(gettextRcmdr("Dataset"))
+    initializeDialog(title = gettext(domain="R-RcmdrPlugin.EZR","Import Excel Data Set"))
+    dsname <- tclVar(gettext(domain="R-RcmdrPlugin.EZR","Dataset"))
     entryDsname <- ttkentry(top, width = "35", textvariable = dsname)
     onOK <- function(){
         closeDialog()
@@ -4971,27 +4970,27 @@ StatMedImportExcel <- function(){
         dsnameValue <- trim.blanks(tclvalue(dsname))
         if(dsnameValue == ""){
             errorCondition(recall = StatMedImportExcel,
-                           message = gettextRcmdr("You must enter the name of a data set."))
+                           message = gettext(domain="R-RcmdrPlugin.EZR","You must enter the name of a data set."))
             return()
         }
         if(!is.valid.name(dsnameValue)){
             errorCondition(recall = StatMedImportExcel,
                            message = paste('"', dsnameValue, '" ',
-                                           gettextRcmdr("is not a valid name."), sep = ""))
+                                           gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep = ""))
             return()
         }
         if(is.element(dsnameValue, listDataSets())){
-            if("no" == tclvalue(checkReplace(dsnameValue, gettextRcmdr("Data set")))){
+            if("no" == tclvalue(checkReplace(dsnameValue, gettext(domain="R-RcmdrPlugin.EZR","Data set")))){
                 StatMedImportExcel()
                 return()
             }
         }
-#        File <- tclvalue(tkgetOpenFile(filetypes = gettextRcmdr(
-#            '{"All Files" {"*"}} {{"MS Excel file" {".xls" ".XLS"}} "MS Excel 2007 file" {".xlsx" ".XLSX"}}'
-#        ), parent=CommanderWindow()))
-        File <- tclvalue(tkgetOpenFile(filetypes = gettextRcmdr(
-            '{"All Files" {"*"}} {"MS Excel 2007 file" {".xlsx" ".XLSX"}} {"MS Excel file" {".xls" ".XLS"}}'
+        File <- tclvalue(tkgetOpenFile(filetypes = gettext(domain="R-RcmdrPlugin.EZR",
+            '{{"MS Excel file" {".xls" ".XLS"}} "MS Excel 2007 file" {".xlsx" ".XLSX"}} {"All Files" {"*"}}'
         ), parent=CommanderWindow()))
+#        File <- tclvalue(tkgetOpenFile(filetypes = gettext(domain="R-RcmdrPlugin.EZR",
+#            '{"MS Excel 2007 file" {".xlsx" ".XLSX"}} {"MS Excel file" {".xls" ".XLS"}} {"All Files" {"*"}}'
+#        ), parent=CommanderWindow()))
         if(File == ""){
             tkfocus(CommanderWindow())
             return()
@@ -5001,11 +5000,11 @@ StatMedImportExcel <- function(){
         worksheets <- getSheets(.Workbook)
         if(length(worksheets)>1)
             worksheet <- tk_select.list(worksheets,
-                                        title = gettextRcmdr("Select one table"))
+                                        title = gettext(domain="R-RcmdrPlugin.EZR","Select one table"))
         else
             worksheet <- worksheets
         if(worksheet == ""){
-            errorCondition(message=gettextRcmdr("No table selected"))
+            errorCondition(message=gettext(domain="R-RcmdrPlugin.EZR","No table selected"))
             return()
         }
         command <- paste('readWorksheet(.Workbook, "', worksheet, '")', sep="")
@@ -5030,7 +5029,7 @@ StatMedImportExcel <- function(){
         }
     }
     OKCancelHelp(helpSubject="readWorksheet")
-    tkgrid(labelRcmdr(top, text=gettextRcmdr("Enter name of data set:  ")),
+    tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Enter name of data set:  ")),
            entryDsname, sticky="e")
     tkgrid(buttonsFrame, columnspan="2", sticky="w")
     tkgrid.configure(entryDsname, sticky="w")
@@ -5278,7 +5277,8 @@ StatMedSaveDataSet <- function() {
             return()					
 	}
 	file <- tclvalue(tkgetSaveFile(filetypes=
-				gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"R Data Files" {".rda" ".Rda" ".RDA" ".RData"}}'),
+#				gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"R Data Files" {".rda" ".Rda" ".RDA" ".RData"}}'),
+				gettext(domain="R-RcmdrPlugin.EZR",'{"R Data Files" {".rda" ".Rda" ".RDA" ".RData"}} {"All Files" {"*"}}'),
 			defaultextension="rda", initialfile=paste(activeDataSet(), "rda", sep=".")))
 	if (file == "") return()
 	command <- paste('save("', activeDataSet(), '", file="', file, '")', sep="")
@@ -5342,6 +5342,7 @@ StatMedExportDataSet <- function() {
 
 StatMedExportStata <- function() {
 	Library("foreign")
+	Library("readstata13")
 	if (activeDataSetP() == FALSE){
             logger(gettext(domain="R-RcmdrPlugin.EZR","There is no active data set."))
             return()					
@@ -5351,13 +5352,16 @@ StatMedExportStata <- function() {
 	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Export Active Data Set"))
 	onOK <- function(){
 		closeDialog()
-		saveFile <- tclvalue(tkgetSaveFile(filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Stata datasets" {".dta" ".DTA"}}'),
-				defaultextension="dta", initialfile=paste(dsname, ".dta", sep="")))
+#		saveFile <- tclvalue(tkgetSaveFile(filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Stata datasets" {".dta" ".DTA"}}'),
+#				defaultextension="", initialfile=paste(dsname, ".dta", sep="")))
+		saveFile <- tclvalue(tkgetSaveFile(filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"Stata datasets" {".dta" ".DTA"}} {"All Files" {"*"}}'),
+				defaultextension="", initialfile=paste(dsname, ".dta", sep="")))
 		if (saveFile == "") {
 			tkfocus(CommanderWindow())
 			return()
 		}
-		command <- paste("write.dta(", dsname, ', "', saveFile, '")', sep="")
+#		command <- paste("write.dta(", dsname, ', "', saveFile, '")', sep="")
+		command <- paste("save.dta13(", dsname, ', "', saveFile, '")', sep="")	#readstata13 package
 		justDoIt(command)
 		logger(command)
 		Message(paste(gettext(domain="R-RcmdrPlugin.EZR","Active dataset exported to Stata file"), saveFile), type="note")
@@ -6575,12 +6579,12 @@ StatMedReorderFactor <- function(){
 
 StatMedDropUnusedFactorLevels <- function(){
     dataSet <- activeDataSet()
-    initializeDialog(title=gettextRcmdr("Drop Unused Factor Levels"))
+    initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Drop Unused Factor Levels"))
     allfactorsVariable <- tclVar("0")
     allFrame <- tkframe(top)
     allfactorsCheckBox <- ttkcheckbutton(allFrame, variable = allfactorsVariable)
     variablesBox <- variableListBox(top, Factors(),
-        title=gettextRcmdr("Factors(s) to drop levels (pick one or more)"), selectmode="multiple",
+        title=gettext(domain="R-RcmdrPlugin.EZR","Factors(s) to drop levels (pick one or more)"), selectmode="multiple",
         initialSelection=NULL)
     onOK <- function(){
 		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Drop unused factor levels"), "#####", sep=""))
@@ -6588,10 +6592,10 @@ StatMedDropUnusedFactorLevels <- function(){
         variables <- getSelection(variablesBox)
         closeDialog()
         if (all == 0 && length(variables) == 0) {
-            errorCondition(recall=StatMedDropUnusedFactorLevels, message=gettextRcmdr("You must select one or more variables."))
+            errorCondition(recall=StatMedDropUnusedFactorLevels, message=gettext(domain="R-RcmdrPlugin.EZR","You must select one or more variables."))
             return()
         }
-        response <- tclvalue(RcmdrTkmessageBox(message=gettextRcmdr("Drop unused factor levels\nPlease confirm."), 
+        response <- tclvalue(RcmdrTkmessageBox(message=gettext(domain="R-RcmdrPlugin.EZR","Drop unused factor levels\nPlease confirm."), 
             icon="warning", type="okcancel", default="cancel"))
         if (response == "cancel") {
             onCancel()
@@ -6609,9 +6613,9 @@ StatMedDropUnusedFactorLevels <- function(){
         tkfocus(CommanderWindow())
     }
     OKCancelHelp(helpSubject="droplevels")
-    tkgrid(allfactorsCheckBox, labelRcmdr(allFrame, text=gettextRcmdr("all factors")), sticky="w")
+    tkgrid(allfactorsCheckBox, labelRcmdr(allFrame, text=gettext(domain="R-RcmdrPlugin.EZR","all factors")), sticky="w")
     tkgrid(allFrame, sticky="w")
-    tkgrid(labelRcmdr(top, text=gettextRcmdr("OR"), fg="red"), sticky="w")
+    tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","OR"), fg="red"), sticky="w")
     tkgrid(getFrame(variablesBox), sticky="nw")
     tkgrid(buttonsFrame, sticky="w")
     dialogSuffix()
@@ -6629,9 +6633,9 @@ StatMedRecodeDialog <- function () {
   defaults <- list (initial.asFactor = 1, initial.variables = NULL, initial.name = "variable",
                     initial.recode.directives="")
   dialog.values <- getDialog ("StatMedRecodeDialog", defaults)
-  initializeDialog(title = gettextRcmdr("Recode Variables"))
+  initializeDialog(title = gettext(domain="R-RcmdrPlugin.EZR","Recode Variables"))
   variablesBox <- variableListBox(top, Variables(), selectmode = "multiple", 
-                                  title = gettextRcmdr("Variables to recode (pick one or more)"),
+                                  title = gettext(domain="R-RcmdrPlugin.EZR","Variables to recode (pick one or more)"),
                                   initialSelection = varPosn (dialog.values$initial.variables, "all"))
   variablesFrame <- tkframe(top)
   newVariableName <- tclVar(dialog.values$initial.name)
@@ -6658,11 +6662,11 @@ StatMedRecodeDialog <- function () {
     recode.directives <- gsub("\n", "; ", save.recodes)
     check.empty <- gsub(";", "", gsub(" ", "", recode.directives))
     if ("" == check.empty) {
-      errorCondition(recall = StatMedRecodeDialog, message = gettextRcmdr("No recode directives specified."))
+      errorCondition(recall = StatMedRecodeDialog, message = gettext(domain="R-RcmdrPlugin.EZR","No recode directives specified."))
       return()
     }
     if (0 != length(grep("'", recode.directives))) {
-      errorCondition(recall = StatMedRecodeDialog, message = gettextRcmdr("Use only double-quotes (\" \") in recode directives"))
+      errorCondition(recall = StatMedRecodeDialog, message = gettext(domain="R-RcmdrPlugin.EZR","Use only double-quotes (\" \") in recode directives"))
       return()
     }
     recode.directives <- strsplit(recode.directives, ";")[[1]]
@@ -6672,7 +6676,7 @@ StatMedRecodeDialog <- function () {
     variables <- getSelection(variablesBox)
     closeDialog()
     if (length(variables) == 0) {
-      errorCondition(recall = StatMedRecodeDialog, message = gettextRcmdr("You must select a variable."))
+      errorCondition(recall = StatMedRecodeDialog, message = gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
       return()
     }
     multiple <- if (length(variables) > 1) 
@@ -6691,7 +6695,7 @@ StatMedRecodeDialog <- function () {
       else name
       if (!is.valid.name(newVar)) {
         errorCondition(recall = StatMedRecodeDialog, message = paste("\"", 
-                                                              newVar, "\" ", gettextRcmdr("is not a valid name."), 
+                                                              newVar, "\" ", gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), 
                                                               sep = ""))
         return()
       }
@@ -6718,12 +6722,12 @@ StatMedRecodeDialog <- function () {
   OKCancelHelp(helpSubject = "StatMedRecodeDialog", reset = "StatMedRecodeDialog", apply = "StatMedRecodeDialog")
   tkgrid(getFrame(variablesBox), sticky = "nw")
   tkgrid(labelRcmdr(variablesFrame, text = ""))
-  tkgrid(labelRcmdr(variablesFrame, text = gettextRcmdr("New variable name or prefix for multiple recodes: ")), 
+  tkgrid(labelRcmdr(variablesFrame, text = gettext(domain="R-RcmdrPlugin.EZR","New variable name or prefix for multiple recodes: ")), 
          newVariable, sticky = "w")
-  tkgrid(asFactorCheckBox, labelRcmdr(asFactorFrame, text = gettextRcmdr("Make (each) new variable a factor")), 
+  tkgrid(asFactorCheckBox, labelRcmdr(asFactorFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Make (each) new variable a factor")), 
          sticky = "w")
   tkgrid(labelRcmdr(asFactorFrame, text = ""))
-  tkgrid(labelRcmdr(recodesFrame, text = gettextRcmdr("Enter recode directives"), 
+  tkgrid(labelRcmdr(recodesFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Enter recode directives"), 
                     fg = getRcmdr("title.color"), font="RcmdrTitleFont"), sticky = "w")
   tkgrid(recodes, recodesYscroll, sticky = "nw")
   tkgrid(recodesXscroll)
@@ -7330,8 +7334,8 @@ StatMedQQPlot <- function () {
 			initial.chisqdf = "", initial.fdf1 = "", initial.fdf2 = "", initial.othername = "", 
 			initial.otherparam = "")
 	dialog.values <- getDialog("StatMedQQPlot", defaults)
-	initializeDialog(title = gettextRcmdr("Quantile-Comparison (QQ) Plot"))
-	xBox <- variableListBox(top, Numeric(), title = gettextRcmdr("Variable (pick one)"), listHeight=15, 
+	initializeDialog(title = gettext(domain="R-RcmdrPlugin.EZR","Quantile-Comparison (QQ) Plot"))
+	xBox <- variableListBox(top, Numeric(), title = gettext(domain="R-RcmdrPlugin.EZR","Variable (pick one)"), listHeight=15, 
 			initialSelection = varPosn (dialog.values$initial.x, "numeric"))
 	onOK <- function() {
 		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Quantile-comparison plot"), "#####", sep=""))
@@ -7350,7 +7354,7 @@ StatMedQQPlot <- function () {
 						initial.otherparam = otherparam))
 		closeDialog()
 		if (0 == length(x)) {
-			errorCondition(recall = StatMedQQPlot, message = gettextRcmdr("You must select a variable."))
+			errorCondition(recall = StatMedQQPlot, message = gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
 		save <- options(warn = -1)
@@ -7365,7 +7369,7 @@ StatMedQQPlot <- function () {
 					df <- tclvalue(tDfVariable)
 					df.num <- as.numeric(df)
 					if (is.na(df.num) || df.num < 1) {
-						retryMe(gettextRcmdr("df for t must be a positive number."))
+						retryMe(gettext(domain="R-RcmdrPlugin.EZR","df for t must be a positive number."))
 						return()
 					}
 					args <- paste("dist=\"t\", df=", df, sep = "")
@@ -7373,7 +7377,7 @@ StatMedQQPlot <- function () {
 					df <- tclvalue(chisqDfVariable)
 					df.num <- as.numeric(df)
 					if (is.na(df.num) || df.num < 1) {
-						retryMe(gettextRcmdr("df for chi-square must be a positive number."))
+						retryMe(gettext(domain="R-RcmdrPlugin.EZR","df for chi-square must be a positive number."))
 						return()
 					}
 					args <- paste("dist=\"chisq\", df=", df, sep = "")
@@ -7384,7 +7388,7 @@ StatMedQQPlot <- function () {
 					df.num2 <- as.numeric(df2)
 					if (is.na(df.num1) || df.num1 < 1 || is.na(df.num2) || 
 							df.num2 < 1) {
-						retryMe(gettextRcmdr("numerator and denominator \ndf for F must be positive numbers."))
+						retryMe(gettext(domain="R-RcmdrPlugin.EZR","numerator and denominator \ndf for F must be positive numbers."))
 						return()
 					}
 					args <- paste("dist=\"f\", df1=", df1, ", df2=", 
@@ -7396,8 +7400,8 @@ StatMedQQPlot <- function () {
 				})
 		.activeDataSet <- ActiveDataSet()
 		if ("1" == tclvalue(identifyVariable)) {
-			RcmdrTkmessageBox(title = "Identify Points", message = paste(gettextRcmdr("Use left mouse button to identify points,\n"), 
-							gettextRcmdr(if (MacOSXP()) 
+			RcmdrTkmessageBox(title = "Identify Points", message = paste(gettext(domain="R-RcmdrPlugin.EZR","Use left mouse button to identify points,\n"), 
+							gettext(domain="R-RcmdrPlugin.EZR",if (MacOSXP()) 
 												"esc key to exit."
 											else "right button to exit."), sep = ""), icon = "info", 
 					type = "ok")
@@ -7447,30 +7451,30 @@ StatMedQQPlot <- function () {
 	identifyFrame <- tkframe(top)
 	identifyCheckBox <- tkcheckbutton(identifyFrame, variable = identifyVariable)
 	tkgrid(getFrame(xBox), sticky = "nw")
-	tkgrid(labelRcmdr(identifyFrame, text = gettextRcmdr("Identify observations with mouse")), 
+	tkgrid(labelRcmdr(identifyFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Identify observations with mouse")), 
 			identifyCheckBox, sticky = "w")
 	tkgrid(identifyFrame, sticky = "w")
-	tkgrid(labelRcmdr(distFrame, text = gettextRcmdr("Distribution"), 
+	tkgrid(labelRcmdr(distFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Distribution"), 
 					fg = "blue"), columnspan = 6, sticky = "w")
-	tkgrid(labelRcmdr(distFrame, text = gettextRcmdr("Normal")), 
+	tkgrid(labelRcmdr(distFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Normal")), 
 			normalButton, sticky = "w")
-	tkgrid(labelRcmdr(tDfFrame, text = gettextRcmdr("df = ")), 
+	tkgrid(labelRcmdr(tDfFrame, text = gettext(domain="R-RcmdrPlugin.EZR","df = ")), 
 			tDfField, sticky = "w")
 	tkgrid(labelRcmdr(distFrame, text = "t"), tButton, tDfFrame, 
 			sticky = "w")
-	tkgrid(labelRcmdr(chisqDfFrame, text = gettextRcmdr("df = ")), 
+	tkgrid(labelRcmdr(chisqDfFrame, text = gettext(domain="R-RcmdrPlugin.EZR","df = ")), 
 			chisqDfField, sticky = "w")
-	tkgrid(labelRcmdr(distFrame, text = gettextRcmdr("Chi-square")), 
+	tkgrid(labelRcmdr(distFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Chi-square")), 
 			chisqButton, chisqDfFrame, sticky = "w")
-	tkgrid(labelRcmdr(FDfFrame, text = gettextRcmdr("Numerator df = ")), 
-			FDf1Field, labelRcmdr(FDfFrame, text = gettextRcmdr("Denominator df = ")), 
+	tkgrid(labelRcmdr(FDfFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Numerator df = ")), 
+			FDf1Field, labelRcmdr(FDfFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Denominator df = ")), 
 			FDf2Field, sticky = "w")
 	tkgrid(labelRcmdr(distFrame, text = "F"), FButton, FDfFrame, 
 			sticky = "w")
-	tkgrid(labelRcmdr(otherParamsFrame, text = gettextRcmdr("Specify: ")), 
-			otherNameField, labelRcmdr(otherParamsFrame, text = gettextRcmdr("Parameters: ")), 
+	tkgrid(labelRcmdr(otherParamsFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Specify: ")), 
+			otherNameField, labelRcmdr(otherParamsFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Parameters: ")), 
 			otherParamsField, sticky = "w")
-	tkgrid(labelRcmdr(distFrame, text = gettextRcmdr("Other")), 
+	tkgrid(labelRcmdr(distFrame, text = gettext(domain="R-RcmdrPlugin.EZR","Other")), 
 			otherButton, otherParamsFrame, sticky = "w")
 	tkgrid(distFrame, sticky = "w")
 	tkgrid(buttonsFrame, sticky = "w")
@@ -9844,7 +9848,7 @@ putDialog("StatMedANCOVA", list(group=group, data=data, covariate=covariate, act
 		interaction <- eval(parse(text=paste("signif(Anova(lm(", data, " ~ 1 + factor(", group, ") * ", covariate, ', data=TempDF, na.action=na.omit), type="III")$Pr[4], digits=3)', sep="")))
 		doItAndPrint(paste('cat(gettext(domain="R-RcmdrPlugin.EZR","P value for interaction between grouping variable and covariate is"), ', " ", interaction, ', "\n")', sep=""))
 		if(interaction < 0.05){
-			logger(gettextRcmdr("ANCOVA not performed due to significant interaction between grouping variable and covariate."))
+			logger(gettext(domain="R-RcmdrPlugin.EZR","ANCOVA not performed due to significant interaction between grouping variable and covariate."))
 		} else {
 			command <- paste(modelValue, " <- lm(", data, " ~ 1 + factor(", group, ") + ", covariate, ", data=TempDF, na.action=na.omit)", sep="")
 			# 		logger(paste(modelValue, " <- ", command, sep = ""))
@@ -11580,7 +11584,7 @@ putDialog("StatMedPropTrend", list(response=response, group=group, subset=tclval
 
 
 StatMedLogisticRegression <- function(){
-defaults <- list(lhs = "", rhs = "", waldVariable = 0,  rocVariable = 0, diagnosisVariable = 0, actmodelVariable = 0, stepwise1Variable = 0, stepwise2Variable = 0, stepwise3Variable = 0, subset = "")
+defaults <- list(lhs = "", rhs = "", waldVariable = 0,  rocVariable = 0, diagnosisVariable = 0, actmodelVariable = 0, pscoreVariable = 0, stepwise1Variable = 0, stepwise2Variable = 0, stepwise3Variable = 0, subset = "")
 dialog.values <- getDialog("StatMedLogisticRegression", defaults)
 currentFields$lhs <- dialog.values$lhs			#Values in currentFields will be sent to modelFormula
 currentFields$rhs <- dialog.values$rhs
@@ -11609,7 +11613,7 @@ currentFields$subset <- dialog.values$subset
     model <- ttkentry(modelFrame, width="20", textvariable=modelName)
 	optionsFrame <- tkframe(top)
 	
-	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$actmodelVariable, dialog.values$rocVariable, dialog.values$diagnosisVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "pscore", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$actmodelVariable, dialog.values$rocVariable, dialog.values$diagnosisVariable, dialog.values$pscoreVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Make propensity score variable", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 
 #	waldVariable <- tclVar("0")
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -11630,12 +11634,13 @@ currentFields$subset <- dialog.values$subset
 		actmodel <- tclvalue(actmodelVariable)
 		roc <- tclvalue(rocVariable)
 		diagnosis <- tclvalue(diagnosisVariable)
+		pscore <- tclvalue(pscoreVariable)
 		stepwise1 <- tclvalue(stepwise1Variable)
         stepwise2 <- tclvalue(stepwise2Variable)
 		stepwise3 <- tclvalue(stepwise3Variable)
 		subset <- tclvalue(subsetVariable)
 #input values into dialog memory	
-putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  actmodelVariable = actmodel, rocVariable = roc, diagnosisVariable = diagnosis, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
+putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  actmodelVariable = actmodel, rocVariable = roc, diagnosisVariable = diagnosis, pscoreVariable = pscore, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
         check.empty <- gsub(" ", "", tclvalue(lhsVariable))
         if ("" == check.empty) {
             errorCondition(recall=StatMedLogisticRegression, model=TRUE, message=gettext(domain="R-RcmdrPlugin.EZR","Left-hand side of model empty."))
@@ -11701,6 +11706,12 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 			doItAndPrint("oldpar <- par(oma=c(0,0,3,0), mfrow=c(2,2))")
 			doItAndPrint(paste("plot(", modelValue, ")", sep=""))
 			doItAndPrint("par(oldpar)")			
+		}
+		if (pscore==1){
+			command <-  paste(ActiveDataSet(),"$PropensityScore.", modelValue, " <- fitted(", modelValue, ")", sep="")
+			doItAndPrint(command)
+			logger(paste("#", gettext(domain="R-RcmdrPlugin.EZR","New variable"), " PropensityScore.", modelValue, " ", gettext(domain="R-RcmdrPlugin.EZR","was made."), sep="") )
+			activeDataSet(ActiveDataSet(), flushModel=FALSE)
 		}
 		if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
 			command <- paste("glm(", formula, ", family=binomial(logit), data=TempDF", subset, ")", sep="")
@@ -15964,8 +15975,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.35", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","March 1, 2017"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.36", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","September 1, 2017"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -16079,7 +16090,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.35", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.36", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -16146,4 +16157,4 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'cuminc', 'Anova', 'pmvt', 'wald.test', 'timepoints', 'ci', 'sqlQuery',
 'groupingVariable', 'groupingFrame', 'othervarVariable', 'rocVariable',
 'columnmergeVariable', 'column.name1', 'column.name2', 'columnmergeFrame',
-'deleteVariable', 'RecodeDialog', 'km', 'coxmodel'))
+'deleteVariable', 'RecodeDialog', 'km', 'coxmodel', 'pscoreVariable'))

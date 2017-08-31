@@ -1,4 +1,12 @@
-Changes to Version 1.35
+Changes to Version 1.36
+
+  o Changed the menu list for compatability with new version (2.4-0) of "Rcmdr" package.
+
+  o Import and export STATA file function now uses "readstata13" package.
+  
+  o Added an option to make propensity score variable in logistic regression function.
+
+  Changes to Version 1.35
 
   o rmean.table() function now uses survRM2() package, that should be used after "Kaplan-Meier survival curve and logrank test" analysis. In addition, rmean.table.ajusted() function, that should be used after "Adjusted survival curve" analysis, was added.
 
@@ -11,6 +19,8 @@ Changes to Version 1.34
   o Small bug fixes.
 
 Changes to Version 1.33
+
+  o Changed the menu list for compatability with new version (2.3-0) of "Rcmdr" package.
 
   o Changed the scripts of survival and cumulative incidence functions for compatability with new version (2.39) of "survival" package. Added rmean.table() function to calcurate and compare restriction mean survival time.
 

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2016-06-02 17:17+0900\n"
+"PO-Revision-Date: 2017-08-30 11:16+0900\n"
 "Last-Translator: \n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
@@ -5235,28 +5235,28 @@ msgid "LinePlot"
 msgstr "折れ線"
 
 msgid "Pairwise comparison not performed when more than one grouping variables are picked."
-msgstr "↓2組ずつの比較(post-hoc検定)は比較する群が1つの場合のみ実施される。"
+msgstr "↓2群ずつの比較(post-hoc検定)は比較する群別因子が1つの場合のみ実施される。"
 
 msgid "Pairwise comparison"
-msgstr "↓2組ずつの比較(post-hoc検定)"
+msgstr "↓2群ずつの比較(post-hoc検定)"
 
 msgid "Pairwise comparison (Bonferroni)"
-msgstr "2組ずつの比較(Bonferroniの多重比較)"
+msgstr "2群ずつの比較(Bonferroniの多重比較)"
 
 msgid "Pairwise comparison (Holm)"
-msgstr "2組ずつの比較(Holmの多重比較)"
+msgstr "2群ずつの比較(Holmの多重比較)"
 
 msgid "Pairwise comparison (Tukey)"
-msgstr "2組ずつの比較(Tukeyの多重比較)"
+msgstr "2群ずつの比較(Tukeyの多重比較)"
 
 msgid "Pairwise comparison (Dunnett)"
-msgstr "2組ずつの比較(Dunnettの多重比較)"
+msgstr "2群ずつの比較(Dunnettの多重比較)"
 
 msgid "Pairwise comparison (Steel-Dwass)"
-msgstr "2組ずつの比較(post-hoc検定、Steel-Dwassの多重比較)"
+msgstr "2群ずつの比較(post-hoc検定、Steel-Dwassの多重比較)"
 
 msgid "Pairwise comparison (Steel)"
-msgstr "2組ずつの比較(post-hoc検定、Steelの多重比較)"
+msgstr "2群ずつの比較(post-hoc検定、Steelの多重比較)"
 
 msgid "The first group in alphabetical will be treated as the reference group."
 msgstr "↑アルファベット順で一番若い群が対照群となる。変更したい場合は因子水準を再順序化する。"
@@ -6457,4 +6457,7 @@ msgstr "95%信頼区間下限"
 
 msgid "97.5 %"
 msgstr "95%信頼区間上限"
+
+msgid "Make propensity score variable"
+msgstr "傾向スコア変数を自動作成する"
 
