@@ -44,8 +44,13 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.36", "\n")
+cat("   Version 1.37", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
+cat("-----------------------------------\n")
+cat("\n")
+cat("-----------------------------------\n")
+cat(gettext(domain="R-RcmdrPlugin.EZR", "Please cite the following article", "\n"))
+cat(gettext(domain="R-RcmdrPlugin.EZR", "Bone Marrow Transplantation 2013:48,452-458", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
 
@@ -4598,7 +4603,7 @@ StatMedReadDataSet <- function() {
 		}
 		dec <- if (tclvalue(decimalVariable) == "period") "." else ","
 		command <- paste('read.table("', file,'", header=', head,
-			', sep="', del, '", na.strings=', miss, ', dec="', dec, '"', fill, ', quote="\\"", strip.white=TRUE)', sep="")
+			', sep="', del, '", na.strings=', miss, ', dec="', dec, '"', fill, ', quote="\\"", comment.char="", strip.white=TRUE)', sep="")
 		logger(paste(dsnameValue, " <- ", command, sep=""))
 		result <- justDoIt(command)
 		if (class(result)[1] !=  "try-error"){
@@ -4758,6 +4763,31 @@ StatMedImportMinitab <- function() {
 }
 
 
+readStataEZR <- function(file, rownames=FALSE, stringsAsFactors=default.stringsAsFactors(), convert.dates=TRUE, convert.underscore=TRUE){
+    Data <- readstata13::read.dta13(file, convert.factors=stringsAsFactors, convert.dates=convert.dates, convert.underscore=convert.underscore)
+###Just added convert.underscore = FALSE as option for EZR
+    if (rownames){
+        check <- length(unique(col1 <- Data[[1]])) == nrow(Data)
+        if (!check) warning ("row names are not unique, ignored")
+        else {
+            rownames(Data) <- col1
+            Data[[1]] <- NULL
+        }
+    }
+    if (stringsAsFactors){
+        char.cols <- sapply(Data, class) == "character"
+        if (any(char.cols)){
+            for (col in names(Data)[char.cols]){
+                fac <- Data[, col]
+                fac[fac == ""] <- NA
+                Data[, col] <- as.factor(fac)
+            } 
+        }
+    }
+    Data
+}
+
+
 StatMedImportSTATA <- function() {
     initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Import STATA Data Set"))
     dsname <- tclVar("Dataset")
@@ -4768,6 +4798,8 @@ StatMedImportSTATA <- function() {
     asFactorCheckBox <- ttkcheckbutton(optionsFrame, variable=asFactor)
     asDate <- tclVar("1")
     asDateCheckBox <- ttkcheckbutton(optionsFrame, variable=asDate)
+    convertunderscore <- tclVar("1")
+    convertunderscoreCheckBox <- ttkcheckbutton(optionsFrame, variable=convertunderscore)
     rownames <- tclVar("0")
     rownamesCheckBox <- ttkcheckbutton(optionsFrame, variable=rownames)
     onOK <- function(){
@@ -4800,10 +4832,11 @@ StatMedImportSTATA <- function() {
             return()
         }
         convert.date <- tclvalue(asDate) == "1"
+        convert.underscore <- tclvalue(convertunderscore) == "1"
         factor <- tclvalue(asFactor) == "1"
         has.rownames <- tclvalue(rownames) ==  "1"
-        command <- paste('readStata("', file,'", convert.dates=', convert.date,
-                         ", stringsAsFactors=", factor, ", rownames=", has.rownames, ")", sep="")
+        command <- paste('readStataEZR("', file,'", convert.dates=', convert.date,
+                         ", stringsAsFactors=", factor, ", rownames=", has.rownames, ", convert.underscore=", convert.underscore, ")", sep="")
         logger(paste(dsnameValue, " <- ", command, sep=""))
         result <- justDoIt(command)
         if (class(result)[1] !=  "try-error"){
@@ -4818,6 +4851,8 @@ StatMedImportSTATA <- function() {
     tkgrid(asFactorCheckBox, labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Convert character variables to factors"), justify="left"),
            sticky="nw")
     tkgrid(asDateCheckBox, labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Convert dates to R format"), justify="left"),
+           sticky="w")
+    tkgrid(convertunderscoreCheckBox, labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Convert underscore to period"), justify="left"),
            sticky="w")
     tkgrid(rownamesCheckBox, labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","First column contains row names"), justify="left"),
            sticky="w")
@@ -15975,8 +16010,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.36", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","September 1, 2017"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.37", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","April 1, 2018"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -16090,7 +16125,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.36", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.37", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',

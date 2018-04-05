@@ -35,8 +35,8 @@ HistEZR(x, scale=c("frequency", "percent", "density"), xlab=deparse(substitute(x
 \seealso{\code{\link[graphics]{hist}}}
 
 \examples{
-    data(Prestige, package="car")
-    HistEZR(Prestige$income, scale="percent")
+    data(iris, package="datasets")
+    HistEZR(iris$Petal.Length, scale="percent")
     }
 
 \keyword{hplot}

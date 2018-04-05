@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2017-08-30 11:16+0900\n"
+"PO-Revision-Date: 2018-04-05 15:40+0900\n"
 "Last-Translator: \n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
@@ -6460,4 +6460,10 @@ msgstr "95%信頼区間上限"
 
 msgid "Make propensity score variable"
 msgstr "傾向スコア変数を自動作成する"
+
+msgid "First column contains row names"
+msgstr "1列目に行名を含む"
+
+msgid "Please cite the following article"
+msgstr "以下の論文を参考文献として引用ください"
 

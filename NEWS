@@ -1,3 +1,9 @@
+Changes to Version 1.37
+
+  o Changed examples in the HistEZR function according to the changes in the car package (data sets removed).
+
+  o Added "Convert underscore to period" option in import STATA file function.
+  
 Changes to Version 1.36
 
   o Changed the menu list for compatability with new version (2.4-0) of "Rcmdr" package.
