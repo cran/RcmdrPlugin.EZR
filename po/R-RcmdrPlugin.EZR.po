@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2018-04-05 15:40+0900\n"
+"PO-Revision-Date: 2019-01-11 16:52+0900\n"
 "Last-Translator: \n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
@@ -6206,10 +6206,10 @@ msgstr "いいえ(Welch検定)"
 msgid "Pairwise comparison and active model keeping not performed for Welch test."
 msgstr "↑Welch検定の場合は多重比較やモデルの保存は行われません。"
 
-msgid "X axis lavel"
+msgid "X axis label"
 msgstr "X軸のラベル"
 
-msgid "Y axis lavel"
+msgid "Y axis label"
 msgstr "Y軸のラベル"
 
 msgid "Create summary table"
@@ -6466,4 +6466,7 @@ msgstr "1列目に行名を含む"
 
 msgid "Please cite the following article"
 msgstr "以下の論文を参考文献として引用ください"
+
+msgid "Y axis with percentage"
+msgstr "Y軸をパーセント表示にする"
 

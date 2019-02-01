@@ -1,3 +1,11 @@
+Changes to Version 1.38
+
+  o Added an option to show Y-axis in percentage in survival curve graphs.
+
+  o Minor changes for compatability with new version of "car" package.
+
+  o Small bug fixes.
+  
 Changes to Version 1.37
 
   o Changed examples in the HistEZR function according to the changes in the car package (data sets removed).
