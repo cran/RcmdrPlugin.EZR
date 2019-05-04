@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.38", "\n")
+cat("   Version 1.40", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -7896,9 +7896,10 @@ currentModel <- TRUE
         group1 <- getSelection(group1Box)
         group2 <- getSelection(group2Box)
         response <- getSelection(responseBox)
-        error.bars <- tclvalue(errorBarsVariable)
+        error.bars <- tclvalue(errorBarsVariable)		
 		subset <- tclvalue(subsetVariable)
 putDialog("StatMedBarMeans", list(group1=group1, group2=group2, response=response, errorBars=error.bars, subset=tclvalue(subsetVariable)))
+		if (error.bars=="conf.int") error.bars <- "bar.ses*qnorm(0.975)"
 		if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 			subset1 <- ""
 			subset2 <- ""
@@ -7986,7 +7987,7 @@ putDialog("StatMedBarMeans", list(group1=group1, group2=group2, response=respons
         tkfocus(CommanderWindow())
         }
     optionsFrame <- tkframe(top)
-    radioButtons(optionsFrame, name="errorBars", buttons=c("bar.ses", "bar.sds", "none"), values=c("bar.ses", "bar.sds", "none"),initialValue=dialog.values$errorBars, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Standard errors", "Standard deviations", "No error bars")),
+    radioButtons(optionsFrame, name="errorBars", buttons=c("bar.ses", "bar.sds", "conf.int", "none"), values=c("bar.ses", "bar.sds", "conf.int", "none"),initialValue=dialog.values$errorBars, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Standard errors", "Standard deviations", "Confidence intervals", "No error bars")),
         title=gettext(domain="R-RcmdrPlugin.EZR","Error Bars"))
 #	errorBarsVariable <- tclVar("bar.sds")
 #    seButton <- ttkradiobutton(optionsFrame, variable=errorBarsVariable, value="bar.ses")
@@ -14206,10 +14207,10 @@ putDialog("StatMedReliability", list(x=x))
     dialogSuffix(rows=2, columns=1)
     }
 
-
-StatMedOptMatch <- function(){
-defaults <- list(group=NULL, strata=NULL, matchnumber="1", unmatch="FALSE", newDataSetName="Add _MP at the end of original name")
-dialog.values <- getDialog("StatMedOptMatch", defaults)
+	
+StatMedMatching <- function(){
+defaults <- list(group=NULL, strata=NULL, matchnumber="1", caliper="TRUE", calipervalue=0.2, newDataSetName="Add _MP at the end of original name")
+dialog.values <- getDialog("StatMedMatching", defaults)
 
 	dataSet <- activeDataSet()
 	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Extract matched controls"))
@@ -14226,75 +14227,101 @@ dialog.values <- getDialog("StatMedOptMatch", defaults)
     matchnumberFrame <- tkframe(optionsFrame)
     matchnumberLevel <- tclVar(dialog.values$matchnumber)
     matchnumberField <- ttkentry(matchnumberFrame, width="6", textvariable=matchnumberLevel)
-	
+    calipervalueFrame <- tkframe(optionsFrame)
+    calipervalueLevel <- tclVar(dialog.values$calipervalue)
+    calipervalueField <- ttkentry(calipervalueFrame, width="6", textvariable=calipervalueLevel)
+
 	onOK <- function(){
 	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Extract matched controls"), "#####", sep=""))
 	    group <- getSelection(groupBox)
         strata <- getSelection(strataBox)
 	    matchnumber <- tclvalue(matchnumberLevel)
-        unmatch <- as.character(tclvalue(unmatchVariable))
+	    calipervalue <- tclvalue(calipervalueLevel)
+        caliper <- as.character(tclvalue(caliperVariable))
+		if(caliper=="FALSE"){
+			caliper <- NULL
+		} else {
+			caliper <- calipervalue
+		}
 		newName <- trim.blanks(tclvalue(dataSetName))
 		if (newName == gettext(domain="R-RcmdrPlugin.EZR","Add _MP at the end of original name")) newName <- paste(ActiveDataSet(), "_MP", sep="")
-putDialog("StatMedOptMatch", list(group=group, strata=strata, matchnumber=matchnumber, unmatch=unmatch, newDataSetName=newName))
+putDialog("StatMedMatching", list(group=group, strata=strata, matchnumber=matchnumber, caliper=caliper, calipervalue=calipervalue, newDataSetName=newName))
         if (length(group) == 0) {
-            errorCondition(recall=StatMedOptMatch, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
+            errorCondition(recall=StatMedMatching, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a groups variable."))
             return()
             }
         if (length(strata) == 0) {
-            errorCondition(recall=StatMedOptMatch, message=gettext(domain="R-RcmdrPlugin.EZR","Pick at least one matching variable"))
+            errorCondition(recall=StatMedMatching, message=gettext(domain="R-RcmdrPlugin.EZR","Pick at least one matching variable"))
             return()
             }
 		if (!is.valid.name(newName)){
-			errorCondition(recall=StatMedOptMatch,
+			errorCondition(recall=StatMedMatching,
 				message=paste('"', newName, '" ', gettext(domain="R-RcmdrPlugin.EZR","is not a valid name."), sep=""))
 			return()
 		}
 		if (is.element(newName, listDataSets())) {
 			if ("no" == tclvalue(checkReplace(newName, type=gettext(domain="R-RcmdrPlugin.EZR","Data set")))){
 				closeDialog()
-				StatMedOptMatch()
+				StatMedMatching()
 				return()
 			}
 		}
 		closeDialog()
 		.activeDataSet <- ActiveDataSet()
-		doItAndPrint("library(optmatch, quietly=TRUE)")
+		doItAndPrint("library(Matching, quietly=TRUE)")
 		nacheck.command <- paste("TempDataSet <- ", .activeDataSet, "[complete.cases(", .activeDataSet, "$", group, ", ", .activeDataSet, "$", strata[1], sep="")
-		mdist.command <- paste("match.distance <- mdist(", group, " ~ ", strata[1], sep="")
-		if (length(strata) >1 ){
+			strata2 <- paste("cbind(TempDataSet$", strata[1], sep="")
+			if (length(strata) >1 ){
 			for (i in 2:length(strata)){
 				nacheck.command <- paste(nacheck.command, ", ", .activeDataSet, "$", strata[i], sep="")
-				mdist.command <- paste(mdist.command, " + ", strata[i], sep="")
+				strata2 <- paste(strata2, ", TempDataSet$", strata[i], sep="")
 			}
-		}
+			}
+			strata2 <- paste(strata2, ")", sep="")
+			strata <- strata2
 		nacheck.command <- paste(nacheck.command, "),]", sep="")
-		mdist.command <- paste(mdist.command, ", data=TempDataSet)", sep="")
 		doItAndPrint(nacheck.command)
-		doItAndPrint(mdist.command)
-		match.command <- paste("pairmatch.results <- pairmatch(match.distance, control=", matchnumber, ", remove.unmatchables=", unmatch, ", data=TempDataSet)", sep="")
+
+		match.command <- paste("match.results <- Match(Tr=TempDataSet$", group, ", X=", strata, ", M=", matchnumber, ", caliper=", caliper, ", replace=FALSE)", sep="")
+		
 		logger(match.command)
 		result <- justDoIt(match.command)
 		if (class(result)[1] ==  "try-error"){
-				errorCondition(recall=StatMedOptMatch, message=gettext(domain="R-RcmdrPlugin.EZR","Matching failed"))
+				errorCondition(recall=StatMedMatching, message=gettext(domain="R-RcmdrPlugin.EZR","Matching failed"))
 				return()
 		}
-		doItAndPrint("TempDataSet$pairmatch <- as.integer(substring(pairmatch.results, 3))")
-		command <- paste(newName, " <- TempDataSet[!is.na(TempDataSet$pairmatch),]", sep="")
+		doItAndPrint("summary(match.results)")
+		if(matchnumber>1){
+			doItAndPrint(paste("match.results$index.treated <- match.results$index.treated[", matchnumber, " * (1:(length(match.results$index.treated)/", matchnumber, "))]", sep=""))
+		}
+
+		doItAndPrint("pairmatch.treated <- 1:length(match.results$index.treated)")
+		doItAndPrint(paste("pairmatch.control <- rep(pairmatch.treated, each=", matchnumber, ")", sep=""))
+		doItAndPrint("pairmatch <- c(pairmatch.treated, pairmatch.control)")
+		
+		command <- paste(newName, " <- rbind(TempDataSet[match.results$index.treated,], TempDataSet[match.results$index.control,])", sep="")
 		logger(command)
 		result <- justDoIt(command)
+		doItAndPrint(paste(newName, "$pairmatch <- pairmatch", sep="")) 
 		if (class(result)[1] !=  "try-error") activeDataSet(newName)
 		tkfocus(CommanderWindow())
 	}
-	OKCancelHelp(helpSubject="pairmatch", apply="StatMedOptMatch", reset="StatMedOptMatch")
+	OKCancelHelp(helpSubject="Match", apply="StatMedMatching", reset="StatMedMatching")
 	tkgrid(labelRcmdr(variablesFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Click pressing Ctrl key to select multiple variables."), fg="blue"), sticky="w")
 	tkgrid(getFrame(groupBox), labelRcmdr(variablesFrame, text="    "), getFrame(strataBox), sticky="nw")
     tkgrid(variablesFrame, sticky="nw")
 	tkgrid(labelRcmdr(matchnumberFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Number of controls matched to one case"), fg="blue"), sticky="w")
     tkgrid(matchnumberField, sticky="w")
-    radioButtons(optionsFrame, name="unmatch", buttons=c("No", "Yes"), values=c("FALSE", "TRUE"),
-        labels=gettext(domain="R-RcmdrPlugin.EZR",c("Not remove", "Remove")), title=gettext(domain="R-RcmdrPlugin.EZR","Remove unmatched cases?"))
- 	tkgrid(matchnumberFrame, labelRcmdr(optionsFrame, text="    "), unmatchFrame, sticky="nw")		
+	tkgrid(labelRcmdr(calipervalueFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Caliper width"), fg="blue"), sticky="w")
+    tkgrid(calipervalueField, sticky="w")
+    radioButtons(optionsFrame, name="caliper", buttons=c("FALSE", "TRUE"), values=c("FALSE", "TRUE"), initialValue=dialog.values$caliper, labels=gettext(domain="R-RcmdrPlugin.EZR",c("No", "Yes")), title=gettext(domain="R-RcmdrPlugin.EZR","Caliper matching"))
+ 	tkgrid(matchnumberFrame, labelRcmdr(optionsFrame, text="    "), caliperFrame, labelRcmdr(optionsFrame, text="    "), calipervalueFrame, sticky="nw")		
     tkgrid(optionsFrame, sticky="nw")
+	
+	options2Frame <- tkframe(top)
+	tkgrid(labelRcmdr(options2Frame, text=gettext(domain="R-RcmdrPlugin.EZR","Caliper width as a proportion of standard deviation, applied for all variables"), fg="blue"), sticky="w")
+	tkgrid(options2Frame, sticky="nw")
+	
 	tkgrid(labelRcmdr(dataSetNameFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Name for new data set")), sticky="w")
 	tkgrid(dataSetNameField, sticky="w")
 	tkgrid(dataSetNameFrame, sticky="w")
@@ -16085,8 +16112,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.38", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","February 1, 2019"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.40", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","May 1, 2019"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -16200,7 +16227,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.38", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.40", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -16268,4 +16295,4 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'groupingVariable', 'groupingFrame', 'othervarVariable', 'rocVariable',
 'columnmergeVariable', 'column.name1', 'column.name2', 'columnmergeFrame',
 'deleteVariable', 'RecodeDialog', 'km', 'coxmodel', 'pscoreVariable',
-'ypercent', 'ypercentVariable'))
+'ypercent', 'ypercentVariable', 'caliperVariable', 'caliperFrame'))

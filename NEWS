@@ -1,3 +1,7 @@
+Changes to Version 1.40
+
+  o Added caliper matching function by changing the use of Matching package insteade of OptMatch package.
+
 Changes to Version 1.38
 
   o Added an option to show Y-axis in percentage in survival curve graphs.

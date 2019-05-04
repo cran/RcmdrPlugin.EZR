@@ -56,6 +56,7 @@
 \alias{StatMedLogrankTrend}
 \alias{StatMedMH}
 \alias{StatMedMannW}
+\alias{StatMedMatching}
 \alias{StatMedMcNemar}
 \alias{StatMedMeanCI}
 \alias{StatMedMergeDatasets}
@@ -69,7 +70,6 @@
 \alias{StatMedNewVar2}
 \alias{StatMedNumericToFactor}
 \alias{StatMedNumericalSummaries}
-\alias{StatMedOptMatch}
 \alias{StatMedOrderedChart}
 \alias{StatMedPairedTtest}
 \alias{StatMedPieChart}

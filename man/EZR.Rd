@@ -83,8 +83,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.38\cr
-Date: \tab 2019-02-01\cr
+Version: \tab 1.40\cr
+Date: \tab 2019-05-01\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
@@ -159,7 +159,7 @@ ROC curve analysis for quantitative test\cr
 Compare two ROC curves\cr
 Cronbach's alpha coefficient for reliability\cr\cr
 \emph{For matched-pair analysis}\cr\cr
-Extract matched controls (This function relys on optmatch package and is limietd to academic use.)\cr
+Extract matched controls\cr
 Mantel-Haenzel test for matched proportions\cr
 Conditional logistic regression for matched-pair analysis\cr
 Stratified Cox proportional hazard regression for matched-pair analysis\cr\cr

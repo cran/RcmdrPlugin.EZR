@@ -154,7 +154,7 @@ item	Test	command	"Compare two ROC curves"	StatMedROCtest	"activeDataSetP()"	"pa
 item	Test	command	"Cronbach's alpha coefficient for reliability"	StatMedReliability	"activeDataSetP()"	""
 menu	MatchedPair	StatMed	""	""	""	""
 item	StatMed	cascade	"Matched-pair analysis"	MatchedPair	""	""
-item	MatchedPair	command	"Extract matched controls"	StatMedOptMatch	"activeDataSetP()"	"packageAvailable('optmatch')"
+item	MatchedPair	command	"Extract matched controls"	StatMedMatching	"activeDataSetP()"	"packageAvailable('Matching')"
 item	MatchedPair	command	"Mantel-Haenzel test for matched proportions"	StatMedMH	"activeDataSetP()"	""
 item	MatchedPair	command	"Conditional logistic regression for matched-pair analysis"	StatMedCLogistic	"activeDataSetP()"	""
 item	MatchedPair	command	"Stratified Cox proportional hazard regression for matched-pair analysis"	StatMedStCox	"activeDataSetP()"	""
