@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.40", "\n")
+cat("   Version 1.41", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -8312,7 +8312,7 @@ currentModel <- TRUE
 					"'xy'"
 				else "FALSE"
 		line <- if ("1" == tclvalue(lsLineVariable)) 
-					"lm"
+					"list(method=lm, lty=1)"
 				else "FALSE"
 		smooth <- as.character("1" == tclvalue(smoothLineVariable))
 		spread <- as.character("1" == tclvalue(spreadVariable))
@@ -8327,20 +8327,32 @@ currentModel <- TRUE
 				else paste(", cex.lab=", cex.lab, sep = "")
         if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 		if (.groups == FALSE) {
+#			doItAndPrint(paste("scatterplot(", y, "~", x, log, 
+#							", reg.line=", line, ", smooth=", smooth, ", spread=", 
+#							spread, idtext, ", boxplots=", box, ", span=", 
+#							span/100, jitter, xlab, ylab, cex, cex.axis, 
+#							cex.lab, pch, ", data=", .activeDataSet, subset, 
+#							")", sep = ""))
 			doItAndPrint(paste("scatterplot(", y, "~", x, log, 
-							", reg.line=", line, ", smooth=", smooth, ", spread=", 
-							spread, idtext, ", boxplots=", box, ", span=", 
-							span/100, jitter, xlab, ylab, cex, cex.axis, 
+							", regLine=", line, 
+							if (smooth == "TRUE") paste0(", smooth=list(span=", span/100, ", spread=", spread, ")") else ", smooth=FALSE",
+							idtext, ", boxplots=", box, jitter, xlab, ylab, cex, cex.axis, 
 							cex.lab, pch, ", data=", .activeDataSet, subset, 
-							")", sep = ""))
+							")", sep = ""))											# Changted according to the updated car package
 		}
 		else {
+#			doItAndPrint(paste("scatterplot(", y, "~", x, " | ", 
+#							.groups, log, ", reg.line=", line, ", smooth=", smooth, 
+#							", spread=", spread, idtext, ", boxplots=", box, 
+#							", span=", span/100, jitter, xlab, ylab, cex, 
+#							cex.axis, cex.lab, pch, ", by.groups=", .linesByGroup, 
+#							", data=", .activeDataSet, subset, ")", sep = ""))
 			doItAndPrint(paste("scatterplot(", y, "~", x, " | ", 
-							.groups, log, ", reg.line=", line, ", smooth=", smooth, 
-							", spread=", spread, idtext, ", boxplots=", box, 
-							", span=", span/100, jitter, xlab, ylab, cex, 
+							.groups, log, ", regLine=", line,
+							if (smooth == "TRUE") paste0(", smooth=list(span=", span/100, ", spread=", spread, ")") else ", smooth=FALSE",
+							idtext, ", boxplots=", box, jitter, xlab, ylab, cex, 
 							cex.axis, cex.lab, pch, ", by.groups=", .linesByGroup, 
-							", data=", .activeDataSet, subset, ")", sep = ""))
+							", data=", .activeDataSet, subset, ")", sep = ""))		# Changted according to the updated car package
 		}
 		activateMenus()
 		tkfocus(CommanderWindow())
@@ -8407,7 +8419,7 @@ StatMedScatterPlotMatrix <- function () {
 		variables <- getSelection(variablesBox)
 		closeDialog()
 		line <- if ("1" == tclvalue(lsLineVariable)) 
-					"lm"
+					"list(method=lm, lty=1)"
 				else "FALSE"
 		smooth <- as.character("1" == tclvalue(smoothLineVariable))
 		spread <- as.character("1" == tclvalue(spreadVariable))
@@ -8428,21 +8440,32 @@ StatMedScatterPlotMatrix <- function () {
 		}
         if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 		if (.groups == FALSE) {
+#			command <- paste("scatterplotMatrix(~", paste(variables, 
+#							collapse = "+"), ", reg.line=", line, ", smooth=", 
+#					smooth, ", spread=", spread, ", span=", span/100, 
+#					", diagonal = '", diag, "', data=", .activeDataSet, 
+#					subset, ")", sep = "")
 			command <- paste("scatterplotMatrix(~", paste(variables, 
-							collapse = "+"), ", reg.line=", line, ", smooth=", 
-					smooth, ", spread=", spread, ", span=", span/100, 
+							collapse = "+"), ", regLine=", line, 
+							if (smooth == "TRUE") paste0(", smooth=list(span=", span/100, ", spread=", spread, ")") else ", smooth=FALSE",							
 					", diagonal = '", diag, "', data=", .activeDataSet, 
-					subset, ")", sep = "")
+					subset, ")", sep = "")											# Changted according to the updated car package					
 			logger(command)
 			justDoIt(command)
 		}
 		else {
+#			command <- paste("scatterplotMatrix(~", paste(variables, 
+#							collapse = "+"), " | ", .groups, ", reg.line=", 
+#					line, ", smooth=", smooth, ", spread=", spread, 
+#					", span=", span/100, ", diagonal= '", diag, "', by.groups=", 
+#					.linesByGroup, ", data=", .activeDataSet, subset, 
+#					")", sep = "")
 			command <- paste("scatterplotMatrix(~", paste(variables, 
-							collapse = "+"), " | ", .groups, ", reg.line=", 
-					line, ", smooth=", smooth, ", spread=", spread, 
-					", span=", span/100, ", diagonal= '", diag, "', by.groups=", 
+							collapse = "+"), " | ", .groups, ", regLine=", line,
+							if (smooth == "TRUE") paste0(", smooth=list(span=", span/100, ", spread=", spread, ")") else ", smooth=FALSE",	
+							", diagonal= '", diag, "', by.groups=", 
 					.linesByGroup, ", data=", .activeDataSet, subset, 
-					")", sep = "")
+					")", sep = "")													# Changted according to the updated car package	
 			logger(command)
 			justDoIt(command)
 		}
@@ -9889,7 +9912,8 @@ putDialog("StatMedANCOVA", list(group=group, data=data, covariate=covariate, act
             }
 		closeDialog()
 		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}		
-		command <- paste("scatterplot(", data, " ~ ", covariate, " | factor(", group, "), reg.line=lm, smooth=FALSE, spread=FALSE, by.groups=TRUE, data=TempDF)", sep="")
+#		command <- paste("scatterplot(", data, " ~ ", covariate, " | factor(", group, "), reg.line=lm, smooth=FALSE, spread=FALSE, by.groups=TRUE, data=TempDF)", sep="")
+		command <- paste("scatterplot(", data, " ~ ", covariate, " | factor(", group, "), regLine=list(method=lm, lty=1), smooth=FALSE, by.groups=TRUE, data=TempDF)", sep="")				# Changted according to the updated car package
 		doItAndPrint(command)
 #		doItAndPrint("library(car)")		
 		interaction <- eval(parse(text=paste("signif(Anova(lm(", data, " ~ 1 + factor(", group, ") * ", covariate, ', data=TempDF, na.action=na.omit), type="III")$Pr[4], digits=3)', sep="")))
@@ -9960,8 +9984,10 @@ putDialog("StatMedCorrelation", list(x=x, alternative=alternative, subset = tclv
     closeDialog()
     .activeDataSet <- ActiveDataSet()
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#    command2 <- paste("scatterplot(", x[1], "~", x[2],
+#        ", reg.line=lm, smooth=FALSE, spread=FALSE, boxplots='xy', span=0.5, data=", .activeDataSet, subset, ")", sep="")
     command2 <- paste("scatterplot(", x[1], "~", x[2],
-        ", reg.line=lm, smooth=FALSE, spread=FALSE, boxplots='xy', span=0.5, data=", .activeDataSet, subset, ")", sep="")
+        ", regLine=list(method=lm, lty=1), smooth=FALSE, boxplots='xy', data=", .activeDataSet, subset, ")", sep="")	# Changted according to the updated car package
     doItAndPrint(command2)  
 	doItAndPrint("res <- NULL")
     command <- paste("(res <- cor.test(", subset1, .activeDataSet, subset2, "$", x[1], ", ", subset1, .activeDataSet, subset2, "$", x[2],
@@ -10610,8 +10636,10 @@ putDialog("StatMedSpearman", list(x=x, alternative=alternative, method=method, s
     closeDialog()
     .activeDataSet <- ActiveDataSet()
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#    command2 <- paste("scatterplot(", x[1], "~", x[2],
+#        ", reg.line=lm, smooth=FALSE, spread=FALSE, boxplots='xy', span=0.5, data=", .activeDataSet, subset, ")", sep="")
     command2 <- paste("scatterplot(", x[1], "~", x[2],
-        ", reg.line=lm, smooth=FALSE, spread=FALSE, boxplots='xy', span=0.5, data=", .activeDataSet, subset, ")", sep="")
+        ", regLine=list(method=lm, lty=1), smooth=FALSE, boxplots='xy', data=", .activeDataSet, subset, ")", sep="") # Changted according to the updated car package
     doItAndPrint(command2)  
 	doItAndPrint("res <- NULL")
     command <- paste("(res <- cor.test(", subset1, .activeDataSet, subset2, "$", x[1], ", ", subset1, .activeDataSet, subset2, "$", x[2],
@@ -11084,7 +11112,7 @@ defaults <- list(variable=NULL, color=0, subset="")
 dialog.values <- getDialog("StatMedPieChart", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
-	Library("colorspace")
+#	Library("colorspace")		#conflicts with pROC package:coords
     initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Pie chart(Frequencies)"))
     variableBox <- variableListBox(top, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Variable (pick one)"), listHeight=15, initialSelection=varPosn(dialog.values$variable, "all"))
     checkBoxes(frame="color", boxes=c("color"),initialValues=dialog.values$color,labels=gettext(domain="R-RcmdrPlugin.EZR",c("Draw in color")))
@@ -13016,7 +13044,9 @@ currentModel <- TRUE
 		if(eval(parse(text=paste("length(levels(factor(", subdataSet, "$", event, "[", subdataSet, "$", event, ">0])))", sep="")))==1){line <- paste("col=1, lty=1, ", par.lwd, sep="")}
 		if (atrisk==0){
 #			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
-			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+			if (nevent==1) {doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+				} else {doItAndPrint(paste('plot(ci[,1:', nevent, '], bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+			}
 		} else {
 			doItAndPrint('mar <- par("mar")')
 			doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
@@ -13024,7 +13054,9 @@ currentModel <- TRUE
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
 #			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
-			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+			if (nevent==1) {doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+				} else {doItAndPrint(paste('plot(ci[,1:', nevent, '], bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+			}
 			doItAndPrint("xticks <- axTicks(1)")
 #			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
 			doItAndPrint("n.atrisk <- nrisk(ci, xticks)")
@@ -13035,15 +13067,19 @@ currentModel <- TRUE
 	}else{
 		if (atrisk==0){
 #			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
-			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
-		} else {
+			if (nevent==1) {doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+				} else {doItAndPrint(paste("plot(ci[", plotline, '], bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #survival package 2.44-1.1
+			}
+			} else {
 			doItAndPrint('mar <- par("mar")')
 			doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
 			doItAndPrint("par(mar=mar)")
 			doItAndPrint("opar <- par(mar = mar)")
 			doItAndPrint("on.exit(par(opar))")
 #			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
-			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+			if (nevent==1){doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+				} else {doItAndPrint(paste("plot(ci[", plotline, '], bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #survival package 2.44-1.1
+			}
 			doItAndPrint("xticks <- axTicks(1)")
 #			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
 			doItAndPrint("n.atrisk <- nrisk(ci, xticks)")
@@ -13101,8 +13137,10 @@ currentModel <- TRUE
 			if (line=="col=1, lty=1, lwd=legendline") line <- paste("col=1, lty=1, ", par.lwd, ":8", sep="")
 			if (atrisk==0){
 #				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
-				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
-#				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))
+				if (nevent==1) {doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+					} else {doItAndPrint(paste('plot(ci[,1:', nevent, '], bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+				}
+				#				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))
 			}else{
 				doItAndPrint('mar <- par("mar")')
 				doItAndPrint("mar[1] <- mar[1] + length(ci$strata) + 0.5")
@@ -13111,7 +13149,9 @@ currentModel <- TRUE
 				doItAndPrint("opar <- par(mar = mar)")
 				doItAndPrint("on.exit(par(opar))")
 #				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
-				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+				if (nevent==1) {doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+					} else {doItAndPrint(paste('plot(ci[,1:', nevent, '], bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+				}
 				doItAndPrint("xticks <- axTicks(1)")
 #				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
 				doItAndPrint("n.atrisk <- nrisk(ci, xticks)")
@@ -13127,7 +13167,9 @@ currentModel <- TRUE
 	}else{
 			if (atrisk==0){
 #				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, 	ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
-				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, 	ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+				if (nevent==1) {doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, 	ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+					} else {doItAndPrint(paste("plot(ci[,", plotline, '], bty="l", ', line, xlim, 	ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+				}
 #				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))
 			}else{
 				doItAndPrint('mar <- par("mar")')
@@ -13137,7 +13179,9 @@ currentModel <- TRUE
 				doItAndPrint("opar <- par(mar = mar)")
 				doItAndPrint("on.exit(par(opar))")
 #				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
-				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+				if (nevent==1){doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
+					} else {doItAndPrint(paste("plot(ci[,", plotline, '], bty="l", ', line, xlim, 	ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+				}
 				doItAndPrint("xticks <- axTicks(1)")
 #				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
 				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", ")", sep=""))
@@ -13891,28 +13935,19 @@ putDialog("StatMedROC", list(response=response, predictor=predictor, threshold=t
 	doItAndPrint('legend("bottom", horiz=TRUE, c("Sensitivity", "Specificity"), lty=1:2, box.lty=0)')			
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 
-	doItAndPrint(paste("co <- coords(ROC", cpt, ")", sep=""))
-	if(eval(parse(text="class(co)"))=="matrix"){
-		doItAndPrint("if(ROC$thresholds[1]==-Inf){co[1,] <- min(ROC$predictor[ROC$predictor>co[1,]])}")	###Change to exact values
-		doItAndPrint("if(ROC$thresholds[1]==Inf)co[1,] <- max(ROC$predictor[ROC$predictor<co[1,]])")	###Change to exact values
+	doItAndPrint(paste("co <- coords(ROC", cpt, ", transpose = FALSE)", sep=""))	#transpose = FALSE added suggested by the author of pROC (ver 1.15)
+																					#checking for matrix removed	
+	doItAndPrint("if(ROC$thresholds[1]==-Inf){co[,1] <- min(ROC$predictor[ROC$predictor>co[,1]])}")	###Change to exact values
+	doItAndPrint("if(ROC$thresholds[1]==Inf)co[,1] <- max(ROC$predictor[ROC$predictor<co[,1]])")	###Change to exact values
 		if (tclvalue(thresholdVariable) == "1") {
-			doItAndPrint("plot(ROC, print.thres=co[1,], grid=TRUE)")
+			doItAndPrint("plot(ROC, print.thres=co[,1], grid=TRUE)")
 		} else {
 			doItAndPrint("plot(ROC, print.thres=NULL, grid=TRUE)")	
 		}
-	} else {
-		doItAndPrint("if(ROC$thresholds[1]==-Inf){co[1] <- min(ROC$predictor[ROC$predictor>co[1]])}")	###Change to exact values
-		doItAndPrint("if(ROC$thresholds[1]==Inf)co[1] <- max(ROC$predictor[ROC$predictor<co[1]])")	###Change to exact values
-		if (tclvalue(thresholdVariable) == "1") {
-			doItAndPrint("plot(ROC, print.thres=co[1], grid=TRUE)")
-		} else {
-			doItAndPrint("plot(ROC, print.thres=NULL, grid=TRUE)")	
-		}
-	}
 		
 #	doItAndPrint('coords(ROC, "all")')
-	doItAndPrint("if(ROC$thresholds[1]==-Inf){coords(ROC, x=c(-Inf, unique(sort(ROC$predictor)), Inf))}")
-	doItAndPrint("if(ROC$thresholds[1]==Inf){coords(ROC, x=c(Inf, unique(sort(ROC$predictor, decreasing=TRUE)), -Inf))}")
+	doItAndPrint("if(ROC$thresholds[1]==-Inf){coords(ROC, x=c(-Inf, unique(sort(ROC$predictor)), Inf), transpose = FALSE)}") #transpose = FALSE added suggested by the author of pROC
+	doItAndPrint("if(ROC$thresholds[1]==Inf){coords(ROC, x=c(Inf, unique(sort(ROC$predictor, decreasing=TRUE)), -Inf), transpose = FALSE)}") #transpose = FALSE added suggested by the author of pROC
 
 	if(eval(parse(text="ROC$direction"))==">"){
 		logger(gettext(domain="R-RcmdrPlugin.EZR","### <= threshold is considered positive"))
@@ -16112,8 +16147,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.40", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","May 1, 2019"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.41", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","October 1, 2019"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -16196,7 +16231,7 @@ StatMedcloseCommander <- function(ask=TRUE, ask.save=ask){
 
 ###add save data function
 	if (!is.null(ActiveDataSet())){	
-		logger("Active dataset")
+		logger("Active_dataset")
 		response1 <- RcmdrTkmessageBox(message=gettext(domain="R-RcmdrPlugin.EZR","Save active dataset?"),
 				icon="question", type="yesno", default="yes")
 		if ("yes" == tclvalue(response1)){
@@ -16227,7 +16262,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.40", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.41", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',

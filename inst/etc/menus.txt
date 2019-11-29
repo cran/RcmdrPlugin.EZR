@@ -386,6 +386,11 @@ item	statModelsMenu2	command	"Linear model..."	linearModel	"numericP()"	""
 item	statModelsMenu2	command	"Generalized linear model..."	generalizedLinearModel	"activeDataSetP()"	""
 item	statModelsMenu2	command	"Multinomial logit model..."	multinomialLogitModel	"factorsP()"	"packageAvailable('nnet')"
 item	statModelsMenu2	command	"Ordinal regression model..."	ordinalRegressionModel	"factorsP()"	"packageAvailable('MASS')"
+
+item    statModelsMenu2  command "Linear mixed model..."                         linearMixedModel      "numericP()" "packageAvailable('lme4')"
+item    statModelsMenu2  command "Generalized linear mixed model..."             generalizedLinearMixedModel      "activeDataSetP()" "packageAvailable('lme4')"
+
+
 menu	graphsMenu2	OriginalMenu	""	""	""	""
 item	OriginalMenu	cascade	"Graphs"	graphsMenu2	""	""
 item	graphsMenu2	command	"Color palette..."	setPalette	""	""

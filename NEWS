@@ -1,3 +1,11 @@
+Changes to Version 1.41
+
+  o Changed the scripts of cumulative incidence functions for compatability with new version (2.44) of "survival" package.
+
+  o Changed the scripts of ROC curve analyses for compatability with new version (1.15) of "pROC" package.
+
+  o Small bug fixes.
+
 Changes to Version 1.40
 
   o Added caliper matching function by changing the use of Matching package insteade of OptMatch package.
