@@ -72,6 +72,7 @@
 \alias{waldtest.crr}
 \alias{window.type}
 \alias{BarplotFor3Factors}
+\alias{nchar_ZenToHan}
 \title{
 Rcmdr Plug-In Package for the EZR (Easy R especially for medical statistics)
 }
@@ -83,8 +84,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.41\cr
-Date: \tab 2019-12-01\cr
+Version: \tab 1.41.1\cr
+Date: \tab 2020-04-01\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }

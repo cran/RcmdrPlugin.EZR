@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.41", "\n")
+cat("   Version 1.41.1", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -128,7 +128,7 @@ HistEZR <- function (x, scale = c("frequency", "percent", "density"), xlab = dep
 }
 
 
-nchar.ZenToHan <- function(x) {
+nchar_ZenToHan <- function(x) {
 	if(length(x)==1){
 		return(length(charToRaw(x)))
 	} else {
@@ -147,21 +147,21 @@ dataframe_print <- function(x, printrow=1) {
 	row.number <- length(x[,1])
 	col.number <- length(colnames(x))
 
-	group.name.max.nchar <- max(nchar.ZenToHan(colnames(x)[1:col.number]))
+	group.name.max.nchar <- max(nchar_ZenToHan(colnames(x)[1:col.number]))
 	group.data.max.nchar <- 0
 	for (i in 1:(col.number)){
-		if(max(nchar.ZenToHan(as.character(x[,i]))) > group.data.max.nchar){
-			group.data.max.nchar <- max(nchar.ZenToHan(as.character(x[,i])))
+		if(max(nchar_ZenToHan(as.character(x[,i]))) > group.data.max.nchar){
+			group.data.max.nchar <- max(nchar_ZenToHan(as.character(x[,i])))
 		}
 	}
 	group.nchar <- max(group.name.max.nchar, group.data.max.nchar)
 	for (i in 1:(col.number)){
-		margin <- group.nchar - nchar.ZenToHan(colnames(x)[i])
+		margin <- group.nchar - nchar_ZenToHan(colnames(x)[i])
 		colnames(x)[i] <- paste(paste(rep(" ", floor(margin/2)), collapse=""), colnames(x)[i], paste(rep(" ", ceiling(margin/2)), collapse=""), sep="")
 	}
 
 	if(printrow==1){
-		rownames.nchar <- max(nchar.ZenToHan(row.names(x)))
+		rownames.nchar <- max(nchar_ZenToHan(row.names(x)))
 		line.nchar <- rownames.nchar + group.nchar * col.number
 		line.nchar <- line.nchar + 3 * (col.number - 1)
 		table.line <- NULL
@@ -175,10 +175,10 @@ dataframe_print <- function(x, printrow=1) {
 			substring(table.line[3], rownames.nchar + 3 + (group.nchar +3 ) * (i - 1) + group.nchar + 2) <- "+"	
 		}
 		for(i in 1:row.number){
-			table.line[3+i] <- paste(rep(" ", rownames.nchar - nchar.ZenToHan(row.names(x)[i])), collapse="")
+			table.line[3+i] <- paste(rep(" ", rownames.nchar - nchar_ZenToHan(row.names(x)[i])), collapse="")
 			table.line[3+i] <- paste(row.names(x)[i], table.line[3+i], sep="")
 			for(j in 1:col.number){
-				cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,j]))), collapse="")
+				cell <- paste(rep(" ", group.nchar - nchar_ZenToHan(as.character(x[i,j]))), collapse="")
 				cell <- paste(cell, x[i,j], sep="")			
 				table.line[3+i] <- paste(table.line[3+i], " | ", cell, sep="")
 			}
@@ -195,10 +195,10 @@ dataframe_print <- function(x, printrow=1) {
 			substring(table.line[3], (group.nchar +3 ) * (i - 1) + group.nchar + 2) <- "+"	
 		}
 		for(i in 1:row.number){
- 			cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,1]))), collapse="")
+ 			cell <- paste(rep(" ", group.nchar - nchar_ZenToHan(as.character(x[i,1]))), collapse="")
 			table.line[3+i] <- paste(cell, x[i,1], sep="")			
 			for(j in 2:col.number){
-				cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,j]))), collapse="")
+				cell <- paste(rep(" ", group.nchar - nchar_ZenToHan(as.character(x[i,j]))), collapse="")
 				cell <- paste(cell, x[i,j], sep="")			
 				table.line[3+i] <- paste(table.line[3+i], " | ", cell, sep="")
 			}
@@ -218,23 +218,23 @@ twoway_dataframe_print <- function(x) {
 	x <- x[3:row.number,]
 	row.number <- row.number-2
 
-	group.name.max.nchar <- max(nchar.ZenToHan(colnames(x)[1:col.number]))
-	group.name.max.nchar <- max(group.name.max.nchar, nchar.ZenToHan(group.name))
+	group.name.max.nchar <- max(nchar_ZenToHan(colnames(x)[1:col.number]))
+	group.name.max.nchar <- max(group.name.max.nchar, nchar_ZenToHan(group.name))
 	group.data.max.nchar <- 0
 	for (i in 1:(col.number)){
-		if(max(nchar.ZenToHan(as.character(x[,i]))) > group.data.max.nchar){
-			group.data.max.nchar <- max(nchar.ZenToHan(as.character(x[,i])))
+		if(max(nchar_ZenToHan(as.character(x[,i]))) > group.data.max.nchar){
+			group.data.max.nchar <- max(nchar_ZenToHan(as.character(x[,i])))
 		}
 	}
 	group.nchar <- max(group.name.max.nchar, group.data.max.nchar)
 	for (i in 1:(col.number)){
-		margin <- group.nchar - nchar.ZenToHan(colnames(x)[i])
+		margin <- group.nchar - nchar_ZenToHan(colnames(x)[i])
 		colnames(x)[i] <- paste(paste(rep(" ", floor(margin/2)), collapse=""), colnames(x)[i], paste(rep(" ", ceiling(margin/2)), collapse=""), sep="")
 	}
-	margin <- group.nchar - nchar.ZenToHan(group.name)
+	margin <- group.nchar - nchar_ZenToHan(group.name)
 	group.name <- paste(paste(rep(" ", floor(margin/2)), collapse=""), group.name, paste(rep(" ", ceiling(margin/2)), collapse=""), sep="")
 
-	rownames.nchar <- max(nchar.ZenToHan(row.names(x)))
+	rownames.nchar <- max(nchar_ZenToHan(row.names(x)))
 
 	line.nchar <- group.nchar * col.number
 	line.nchar <- line.nchar + 3 * (col.number - 1)
@@ -248,10 +248,10 @@ twoway_dataframe_print <- function(x) {
 		substring(table.line[4], (group.nchar +3 ) * (i - 1) + group.nchar + 2) <- "+"	
 	}
 	for(i in 1:row.number){
-		cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,1]))), collapse="")
+		cell <- paste(rep(" ", group.nchar - nchar_ZenToHan(as.character(x[i,1]))), collapse="")
 		table.line[4+i] <- paste(cell, x[i,1], sep="")			
 		for(j in 2:col.number){
-			cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,j]))), collapse="")
+			cell <- paste(rep(" ", group.nchar - nchar_ZenToHan(as.character(x[i,j]))), collapse="")
 			cell <- paste(cell, x[i,j], sep="")			
 			table.line[4+i] <- paste(table.line[4+i], " | ", cell, sep="")
 		}
@@ -285,23 +285,23 @@ finaltable_dataframe_print <- function(x) {
 		row.number <- row.number-2
 	}
 
-	group.name.max.nchar <- max(nchar.ZenToHan(colnames(x)[1:col.number]))
-	group.name.max.nchar <- max(group.name.max.nchar, nchar.ZenToHan(group.name))
+	group.name.max.nchar <- max(nchar_ZenToHan(colnames(x)[1:col.number]))
+	group.name.max.nchar <- max(group.name.max.nchar, nchar_ZenToHan(group.name))
 	group.data.max.nchar <- 0
 	for (i in 1:(col.number)){
-		if(max(nchar.ZenToHan(as.character(x[,i]))) > group.data.max.nchar){
-			group.data.max.nchar <- max(nchar.ZenToHan(as.character(x[,i])))
+		if(max(nchar_ZenToHan(as.character(x[,i]))) > group.data.max.nchar){
+			group.data.max.nchar <- max(nchar_ZenToHan(as.character(x[,i])))
 		}
 	}
 	group.nchar <- max(group.name.max.nchar, group.data.max.nchar)
 	for (i in 1:(col.number)){
-		margin <- group.nchar - nchar.ZenToHan(colnames(x)[i])
+		margin <- group.nchar - nchar_ZenToHan(colnames(x)[i])
 		colnames(x)[i] <- paste(paste(rep(" ", floor(margin/2)), collapse=""), colnames(x)[i], paste(rep(" ", ceiling(margin/2)), collapse=""), sep="")
 	}
-	margin <- group.nchar - nchar.ZenToHan(group.name)
+	margin <- group.nchar - nchar_ZenToHan(group.name)
 	group.name <- paste(paste(rep(" ", floor(margin/2)), collapse=""), group.name, paste(rep(" ", ceiling(margin/2)), collapse=""), sep="")
 
-	rownames.nchar <- max(nchar.ZenToHan(row.names(x)))
+	rownames.nchar <- max(nchar_ZenToHan(row.names(x)))
 
 	line.nchar <- group.nchar * col.number
 	line.nchar <- line.nchar + 3 * (col.number - 1)
@@ -325,10 +325,10 @@ finaltable_dataframe_print <- function(x) {
 			substring(table.line[4], (group.nchar +3 ) * (i - 1) + group.nchar + 2) <- "+"	
 		}
 	}
-	cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[1,1]))), collapse="")
+	cell <- paste(rep(" ", group.nchar - nchar_ZenToHan(as.character(x[1,1]))), collapse="")
 	table.line[5] <- paste(cell, x[1,1], sep="")			
 	for(j in 2:col.number){
-			margin <- group.nchar - nchar.ZenToHan(as.character(x[1,j]))
+			margin <- group.nchar - nchar_ZenToHan(as.character(x[1,j]))
 			cell1 <- paste(rep(" ", floor(margin/2)), collapse="")
 			cell2 <- paste(rep(" ", ceiling(margin/2)), collapse="")
 			cell <- paste(cell1, x[1,j], cell2, sep="")			
@@ -338,10 +338,10 @@ finaltable_dataframe_print <- function(x) {
 	table.line[6] <- paste(rep(cell, col.number), collapse="-+-")
 #	table.line[6] <- paste(table.line[6], paste(rep("-", 3 * (col.number)), collapse=""), sep="")
 	for(i in 2:row.number){
-		cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,1]))), collapse="")
+		cell <- paste(rep(" ", group.nchar - nchar_ZenToHan(as.character(x[i,1]))), collapse="")
 		table.line[5+i] <- paste(cell, x[i,1], sep="")			
 		for(j in 2:col.number){
-			cell <- paste(rep(" ", group.nchar - nchar.ZenToHan(as.character(x[i,j]))), collapse="")
+			cell <- paste(rep(" ", group.nchar - nchar_ZenToHan(as.character(x[i,j]))), collapse="")
 			cell <- paste(cell, x[i,j], sep="")			
 			table.line[5+i] <- paste(table.line[5+i], " | ", cell, sep="")
 		}
@@ -1737,8 +1737,10 @@ summary.ci <- function (object, ..., ci, res, event=1, time=0){
 #   changes made according to survival package upgrade to include no event group
 #	nevents <- length(ci$surv[1,])
 
-    samples <- ci.table$table[as.numeric(substring(row.names(ci.table$table), 
-        nchar(row.names(ci.table$table)), nchar(row.names(ci.table$table)))) == event, 1]
+#    samples <- ci.table$table[as.numeric(substring(row.names(ci.table$table), 
+#        nchar(row.names(ci.table$table)), nchar(row.names(ci.table$table)))) == event, 1]
+    samples <- ci.table$table[substring(row.names(ci.table$table), 
+        nchar(row.names(ci.table$table)), nchar(row.names(ci.table$table))) == event, 1]  #delete as.numeric according to the change in survival 3.1-8
     samples <- samples[!is.na(samples)]
 #   changes made according to survival package upgrade to change the row.names
 #	samples <- ci.table$table[as.numeric(substring(row.names(ci.table$table),1,1))==event,1]
@@ -3486,7 +3488,7 @@ stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), xlab=NULL, y
 		yscale <- 1
 	} else {
 		yscale <- 100
-		ylim=ylim * 100
+#		ylim=ylim * 100		#deleted according to the change in survival 3.1-8
 	}
 	if (ypercent==1){
 		ylab <- paste(ylab, " (%)", sep="")
@@ -3525,7 +3527,7 @@ stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), xlab=NULL, y
 			if (num==1){
 				next.y[j] <- sum(ci$surv[i])		
 			} else {
-				next.y[j] <- sum(ci$surv[i, j:num])
+				next.y[j] <- sum(ci$surv[i, (j+1):(num+1)])		#changed accoriding to the survival ver. 3.1-8
 			}
 		}
 		y <- rbind(y, next.y)
@@ -3538,7 +3540,8 @@ stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), xlab=NULL, y
 			plot(ci, fun="event", col=0, bty="l", xlim=xlim, ylim=ylim, yscale=yscale, xlab=xlab, ylab=ylab, main=main)
 			if(atrisk==1){
 				xticks <- axTicks(1)
-				n.atrisk <- nrisk(ci, xticks)			
+#				n.atrisk <- nrisk(ci, xticks)			
+				if(num==1){n.atrisk <- nrisk(ci, xticks)} else {n.atrisk <- nrisk(ci[,1], xticks)}		#changed accoriding to the survival ver. 3.1-8	
 				axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)
 				title(xlab = "Number at risk", line = 3, adj = 0)			
 			}
@@ -11992,13 +11995,15 @@ currentModel <- TRUE
 		if (ypercent==0){
 			ylim <- ""
 		} else {
-			ylim <- ", ylim=c(0, 100)"
+#			ylim <- ", ylim=c(0, 100)"
+			ylim <- ", ylim=c(0, 1)"	#changed according to the change in survival 3.1-8
 		}
 	} else {
 		if (ypercent==0){
 			ylim <- paste(", ylim=c(", ylim, ")", sep="")
 		} else {
-			ylim <- paste(", ylim=c(", ylim, ")*100", sep="")
+#			ylim <- paste(", ylim=c(", ylim, ")*100", sep="")
+			ylim <- paste(", ylim=c(", ylim, ")", sep="")	#changed according to the change in survival 3.1-8
 		}
 	}
 	if (ci==0){
@@ -12656,13 +12661,15 @@ onOK <- function(){
 		if (ypercent==0){
 			ylim <- ""
 		} else {
-			ylim <- ", ylim=c(0, 100)"
+#			ylim <- ", ylim=c(0, 100)"
+			ylim <- ", ylim=c(0, 1)"	#changed according to the change in survival 3.1-8
 		}
 	} else {
 		if (ypercent==0){
 			ylim <- paste(", ylim=c(", ylim, ")", sep="")
 		} else {
-			ylim <- paste(", ylim=c(", ylim, ")*100", sep="")
+#			ylim <- paste(", ylim=c(", ylim, ")*100", sep="")
+			ylim <- paste(", ylim=c(", ylim, ")", sep="")	#changed according to the change in survival 3.1-8
 		}
 	}
 	if (censor==0){
@@ -12945,13 +12952,15 @@ currentModel <- TRUE
 		if (ypercent==0){
 			ylim <- ", ylim=c(0, 1)"
 		} else {
-			ylim <- ", ylim=c(0, 100)"			
+#			ylim <- ", ylim=c(0, 100)"			
+			ylim <- ", ylim=c(0, 1)"	#changed according to the change in survival 3.1-8
 		}
 	} else {
 		if (ypercent==0){
 			ylim <- paste(", ylim=c(", ylim, ")", sep="")
 		} else {
-			ylim <- paste(", ylim=c(", ylim, ")*100", sep="")			
+#			ylim <- paste(", ylim=c(", ylim, ")*100", sep="")			
+			ylim <- paste(", ylim=c(", ylim, ")", sep="")				#changed according to the change in survival 3.1-8
 		}
 	}
 
@@ -13045,7 +13054,7 @@ currentModel <- TRUE
 		if (atrisk==0){
 #			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 			if (nevent==1) {doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
-				} else {doItAndPrint(paste('plot(ci[,1:', nevent, '], bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+				} else {doItAndPrint(paste('plot(ci[,2:', nevent+1, '], bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
 			}
 		} else {
 			doItAndPrint('mar <- par("mar")')
@@ -13055,11 +13064,11 @@ currentModel <- TRUE
 			doItAndPrint("on.exit(par(opar))")
 #			doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 			if (nevent==1) {doItAndPrint(paste('plot(ci, fun="event", bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
-				} else {doItAndPrint(paste('plot(ci[,1:', nevent, '], bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+				} else {doItAndPrint(paste('plot(ci[,2:', nevent+1, '], bty="l", conf.int=FALSE, ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
 			}
 			doItAndPrint("xticks <- axTicks(1)")
 #			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
-			doItAndPrint("n.atrisk <- nrisk(ci, xticks)")
+			if (nevent==1){doItAndPrint("n.atrisk <- nrisk(ci, xticks)")} else {doItAndPrint("n.atrisk <- nrisk(ci[,1], xticks)")}
 			doItAndPrint("axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)")
 			doItAndPrint('title(xlab = "Number at risk", line = 3, adj = 0)')
 		}
@@ -13068,7 +13077,7 @@ currentModel <- TRUE
 		if (atrisk==0){
 #			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 			if (nevent==1) {doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
-				} else {doItAndPrint(paste("plot(ci[", plotline, '], bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #survival package 2.44-1.1
+				} else {doItAndPrint(paste("plot(ci[", plotline+1, '], bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #survival package 2.44-1.1
 			}
 			} else {
 			doItAndPrint('mar <- par("mar")')
@@ -13078,11 +13087,11 @@ currentModel <- TRUE
 			doItAndPrint("on.exit(par(opar))")
 #			doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 			if (nevent==1){doItAndPrint(paste("plot(ci[", plotline, '], fun="event", bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
-				} else {doItAndPrint(paste("plot(ci[", plotline, '], bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #survival package 2.44-1.1
+				} else {doItAndPrint(paste("plot(ci[", plotline+1, '], bty="l", lty=1:32, conf.int=FALSE', xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #survival package 2.44-1.1
 			}
 			doItAndPrint("xticks <- axTicks(1)")
 #			doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
-			doItAndPrint("n.atrisk <- nrisk(ci, xticks)")
+			if (nevent==1){doItAndPrint("n.atrisk <- nrisk(ci, xticks)")}else{doItAndPrint("n.atrisk <- nrisk(ci[,1], xticks)")}
 			doItAndPrint("axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)")
 			doItAndPrint('title(xlab = "Number at risk", line = 3, adj = 0)')
 		}
@@ -13138,7 +13147,7 @@ currentModel <- TRUE
 			if (atrisk==0){
 #				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 				if (nevent==1) {doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
-					} else {doItAndPrint(paste('plot(ci[,1:', nevent, '], bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+					} else {doItAndPrint(paste('plot(ci[,2:', nevent+1, '], bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
 				}
 				#				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))
 			}else{
@@ -13150,11 +13159,11 @@ currentModel <- TRUE
 				doItAndPrint("on.exit(par(opar))")
 #				doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 				if (nevent==1) {doItAndPrint(paste('plot(ci, fun="event", bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
-					} else {doItAndPrint(paste('plot(ci[,1:', nevent, '], bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+					} else {doItAndPrint(paste('plot(ci[,2:', nevent+1, '], bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
 				}
 				doItAndPrint("xticks <- axTicks(1)")
 #				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
-				doItAndPrint("n.atrisk <- nrisk(ci, xticks)")
+				if (nevent==1){doItAndPrint("n.atrisk <- nrisk(ci, xticks)")}else{doItAndPrint("n.atrisk <- nrisk(ci[,1], xticks)")}
 				doItAndPrint("for (i in 1:length(ci$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")
 				doItAndPrint(paste("for (i in 1:length(ci$strata)){mtext(groups[i], side=1, at=-(xticks[2]-xticks[1])/2, line=4+i, cex=", par.cex, ")}", sep=""))
 				doItAndPrint('title(xlab = "Number at risk", line = 3.5, adj = 0)')
@@ -13168,7 +13177,7 @@ currentModel <- TRUE
 			if (atrisk==0){
 #				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, 	ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 				if (nevent==1) {doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, 	ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
-					} else {doItAndPrint(paste("plot(ci[,", plotline, '], bty="l", ', line, xlim, 	ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+					} else {doItAndPrint(paste("plot(ci[,", plotline+1, '], bty="l", ', line, xlim, 	ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
 				}
 #				doItAndPrint(paste("legend (", place, ", legend, ", line, ', box.lty=0, title="', strata3, group[i], '")', sep=""))
 			}else{
@@ -13180,11 +13189,11 @@ currentModel <- TRUE
 				doItAndPrint("on.exit(par(opar))")
 #				doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, ylim, xlabel, ylabel, censor, xscale, ")", sep=""))
 				if (nevent==1){doItAndPrint(paste("plot(ci[,", plotline, '], fun="event", bty="l", ', line, xlim, ylim, ypercent1, xlabel, ylabel, censor, ")", sep=""))
-					} else {doItAndPrint(paste("plot(ci[,", plotline, '], bty="l", ', line, xlim, 	ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
+					} else {doItAndPrint(paste("plot(ci[,", plotline+1, '], bty="l", ', line, xlim, 	ylim, ypercent1, xlabel, ylabel, censor, ")", sep="")) #for survival ver. 2.44-1.1
 				}
 				doItAndPrint("xticks <- axTicks(1)")
 #				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", xscale2, ")", sep=""))
-				doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", ")", sep=""))
+				if (nevent==1){doItAndPrint(paste("n.atrisk <- nrisk(ci, xticks", ")", sep=""))}else{doItAndPrint(paste("n.atrisk <- nrisk(ci[,1], xticks", ")", sep=""))}
 				doItAndPrint("for (i in 1:length(ci$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}")
 				doItAndPrint(paste("for (i in 1:length(ci$strata)){mtext(groups[i], side=1, at=-(xticks[2]-xticks[1])/2, line=4+i, cex=", par.cex, ")}", sep=""))
 				doItAndPrint('title(xlab = "Number at risk", line = 3.5, adj = 0)')
@@ -13935,8 +13944,8 @@ putDialog("StatMedROC", list(response=response, predictor=predictor, threshold=t
 	doItAndPrint('legend("bottom", horiz=TRUE, c("Sensitivity", "Specificity"), lty=1:2, box.lty=0)')			
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 
-	doItAndPrint(paste("co <- coords(ROC", cpt, ", transpose = FALSE)", sep=""))	#transpose = FALSE added suggested by the author of pROC (ver 1.15)
-																					#checking for matrix removed	
+	doItAndPrint(paste("co <- coords(ROC", cpt, ", transpose = FALSE)", sep=""))					###", transpose = FALSE" added from pROC 1.15
+																							
 	doItAndPrint("if(ROC$thresholds[1]==-Inf){co[,1] <- min(ROC$predictor[ROC$predictor>co[,1]])}")	###Change to exact values
 	doItAndPrint("if(ROC$thresholds[1]==Inf)co[,1] <- max(ROC$predictor[ROC$predictor<co[,1]])")	###Change to exact values
 		if (tclvalue(thresholdVariable) == "1") {
@@ -13944,10 +13953,28 @@ putDialog("StatMedROC", list(response=response, predictor=predictor, threshold=t
 		} else {
 			doItAndPrint("plot(ROC, print.thres=NULL, grid=TRUE)")	
 		}
+
+#	if(eval(parse(text="class(co)"))=="matrix"){															#checking for matrix removed from pROC 1.15
+#		doItAndPrint("if(ROC$thresholds[1]==-Inf){co[1,] <- min(ROC$predictor[ROC$predictor>co[1,]])}")	###Change to exact values
+#		doItAndPrint("if(ROC$thresholds[1]==Inf)co[1,] <- max(ROC$predictor[ROC$predictor<co[1,]])")	###Change to exact values
+#		if (tclvalue(thresholdVariable) == "1") {
+#			doItAndPrint("plot(ROC, print.thres=co[1,], grid=TRUE)")
+#		} else {
+#			doItAndPrint("plot(ROC, print.thres=NULL, grid=TRUE)")	
+#		}
+#	} else {
+#		doItAndPrint("if(ROC$thresholds[1]==-Inf){co[1] <- min(ROC$predictor[ROC$predictor>co[1]])}")	###Change to exact values
+#		doItAndPrint("if(ROC$thresholds[1]==Inf)co[1] <- max(ROC$predictor[ROC$predictor<co[1]])")	###Change to exact values
+#		if (tclvalue(thresholdVariable) == "1") {
+#			doItAndPrint("plot(ROC, print.thres=co[1], grid=TRUE)")
+#		} else {
+#			doItAndPrint("plot(ROC, print.thres=NULL, grid=TRUE)")	
+#		}
+#	}
 		
 #	doItAndPrint('coords(ROC, "all")')
-	doItAndPrint("if(ROC$thresholds[1]==-Inf){coords(ROC, x=c(-Inf, unique(sort(ROC$predictor)), Inf), transpose = FALSE)}") #transpose = FALSE added suggested by the author of pROC
-	doItAndPrint("if(ROC$thresholds[1]==Inf){coords(ROC, x=c(Inf, unique(sort(ROC$predictor, decreasing=TRUE)), -Inf), transpose = FALSE)}") #transpose = FALSE added suggested by the author of pROC
+	doItAndPrint("if(ROC$thresholds[1]==-Inf){coords(ROC, x=c(-Inf, unique(sort(ROC$predictor)), Inf), transpose = FALSE)}")		###", transpose = FALSE" added from pROC 1.15
+	doItAndPrint("if(ROC$thresholds[1]==Inf){coords(ROC, x=c(Inf, unique(sort(ROC$predictor, decreasing=TRUE)), -Inf), transpose = FALSE)}")	###", transpose = FALSE" added from pROC 1.15
 
 	if(eval(parse(text="ROC$direction"))==">"){
 		logger(gettext(domain="R-RcmdrPlugin.EZR","### <= threshold is considered positive"))
@@ -16147,8 +16174,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.41", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","October 1, 2019"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.41.1", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","April 1, 2020"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -16262,7 +16289,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.41", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.41.1", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',

@@ -1,3 +1,11 @@
+Changes to Version 1.41.1
+
+  o Changed the scripts of cumulative incidence functions for compatability with new version (3.18) of "survival" package.
+
+  o Changed the scripts of ROC curve analyses for compatability with new version (1.16) of "pROC" package.
+
+  o Reanmed nchar.ZenToHan() to nchar_ZenToHan() because this function id not an S3 method.
+
 Changes to Version 1.41
 
   o Changed the scripts of cumulative incidence functions for compatability with new version (2.44) of "survival" package.
