@@ -84,8 +84,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.41.1\cr
-Date: \tab 2020-04-01\cr
+Version: \tab 1.42\cr
+Date: \tab 2020-05-05\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
@@ -158,6 +158,7 @@ Kappa statistics for agreement of two tests\cr
 Compute positive and negative predictive values\cr
 ROC curve analysis for quantitative test\cr
 Compare two ROC curves\cr
+ROC curve analysis for time-to-event data\cr
 Cronbach's alpha coefficient for reliability\cr\cr
 \emph{For matched-pair analysis}\cr\cr
 Extract matched controls\cr

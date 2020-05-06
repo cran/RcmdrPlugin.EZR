@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.41.1", "\n")
+cat("   Version 1.42", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -7779,7 +7779,8 @@ putDialog("StatMedBoxPlot", list(x=x, group=group, logy=logy, whisker=whisker, s
 		}
 #        identifyPoints <- "1" == tclvalue(identifyVariable)
         .activeDataSet <- ActiveDataSet()
-        var <- paste(subset1, .activeDataSet, subset2, "[complete.cases(", subset1, .activeDataSet, subset2, "$", x, "),]$", x, sep="")
+#        var <- paste(subset1, .activeDataSet, subset2, "[complete.cases(", subset1, .activeDataSet, subset2, "$", x, "),]$", x, sep="")
+        var <- paste(subset1, .activeDataSet, subset2, "$", x, "[complete.cases(", subset1, .activeDataSet, subset2, "$", x, ")]", sep="")
         compgroup <- paste(subset1, .activeDataSet, subset2, "[complete.cases(", subset1, .activeDataSet, subset2, "$", x, "),]$", group, sep="")
 		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
         if (length(group) == 0) {
@@ -14073,7 +14074,116 @@ putDialog("StatMedROCtest", list(response=response, predictor1=predictor1, predi
     dialogSuffix(rows=6, columns=1)
     }
 		
+
+StatMedSurvivalROC  <- function(){
+defaults <- list(event = "", timetoevent = "", predictor=NULL, method="0", point = "<none>", span = "0.05", subset = "")
+dialog.values <- getDialog("StatMedSurvivalROC", defaults)
+currentFields$subset <- dialog.values$subset	
+currentModel <- TRUE
+
+  initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","ROC curve analysis for time-to-event data"))
+    variablesFrame <- tkframe(top)
+    eventBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Status indicator (censor=0, event=1) (pick one)"), listHeight=8, initialSelection=varPosn(dialog.values$event, "all"))
+    timetoeventBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Time-to-event variable (pick one)"), listHeight=8, initialSelection=varPosn(dialog.values$timetoevent, "all"))
+    variables2Frame <- tkframe(top)
+    predictorBox <- variableListBox(variables2Frame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Predictor (pick one)"), listHeight=8, initialSelection=varPosn(dialog.values$predictor, "all"))
+
+	optionFrame <- tkframe(top)
+	pointFrame <- tkframe(optionFrame)
+	pointVariable <- tclVar(dialog.values$point)	
+	pointField <- ttkentry(pointFrame, width="20", textvariable=pointVariable)
+	radioButtons(optionFrame, name="method", buttons=c("KM", "NNE"), values=c("0", "1"), initialValue=dialog.values$method,
+        labels=gettext(domain="R-RcmdrPlugin.EZR",c("Kaplan-Meier", "Nearest neighbor estimation")), title=gettext(domain="R-RcmdrPlugin.EZR","Method"))
+	spanFrame <- tkframe(optionFrame)
+	spanVariable <- tclVar(dialog.values$span)	
+	spanField <- ttkentry(spanFrame, width="20", textvariable=spanVariable)
+
+  onOK <- function(){
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","ROC curve analysis for time-to-event data"), "#####", sep=""))
+    event <- getSelection(eventBox)
+    timetoevent <- getSelection(timetoeventBox)
+    predictor <- getSelection(predictorBox)
+	method <- as.character(tclvalue(methodVariable))
 	
+    subset <- tclvalue(subsetVariable)
+    if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
+        || trim.blanks(subset) == ""){
+	dataSet <- activeDataSet()	
+	  }
+    else{
+	dataSet <- paste("subset(", activeDataSet(), ", ", subset, ")", sep="")	
+	  }
+	point <- tclvalue(pointVariable)
+	span <- tclvalue(spanVariable)
+	
+putDialog("StatMedSurvivalROC", list(event = event, timetoevent = timetoevent, predictor = predictor, method = method, point = tclvalue(pointVariable), span = span, subset = tclvalue(subsetVariable)))
+
+    if (length(event) != 1) {
+      errorCondition(recall=StatMedSurvivalROC, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1)"))
+      return()
+    }
+    if (length(timetoevent) != 1) {
+      errorCondition(recall=StatMedSurvivalROC, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
+      return()
+    }
+    if (length(predictor) != 1) {
+      errorCondition(recall=StatMedSurvivalROC, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one predictor variable"))
+      return()
+    }
+	if (point == "<none>") {
+      errorCondition(recall=StatMedSurvivalROC, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Define time to evaluate survival rate"))
+      return()
+	}
+
+	closeDialog()
+    Library("survival")
+	Library("survivalROC")
+
+	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
+
+	if(method=="0"){
+		doItAndPrint(paste("ROC <- survivalROC(", dataSet, "$", timetoevent, ", ", dataSet, "$", event, ", ", dataSet, "$", predictor, ", predict.time=", point, ', method="KM")', sep=""))
+	} else {
+		doItAndPrint(paste("ROC <- survivalROC(", dataSet, "$", timetoevent, ", ", dataSet, "$", event, ", ", dataSet, "$", predictor, ", predict.time=", point, ', method="NNE", span=', span, ")", sep=""))		
+	}
+	doItAndPrint('plot(ROC$FP, ROC$TP, type="l", xlim=c(0,1), ylim=c(0,1), xlab="1 - Specificity", ylab="Sensitivity", main=paste("AUC = ", round(ROC$AUC,3), sep=""))')
+	doItAndPrint("abline(0,1)")
+
+	doItAndPrint("maxSensSpec <- max(1-ROC$FP + ROC$TP)")
+	doItAndPrint("maxThre <- ROC$cut.values[1-ROC$FP+ROC$TP==maxSensSpec]")
+	doItAndPrint("sensmaxThre <- round(ROC$TP[1-ROC$FP+ROC$TP==maxSensSpec], 3)")
+	doItAndPrint("specmaxThre <- round(1-ROC$FP[1-ROC$FP+ROC$TP==maxSensSpec], 3)")
+
+	doItAndPrint("res <- cbind(ROC$cut.values, 1-ROC$FP, ROC$TP)")
+	doItAndPrint('colnames(res) <- c("threshold", "specificity", "sensitivity")')
+	doItAndPrint("res")
+	
+	doItAndPrint('cat(paste(gettext(domain="R-RcmdrPlugin.EZR", "Threshold to maximize the sum of sensitivity and specificity"), " = ", maxThre, "\n", sep=""))')
+	doItAndPrint('cat(paste(gettext(domain="R-RcmdrPlugin.EZR","Sensitivity"), " = ", sensmaxThre, ", ", gettext(domain="R-RcmdrPlugin.EZR", "Specificity"), " = ", specmaxThre, "\n", sep=""))')
+	}
+  OKCancelHelp(helpSubject="survivalROC", model=TRUE, apply="StatMedSurvivalROC", reset="StatMedSurvivalROC")
+  
+    tkgrid(getFrame(timetoeventBox), labelRcmdr(variablesFrame, text="    "), getFrame(eventBox), sticky="nw")
+    tkgrid(variablesFrame, sticky="nw")
+    tkgrid(getFrame(predictorBox), sticky="nw")
+    tkgrid(variables2Frame, sticky="nw")
+	
+	tkgrid(labelRcmdr(pointFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Time point to evaluate survival rate")), pointField,  sticky = "w")
+	tkgrid(labelRcmdr(spanFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Span for nearest neighbor estimation")), spanField,  sticky = "w")
+  tkgrid(pointFrame, labelRcmdr(optionFrame, text="   "), methodFrame, labelRcmdr(optionFrame, text="   "), spanFrame, sticky="w")	
+  tkgrid(optionFrame, sticky="w")
+  
+  StatMedSubsetBox(model=TRUE)
+  tkgrid(subsetFrame, sticky="w")
+  tkgrid(buttonsFrame, sticky="w")
+  dialogSuffix(rows=7, columns=1)
+}
+
+		
 StatMedTest <- function(){
 	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Accuracy of qualitative test"))
 	textFrame <- tkframe(top)
@@ -16174,8 +16284,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.41.1", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","April 1, 2020"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.42", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","May 5, 2020"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -16289,7 +16399,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.41.1", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.42", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -16357,4 +16467,5 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'groupingVariable', 'groupingFrame', 'othervarVariable', 'rocVariable',
 'columnmergeVariable', 'column.name1', 'column.name2', 'columnmergeFrame',
 'deleteVariable', 'RecodeDialog', 'km', 'coxmodel', 'pscoreVariable',
-'ypercent', 'ypercentVariable', 'caliperVariable', 'caliperFrame'))
+'ypercent', 'ypercentVariable', 'caliperVariable', 'caliperFrame', 
+'predictorVariale', 'predicorFrame'))

@@ -88,6 +88,7 @@
 \alias{StatMedRenameDataset}
 \alias{StatMedROC}
 \alias{StatMedROCtest}
+\alias{StatMedSurvivalROC}
 \alias{StatMedReadDataSet}
 \alias{StatMedRecodeDialog}
 \alias{StatMedReliability}

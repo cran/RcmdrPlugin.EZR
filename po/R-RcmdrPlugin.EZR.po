@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2019-04-29 09:40+0900\n"
+"PO-Revision-Date: 2020-05-06 11:07+0900\n"
 "Last-Translator: Y. Kanda <ycanda-tky@umin.ac.jp>\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
@@ -6478,4 +6478,22 @@ msgstr "キャリパー幅"
 
 msgid "Caliper width as a proportion of standard deviation, applied for all variables"
 msgstr "キャリパー幅は標準偏差に対する割合で指定し、全ての変数に適用される"
+
+msgid "ROC curve analysis for time-to-event data"
+msgstr "生存期間に対するROC曲線解析"
+
+msgid "Threshold to maximize the sum of sensitivity and specificity"
+msgstr "感度と特異度の和を最大にする閾値"
+
+msgid "Time point to evaluate survival rate"
+msgstr "生存率を評価するポイント"
+
+msgid "Define time to evaluate survival rate"
+msgstr "生存率を評価するポイントを入力して下さい"
+
+msgid "Span for nearest neighbor estimation"
+msgstr "最近傍評価法のSpanの指定"
+
+msgid "Nearest neighbor estimation"
+msgstr "最近傍評価"
 
