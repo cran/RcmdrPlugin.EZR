@@ -1,3 +1,13 @@
+Changes to Version 1.50
+
+  o Added linear mixed model in EZR menu.
+
+  o Added functions, st.diff.binom(), st.diff.numeric(), st.diff.binom.w(), and st.diff.numeric.w(), to calculate standardized difference.
+
+  o Added a function, IPTW.ATE(), to create dataset including stabilized weights calculated based on propensity score and assess balance of covariates between the groups.
+
+  o Added sample size calculation for selection desgin in randomized phase II trials. 
+
 Changes to Version 1.42
 
   o Added a new function of ROC analysis for survival data. 

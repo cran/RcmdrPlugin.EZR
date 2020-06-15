@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2020-05-06 11:07+0900\n"
+"PO-Revision-Date: 2020-06-13 10:29+0900\n"
 "Last-Translator: Y. Kanda <ycanda-tky@umin.ac.jp>\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
@@ -6496,4 +6496,37 @@ msgstr "最近傍評価法のSpanの指定"
 
 msgid "Nearest neighbor estimation"
 msgstr "最近傍評価"
+
+msgid "Linear Mixed Model"
+msgstr "線形混合モデル"
+
+msgid "Linear mixed model"
+msgstr "線形混合モデル"
+
+msgid "Show p value"
+msgstr "P値を表示する"
+
+msgid "Calculate sample size for selection design in randomized phase II trials"
+msgstr "無作為化第2相試験におけるselection designでのサンプルサイズの計算"
+
+msgid "Smallest response rate"
+msgstr "最小の比率"
+
+msgid "Difference in response rate"
+msgstr "比率の差"
+
+msgid "Number of treatment arms"
+msgstr "比較する群の数"
+
+msgid "Required sample size per arm"
+msgstr "各群の必要サンプル数"
+
+msgid "Desired Probability"
+msgstr "正しく選択するする確率"
+
+msgid "Probability estimated"
+msgstr "計算された正しく選択する確率"
+
+msgid "Show standardized differences"
+msgstr "標準化差を表示する"
 

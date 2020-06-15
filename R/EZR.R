@@ -44,7 +44,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.42", "\n")
+cat("   Version 1.50", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -1112,9 +1112,11 @@ prop.conf <- function(  r, n, conf){
     alpha <- 1-conf/100               
     if (p == 0) {                                   
 		pl <- 0
-        pu <- 1-alpha^(1/n)
+ #       pu <- 1-alpha^(1/n)		#Until Ver 1.42, this function showed one-sided confidence intervals when the success rate is 0 or 1.
+        pu <- 1-(alpha/2)^(1/n)		#From Ver 1.50, this function was changed to show two-sided confidence intervals to keep consitency with binom.test() and other softwares.
     } else if (p == 1) {                            
-        pl <- alpha^(1/n)
+#        pl <- alpha^(1/n)
+        pl <- (alpha/2)^(1/n)
         pu <- 1
     } else {                                        
         nu1 <- 2*(n-r+1)
@@ -1882,7 +1884,7 @@ get.median.ci <- function (x, ..., ci, res, event=1) {
 }
 
 
-rmean.table <- function(x=km, tau=NULL){
+rmean.table <- function(x=km, tau=NULL, plot = 0){
 	Library("survRM2")
 	if (is.null(tau)) tau <- "NULL"
 	formula <- as.character(x$call)[2]
@@ -1910,8 +1912,10 @@ rmean.table <- function(x=km, tau=NULL){
 		group <- ifelse(eval(parse(text=paste("droplevels(as.factor(", dataset, "$", arm, "))", sep="")))==groups[1], 0, 1)
 		cat(paste("arm 0 = ", groups[1], "\n", sep=""))
 		cat(paste("arm 1 = ", groups[2], "\n", sep=""))
-			command <- paste("rmst2(", dataset, "$", time, ", ", dataset, "$", status, ", group, tau=", tau, ", alpha=0.05)", sep="")
+		command <- paste("res <- rmst2(", dataset, "$", time, ", ", dataset, "$", status, ", group, tau=", tau, ", alpha=0.05)", sep="")
 		eval(parse(text=command))
+		print(res)
+		if(plot==1)plot(res)
 	} else {
 
 	#The "common" option uses the maximum time for all curves in the object 
@@ -1958,7 +1962,19 @@ rmean.table.adjusted <- function(x=coxmodel, tau=NULL){
 	dataset <- as.character(x$call)[3]
 	time <- substr(formula, 6, regexpr(",", formula)-1)
 	status <- substr(formula, regexpr(",", formula)+2, regexpr("==", formula)-2)
+
 	arm <- substr(formula, regexpr("strata", formula)+7, nchar(formula)-1)
+
+	if(eval(parse(text=paste("length(levels(droplevels(as.factor(", dataset, "$", arm, "))))", sep="")))==2){
+	#survRM2 can be used only when the number of arms is 2 (group names should be 0 and 1)
+		groups <- eval(parse(text=paste("levels(droplevels(as.factor(", dataset, "$", arm, ")))", sep="")))
+		group <- ifelse(eval(parse(text=paste("droplevels(as.factor(", dataset, "$", arm, "))", sep="")))==groups[1], 0, 1)
+		cat(paste("arm 0 = ", groups[1], "\n", sep=""))
+		cat(paste("arm 1 = ", groups[2], "\n", sep=""))
+	} else {
+		cat("The number of arms must be 2.\n")
+		return()
+	}
 
 	covariate <- substr(formula, regexpr("~", formula)+2, regexpr("strata", formula)-4)	
 	covariates <- strsplit(covariate, split=" + ", fixed=TRUE)
@@ -1971,9 +1987,11 @@ rmean.table.adjusted <- function(x=coxmodel, tau=NULL){
 	covariate <- paste(covariate, ")", sep="")
 
 	if(substr(time, 1, 1)=="("){
-		command <- paste("rmst2((", dataset, "$", substr(time, 2, nchar(time)-1), "), ", dataset, "$", status, ", ", dataset, "$", arm, ", tau=", tau, ", covariates=", covariate, ", alpha=0.05)", sep="")
+#		command <- paste("rmst2((", dataset, "$", substr(time, 2, nchar(time)-1), "), ", dataset, "$", status, ", ", dataset, "$", arm, ", tau=", tau, ", covariates=", covariate, ", alpha=0.05)", sep="")
+		command <- paste("rmst2((", dataset, "$", substr(time, 2, nchar(time)-1), "), ", dataset, "$", status, ", group, tau=", tau, ", covariates=", covariate, ", alpha=0.05)", sep="")
 	} else {
-		command <- paste("rmst2(", dataset, "$", substr(time, 2, nchar(time)-1), ", ", dataset, "$", status, ", ", dataset, "$", arm, ", tau=", tau, ", covariates=", covariate, ", alpha=0.05)", sep="")
+#		command <- paste("rmst2(", dataset, "$", substr(time, 2, nchar(time)-1), ", ", dataset, "$", status, ", ", dataset, "$", arm, ", tau=", tau, ", covariates=", covariate, ", alpha=0.05)", sep="")
+		command <- paste("rmst2(", dataset, "$", substr(time, 2, nchar(time)-1), ", ", dataset, "$", status, ", group, tau=", tau, ", covariates=", covariate, ", alpha=0.05)", sep="")
 	}
 
 	eval(parse(text=command))
@@ -2066,7 +2084,7 @@ print.ci.summary <- function (x, ..., ci, res) {
 
 StatMedTableOne  <- function(){
     Library("tableone")
-	defaults <- list(group=NULL, cat=NULL, cont=NULL, contnonnormal=NULL, exact="auto", range="TRUE", explain="FALSE", output="clipboard", language="1", subset = "")
+	defaults <- list(group=NULL, cat=NULL, cont=NULL, contnonnormal=NULL, exact="auto", range="TRUE", explain="FALSE", smd="FALSE", output="clipboard", language="1", subset = "")
 	dialog.values <- getDialog("StatMedTableOne", defaults)
 	currentFields$subset <- dialog.values$subset	
 	currentModel <- TRUE
@@ -2083,6 +2101,8 @@ StatMedTableOne  <- function(){
         initialValue=dialog.values$range, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Minimum and maximum values", "Interquartile ranges")), title=gettext(domain="R-RcmdrPlugin.EZR","Range for non-normal categorical variables"))			
     radioButtons(optionsFrame, name="explain", buttons=c("No", "Yes"), values=c("FALSE", "TRUE"),
         initialValue=dialog.values$explain, labels=gettext(domain="R-RcmdrPlugin.EZR",c("No", "Yes")), title=gettext(domain="R-RcmdrPlugin.EZR","Show explantation for continuous variables"))			
+    radioButtons(optionsFrame, name="smd", buttons=c("No", "Yes"), values=c("FALSE", "TRUE"),
+        initialValue=dialog.values$smd, labels=gettext(domain="R-RcmdrPlugin.EZR",c("No", "Yes")), title=gettext(domain="R-RcmdrPlugin.EZR","Show standardized differences"))			
     options2Frame <- tkframe(top)
     radioButtons(options2Frame, name="output", buttons=c("Clipboard", "CSVfile"), values=c("clipboard", "CSVfile"),
         initialValue=dialog.values$output, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Clipboard", "CSV file")), title=gettext(domain="R-RcmdrPlugin.EZR","Output destination"))			
@@ -2099,12 +2119,13 @@ StatMedTableOne  <- function(){
 	exact <- tclvalue(exactVariable)	
 	range <- tclvalue(rangeVariable)	
 	explain <- tclvalue(explainVariable)	
+	smd <- tclvalue(smdVariable)	
     output <- tclvalue(outputVariable)
     language <- tclvalue(languageVariable)
 	dataSet <- activeDataSet()
     subset <- tclvalue(subsetVariable)
 
-	putDialog("StatMedTableOne", list(group=group, cat=cat, cont=cont, contnonnormal=contnonnormal, exact=exact, range=range, explain=explain, output=output, language=language, subset = tclvalue(subsetVariable)))
+	putDialog("StatMedTableOne", list(group=group, cat=cat, cont=cont, contnonnormal=contnonnormal, exact=exact, range=range, explain=explain, smd=smd, output=output, language=language, subset = tclvalue(subsetVariable)))
 		if(output=="Screen") output <- ""		
 		if(output=="CSVfile") {
 			output <- tclvalue(tkgetSaveFile(filetypes=
@@ -2161,12 +2182,13 @@ StatMedTableOne  <- function(){
 			doItAndPrint(paste("CatTable <- CreateCatTable(vars = ", catVariables, ', strata="', group, '", data=', subdataSet, ")", sep=""))
 		}
 		if (exact=="chisq"){
-			doItAndPrint("matCatTable <- print(CatTable, printToggle = FALSE, showAllLevels = TRUE)")
+			doItAndPrint(paste("matCatTable <- print(CatTable, printToggle = FALSE, showAllLevels = TRUE, smd = ", smd, ")", sep=""))
 		} else if (exact=="exact"){
-			doItAndPrint(paste("matCatTable <- print(CatTable, printToggle = FALSE, showAllLevels = TRUE, exact=", catVariables, ")", sep=""))		
+			doItAndPrint(paste("matCatTable <- print(CatTable, printToggle = FALSE, showAllLevels = TRUE, exact=", catVariables, ", smd = ", smd, ")", sep=""))		
 		}	
 #		doItAndPrint("matCatTable <- data.frame(matCatTable)")
-		doItAndPrint('if(colnames(matCatTable)[length(colnames(matCatTable))]=="test"){\nmatCatTable<-matCatTable[,1:length(colnames(matCatTable))-1]\n}')
+#		doItAndPrint('if(colnames(matCatTable)[length(colnames(matCatTable))]=="test"){\nmatCatTable<-matCatTable[,1:length(colnames(matCatTable))-1]\n}')
+		doItAndPrint('matCatTable <- matCatTable[,colnames(matCatTable)!="test"]')
 		doItAndPrint("matCatTable <- cbind(Factor=row.names(matCatTable), matCatTable)")
 	}
 	if(length(cont)>0){
@@ -2184,9 +2206,10 @@ StatMedTableOne  <- function(){
 		}else{
 			doItAndPrint(paste("ContTable <- CreateContTable(vars = ", contVariables, ', strata="', group, '", data=', subdataSet, ")", sep=""))
 		}
-		doItAndPrint(paste("matContTable <- print(ContTable, printToggle = FALSE, explain = ", explain, ")", sep=""))
+		doItAndPrint(paste("matContTable <- print(ContTable, printToggle = FALSE, explain = ", explain, ", smd = ", smd, ")", sep=""))
 #		doItAndPrint("matContTable <- data.frame(matContTable)")
-		doItAndPrint('if(colnames(matContTable)[length(colnames(matContTable))]=="test"){\nmatContTable<-matContTable[,1:length(colnames(matContTable))-1]\n}')
+#		doItAndPrint('if(colnames(matContTable)[length(colnames(matContTable))]=="test"){\nmatContTable<-matContTable[,1:length(colnames(matContTable))-1]\n}')
+		doItAndPrint('matContTable <- matContTable[,colnames(matContTable)!="test"]')
 		#Add a dummy column to ContTable, because CatTable has a grouping column
 		if(length(cat)>0) doItAndPrint('matContTable <- cbind(level="", matContTable)')
 		if(language==0 & explain=="TRUE") {
@@ -2210,9 +2233,10 @@ StatMedTableOne  <- function(){
 		}else{
 			doItAndPrint(paste("ContnonnormalTable <- CreateContTable(vars = ", contnonnormalVariables, ', strata="', group, '", data=', subdataSet, ")", sep=""))
 		}
-		doItAndPrint(paste("matContnonnormalTable <- print(ContnonnormalTable, printToggle = FALSE, nonnormal = TRUE, explain = ", explain, ", minMax=", range, ")", sep=""))
+		doItAndPrint(paste("matContnonnormalTable <- print(ContnonnormalTable, printToggle = FALSE, nonnormal = TRUE, explain = ", explain, ", minMax=", range, ", smd = ", smd, ")", sep=""))
 #		doItAndPrint("matContnonnormalTable <- data.frame(matContnonnormalTable)")
-		doItAndPrint('if(colnames(matContnonnormalTable)[length(colnames(matContnonnormalTable))]=="test"){\nmatContnonnormalTable<-matContnonnormalTable[,1:length(colnames(matContnonnormalTable))-1]\n}')
+#		doItAndPrint('if(colnames(matContnonnormalTable)[length(colnames(matContnonnormalTable))]=="test"){\nmatContnonnormalTable<-matContnonnormalTable[,1:length(colnames(matContnonnormalTable))-1]\n}')
+		doItAndPrint('matContnonnormalTable <- matContnonnormalTable[,colnames(matContnonnormalTable)!="test"]')
 		#Add a dummy column to ContTable, because CatTable has a grouping column
 		if(length(cat)>0) doItAndPrint('matContnonnormalTable <- cbind(level="", matContnonnormalTable)')
 		if(language==0 & explain=="TRUE") {
@@ -2256,7 +2280,8 @@ StatMedTableOne  <- function(){
 	}	
 	doItAndPrint("attributes(FinalTable) <- c(list(dim=attributes(FinalTable)[[1]]), list(dimnames=c(attributes(FinalTable)[[2]][1], tempStrata)))")
 	if(length(cat)>0) doItAndPrint('colnames(FinalTable)[2] <- "Group"')
-	if(length(group)==1) {if (levels>1) doItAndPrint('colnames(FinalTable)[length(colnames(FinalTable))] <- "p.value"')}
+#	if(length(group)==1) {if (levels>1) doItAndPrint('colnames(FinalTable)[length(colnames(FinalTable))] <- "p.value"')}
+	if(length(group)==1) {if (levels>1) doItAndPrint('colnames(FinalTable)[colnames(FinalTable)=="p"] <- "p.value"')}
 #	doItAndPrint("print(as.matrix(FinalTable), quote=FALSE)")
 #	doItAndPrint("FinalTable <- cbind(Factor=row.names(FinalTable), FinalTable)")
 	if(language==0) {
@@ -2318,7 +2343,7 @@ StatMedTableOne  <- function(){
 	tkgrid(labelRcmdr(variableFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Click pressing Ctrl key to select multiple variables"), fg="blue"), sticky="w")
     tkgrid(getFrame(categoryBox), labelRcmdr(variableFrame, text="    "), getFrame(contBox), labelRcmdr(variableFrame, text="    "), getFrame(contnonnormalBox), sticky="nw")
     tkgrid(variableFrame, sticky="nw")
-	tkgrid(exactFrame, labelRcmdr(optionsFrame, text="   "), rangeFrame, labelRcmdr(optionsFrame, text="   "), explainFrame, sticky="nw")	
+	tkgrid(exactFrame, labelRcmdr(optionsFrame, text="   "), rangeFrame, labelRcmdr(optionsFrame, text="   "), explainFrame, labelRcmdr(optionsFrame, text="   "), smdFrame, sticky="nw")	
 	tkgrid(optionsFrame, sticky="w")
 	tkgrid(outputFrame, labelRcmdr(options2Frame, text="   "), languageFrame, sticky="nw")	
 	tkgrid(options2Frame, sticky="w")
@@ -2513,9 +2538,12 @@ Mantel.Byar <- function(Group=TempTD$covariate_td, Event=TempTD$endpoint_td, Sta
 		Event2 <- Event[StopTime>=landmark]
 		Group2 <- Group[StopTime>=landmark]
 		km <- survfit(Surv(StartTime2,StopTime2,Event2)~Group2, na.action = na.omit, conf.type="log-log")
-		diff <- survdiff(Surv(StopTime2,Event2)~Group2)
 		summary(km)
-		km$n.risk[1] <- diff$n[1]			#To correct number at risk at zero point in no event group
+#		diff <- survdiff(Surv(StopTime2,Event2)~Group2)
+		n.atrisk.G1 <- NULL
+		n.atrisk.G2 <- NULL
+#		n.atrisk.G1[1] <- diff$n[1]			#To correct number at risk at zero point in no event group
+#		n.atrisk.G2[1] <- 0
 		len <- nchar("Group2")
 		legend <- substring(names(km$strata), len+2)
 #		windows(width=7, height=7); par(lwd=1, las=1, family="sans", cex=1)
@@ -2538,7 +2566,16 @@ Mantel.Byar <- function(Group=TempTD$covariate_td, Event=TempTD$endpoint_td, Sta
 		if(plot==2) plot(km, ylab="Probability", bty="l", col=1, lty=1:32, lwd=1, conf.int=FALSE, mark.time=TRUE)
 		if(plot>=3) plot(km, ylab="Probability", bty="l", col=1, lty=1, lwd=1:32, conf.int=FALSE, mark.time=TRUE)
 		xticks <- axTicks(1)
-		n.atrisk <- nrisk(km, xticks)
+#		n.atrisk <- nrisk(km, xticks)		#nrisk does not work properly in Simon-Makuch plot
+
+		for(i in 1:length(xticks)){
+			n.atrisk.G1[i] <- length(which(Group2==0 & StartTime2<=xticks[i] & xticks[i]<=StopTime2))
+			n.atrisk.G2[i] <- length(which(Group2==1 & StartTime2<=xticks[i] & xticks[i]<=StopTime2))
+		}
+		
+		n.atrisk <- rbind(n.atrisk.G1, n.atrisk.G2)
+		colnames(n.atrisk) <- xticks
+
 		for (i in 1:length(km$strata)){axis(1, at = xticks, labels = n.atrisk[i,], line=3+i, tick = FALSE)}
 		for (i in 1:length(km$strata)){mtext(legend[i], at=-(xticks[2]-xticks[1])/2, side=1, line=4+i, cex=1)}
 		title(xlab = "Number at risk", line = 3.5, adj = 0)
@@ -2818,11 +2855,11 @@ step.p.cox <- function (cox, dataframe.name, waldtest=0, subset=NULL){
 	while(max(p.value) >= 0.05) {
 #		if(nvar==1){
 		if(length(res$coefficients[,5])==1){
-			cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,5]), digits=4)
+			cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,length(res$coefficients[1,])]), digits=4)
 			rownames(cox.table) <- rownames(res$coefficients)
 			colnames(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))
 		} else {
-			cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,5]), digits=4)
+			cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,length(res$coefficients[1,])]), digits=4)
 			cox.table <- data.frame(cox.table)
 			names(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))
 		}
@@ -2889,13 +2926,13 @@ step.p.cox <- function (cox, dataframe.name, waldtest=0, subset=NULL){
 	}
 #	if(nvar==1){
 	if(length(res$coefficients[,5])==1){
-		cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,5]), digits=4)
+		cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,length(res$coefficients[1,])]), digits=4)
 		rownames(cox.table) <- rownames(res$coefficients)
 		colnames(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))
 	} 
 #	if (nvar>=2){
 	if (length(res$coefficients[,5])>=2){
-		cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,5]), digits=4)
+		cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,length(res$coefficients[1,])]), digits=4)
 		cox.table <- data.frame(cox.table)
 		names(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))
 	}
@@ -2957,11 +2994,11 @@ step.p.coxtd <- function (cox, dataframe.name, waldtest=0, subset=NULL){
 	while(max(p.value) >= 0.05) {
 #		if(nvar==1){
 		if(length(res$coefficients[,5])==1){
-			cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,5]), digits=4)
+			cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,length(res$coefficients[1,])]), digits=4)
 			rownames(cox.table) <- rownames(res$coefficients)
 			colnames(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))
 		} else {
-			cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,5]), digits=4)
+			cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,length(res$coefficients[1,])]), digits=4)
 			cox.table <- data.frame(cox.table)
 			names(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))
 		}
@@ -3028,13 +3065,13 @@ step.p.coxtd <- function (cox, dataframe.name, waldtest=0, subset=NULL){
 	}
 #	if(nvar==1){
 	if(length(res$coefficients[,5])==1){
-		cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,5]), digits=4)
+		cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,length(res$coefficients[1,])]), digits=4)
 		rownames(cox.table) <- rownames(res$coefficients)
 		colnames(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))
 	} 
 #	if (nvar>=2){
 	if (length(res$coefficients[,5])>=2){
-		cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,5]), digits=4)
+		cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,length(res$coefficients[1,])]), digits=4)
 		cox.table <- data.frame(cox.table)
 		names(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))
 	}
@@ -3556,6 +3593,381 @@ stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), xlab=NULL, y
 }
 
 
+IPTW.ATE <- function(GLM) {
+	group <- colnames(GLM$model)[1]
+	factors <- colnames(GLM$model)[2:length(colnames(GLM$model))]
+	classes <- attr(GLM$terms, "dataClasses")[2:length(attr(GLM$terms, "dataClasses"))]
+
+	command <- paste("tab <- table(GLM$data$", group, ")", sep="")
+	tab <- eval(parse(text=command))
+	p <- tab[2] / (tab[1] + tab[2])
+	p.score <- predict(GLM, type="response")
+	command <- paste("GLM$data$weight.ATE <- ifelse(GLM$data$", group, "==1, p/p.score, (1-p)/(1-p.score))", sep="")
+	eval(parse(text=command))
+
+	for (i in 1:length(factors)){
+		command <- paste("lev <- length(levels(as.factor(GLM$data$", factors[i], ")))", sep="")
+		eval(parse(text=command))
+		command <- paste("num <- is.numeric(GLM$data$", factors[i], ")", sep="")
+		eval(parse(text=command))
+		if (lev==2){
+			command <- paste("st.diff.binom.w(GLM$data$", factors[i], ", GLM$data$weight.ATE, GLM$data$", group, ")", sep="")
+		} else if (classes[i]=="factor") {
+			command <- paste("st.diff.multinom.w(GLM$data$", factors[i], ", GLM$data$weight.ATE, GLM$data$", group, ")", sep="")
+		} else {
+			command <- paste("st.diff.numeric.w(GLM$data$", factors[i], ", GLM$data$weight.ATE, GLM$data$", group, ")", sep="")			
+		}
+		res <- eval(parse(text=command))
+		cat(paste(factors[i], ", ", res, "\n", sep=""))
+	}	
+	return(GLM$data)
+}
+
+
+st.diff.categor <- function(factor, group){
+	if(length(levels(as.factor(group)))!=2){
+		return("The number of groups must be 2.")
+	}
+	if(length(levels(as.factor(factor)))>2){
+		#modified from stddiff.category() in stddiff package.
+	  	nr <- length(levels(factor))
+        	tbl <- table(factor, group)
+        	prop <- prop.table(tbl, 2)
+        	t <- prop[-1, 2]
+        	c <- prop[-1, 1]
+        	k <- nr - 1
+       	l <- k
+        	s <- matrix(rep(0, k * l), ncol = k)
+        	for (ii in 1:k) {
+            	for (j in 1:l) {
+                		if (ii == j) {
+                  		s[ii, j] <- 0.5 * (t[ii] * (1 - t[ii]) + c[ii] * (1 - c[ii]))
+                		}
+                		if (ii != j) {
+                  		s[ii, j] <- -0.5 * (t[ii] * t[j] + c[ii] * c[j])
+                		}
+            	}
+        	}
+        	e <- rep(1, k)
+        	e <- diag(e)
+        	s <- solve(s, e)
+        	tc1 <- t - c
+        	tc2 <- t - c
+        	stddiff <- sqrt(t(tc1) %*% s %*% tc2)
+		text <- ""
+		prop <- round(prop, digits=3)
+		for(i in 1:nr){
+			text <- paste(text, "p", i, "1=", prop[i,1], ", p", i, "2=", prop[i,2], ", ", sep="")
+		}
+		text <- paste(text, "Standardized difference=", round(stddiff, digits=3), sep="")
+    		return(text)
+	} else {
+		tab <- table(factor, group)
+		p1 <- tab[2,1]/(tab[1,1]+tab[2,1])
+		p2 <- tab[2,2]/(tab[1,2]+tab[2,2])
+		if(p1==p2){
+			d <- 0
+		} else {
+			d <- abs(p1-p2) / sqrt((p1*(1-p1)+p2*(1-p2))/2)
+		}
+		return(paste("p1=", round(p1, digits=3), ", p2=", round(p2, digits=3), ", Standardized difference=", round(d, digits=3), sep=""))
+	}
+}
+
+
+st.diff.binom <- function(factor, group){
+
+	if(length(levels(as.factor(factor)))!=2){
+		return("This function can be used for factors with two levels.")
+	} else {
+		tab <- table(factor, group)
+		p1 <- tab[2,1]/(tab[1,1]+tab[2,1])
+		p2 <- tab[2,2]/(tab[1,2]+tab[2,2])
+		if(p1==p2){
+			d <- 0
+		} else {
+			d <- abs(p1-p2) / sqrt((p1*(1-p1)+p2*(1-p2))/2)
+		}
+		return(paste("p1=", round(p1, digits=3), ", p2=", round(p2, digits=3), ", Standardized difference=", round(d, digits=3), sep=""))
+	}
+}
+
+
+st.diff.multinom <- function(factor, group){
+	#modified from stddiff.category() in stddiff package.
+	  nr <- length(levels(factor))
+        tbl <- table(factor, group)
+        prop <- prop.table(tbl, 2)
+        t <- prop[-1, 2]
+        c <- prop[-1, 1]
+        k <- nr - 1
+        l <- k
+        s <- matrix(rep(0, k * l), ncol = k)
+        for (ii in 1:k) {
+            for (j in 1:l) {
+                if (ii == j) {
+                  s[ii, j] <- 0.5 * (t[ii] * (1 - t[ii]) + c[ii] * (1 - c[ii]))
+                }
+                if (ii != j) {
+                  s[ii, j] <- -0.5 * (t[ii] * t[j] + c[ii] * c[j])
+                }
+            }
+        }
+        e <- rep(1, k)
+        e <- diag(e)
+        s <- solve(s, e)
+        tc1 <- t - c
+        tc2 <- t - c
+        stddiff <- sqrt(t(tc1) %*% s %*% tc2)
+
+	text <- ""
+	prop <- round(prop, digits=3)
+	for(i in 1:nr){
+		text <- paste(text, "p", i, "1=", prop[i,1], ", p", i, "2=", prop[i,2], ", ", sep="")
+	}
+	text <- paste(text, "Standardized difference=", round(stddiff, digits=3), sep="")
+
+    return(text)
+}
+
+
+st.diff.numeric <- function(numeric, group){
+	res <- numSummary(numeric, groups=group, statistics=c("mean", "sd"))
+	av1 <- res$table[1,1]
+	av2 <- res$table[2,1]
+	sd1 <- res$table[1,2]
+	sd2 <- res$table[2,2]
+	d <- abs(av1-av2) / sqrt((sd1^2+sd2^2)/2)
+	return(paste("mean1=", round(av1, digits=3), ", maen2=", round(av2, digits=3), ", Standardized difference=", round(d, digits=3), sep=""))
+}
+
+
+st.diff.binom.w <- function(factor, weight, group){
+
+	if(length(levels(as.factor(factor)))!=2){
+		return("This function can be used for factors with two levels.")
+	} else {
+		factors <- levels(as.factor(factor))
+		factor <- ifelse(factor==factors[1], 0, 1)
+		groups <- levels(as.factor(group))
+		sum.w1 <- 0; sum.w2 <- 0
+		n.w1 <- 0; n.w2 <- 0
+		for (i in 1:length(factor)){
+			if (!is.na(factor[i]) & !is.na(weight[i]) & !is.na(group[i])){
+				if (group[i]==groups[1]){
+					sum.w1 <- sum.w1 + factor[i] * weight[i]
+					n.w1 <- n.w1 + weight[i]
+				} else {
+					sum.w2 <- sum.w2 + factor[i] * weight[i]
+					n.w2 <- n.w2 + weight[i]
+				}
+			}
+		}
+		p1 <- sum.w1 / n.w1
+		p2 <- sum.w2 / n.w2
+
+		if(p1==p2){
+			d <- 0
+		} else {
+			d <- abs(p1-p2) / sqrt((p1*(1-p1)+p2*(1-p2))/2)
+		}
+		return(paste("p1=", round(p1, digits=3), ", p2=", round(p2, digits=3), ", Standardized difference=", round(d, digits=3), sep=""))
+	}
+}
+
+
+st.diff.multinom.w <- function(factor, weight, group){
+
+#modified from stddiff.category() in stddiff package.
+
+	nr <- length(levels(factor))
+      tbl <- table(factor, group)
+      prop <- prop.table(tbl, 2)
+	groups <- levels(as.factor(group))
+
+	n.w1 <- sum(weight[group==groups[1]], na.rm=T)
+	n.w2 <- sum(weight[group==groups[2]], na.rm=T)
+
+	for(f in 1:nr){
+		sum.w1 <- 0; sum.w2 <- 0
+		for (i in 1:length(factor)){
+			if (!is.na(factor[i]) & !is.na(weight[i]) & !is.na(group[i])){
+				if (group[i]==groups[1] & factor[i]==levels(factor)[f]){
+					sum.w1 <- sum.w1 + weight[i]
+				}
+				if (group[i]==groups[2] & factor[i]==levels(factor)[f]){
+					sum.w2 <- sum.w2 + weight[i]
+				}
+			}
+		}
+		prop[f,1] <- sum.w1 / n.w1
+		prop[f,2] <- sum.w2 / n.w2
+	}
+
+        t <- prop[-1, 2]
+        c <- prop[-1, 1]
+        k <- nr - 1
+        l <- k
+        s <- matrix(rep(0, k * l), ncol = k)
+        for (ii in 1:k) {
+            for (j in 1:l) {
+                if (ii == j) {
+                  s[ii, j] <- 0.5 * (t[ii] * (1 - t[ii]) + c[ii] * (1 - c[ii]))
+                }
+                if (ii != j) {
+                  s[ii, j] <- -0.5 * (t[ii] * t[j] + c[ii] * c[j])
+                }
+            }
+        }
+        e <- rep(1, k)
+        e <- diag(e)
+        s <- solve(s, e)
+        tc1 <- t - c
+        tc2 <- t - c
+        stddiff <- sqrt(t(tc1) %*% s %*% tc2)
+
+	text <- ""
+	prop <- round(prop, digits=3)
+	for(i in 1:nr){
+		text <- paste(text, "p", i, "1=", prop[i,1], ", p", i, "2=", prop[i,2], ", ", sep="")
+	}
+	text <- paste(text, "Standardized difference=", round(stddiff, digits=3), sep="")
+
+    return(text)
+}
+
+
+st.diff.numeric.w <- function(numeric, weight, group){
+	groups <- levels(as.factor(group))
+	sum.w1 <- 0; sum.w2 <- 0
+	n.w1 <- 0; n.w2<- 0
+	sigma.sq.w1 <- 0; sigma.sq.w2 <- 0
+	for (i in 1:length(numeric)){
+		if (!is.na(numeric[i]) & !is.na(weight[i]) & !is.na(group[i])){
+			if (group[i]==groups[1]){
+				sum.w1 <- sum.w1 + numeric[i]*weight[i]
+				n.w1 <- n.w1 + weight[i]
+				sigma.sq.w1 <- sigma.sq.w1 + weight[i]^2
+			} else {
+				sum.w2 <- sum.w2 + numeric[i]*weight[i]
+				n.w2 <- n.w2+ weight[i]
+				sigma.sq.w2 <- sigma.sq.w2 + weight[i]^2
+			}
+		}
+	}
+	av.w1 <- sum.w1 / n.w1
+	av.w2 <- sum.w2 / n.w2
+
+	tmp1 <- 0; tmp2 <- 0
+	for (i in 1:length(numeric)){
+		if (!is.na(numeric[i]) & !is.na(weight[i]) & !is.na(group[i])){
+			if (group[i]==groups[1]){
+				tmp1 <- tmp1 + weight[i]*((numeric[i]-av.w1)^2)
+			} else {
+				tmp2 <- tmp2 + weight[i]*((numeric[i]-av.w2)^2)
+			}
+		}
+	}
+
+	sd1.sq <- (n.w1 / (n.w1^2 - sigma.sq.w1)) * tmp1
+	sd2.sq <- (n.w2 / (n.w2^2 - sigma.sq.w2)) * tmp2
+	d <- abs(av.w1-av.w2) / sqrt((sd1.sq+sd2.sq)/2)
+	return(paste("mean1=", round(av.w1, digits=3), ", maen2=", round(av.w2, digits=3), ", Standardized difference=", round(d, digits=3), sep=""))
+}
+
+
+st.diff.categor.w <- function(factor, weight, group){
+	if(length(levels(as.factor(group)))!=2){
+		return("The number of groups must be 2.")
+	}
+	if(length(levels(as.factor(factor)))!=2){
+
+#modified from stddiff.category() in stddiff package.
+
+	nr <- length(levels(factor))
+      tbl <- table(factor, group)
+      prop <- prop.table(tbl, 2)
+	groups <- levels(as.factor(group))
+
+	n.w1 <- sum(weight[group==groups[1]], na.rm=T)
+	n.w2 <- sum(weight[group==groups[2]], na.rm=T)
+
+	for(f in 1:nr){
+		sum.w1 <- 0; sum.w2 <- 0
+		for (i in 1:length(factor)){
+			if (!is.na(factor[i]) & !is.na(weight[i]) & !is.na(group[i])){
+				if (group[i]==groups[1] & factor[i]==levels(factor)[f]){
+					sum.w1 <- sum.w1 + weight[i]
+				}
+				if (group[i]==groups[2] & factor[i]==levels(factor)[f]){
+					sum.w2 <- sum.w2 + weight[i]
+				}
+			}
+		}
+		prop[f,1] <- sum.w1 / n.w1
+		prop[f,2] <- sum.w2 / n.w2
+	}
+
+        t <- prop[-1, 2]
+        c <- prop[-1, 1]
+        k <- nr - 1
+        l <- k
+        s <- matrix(rep(0, k * l), ncol = k)
+        for (ii in 1:k) {
+            for (j in 1:l) {
+                if (ii == j) {
+                  s[ii, j] <- 0.5 * (t[ii] * (1 - t[ii]) + c[ii] * (1 - c[ii]))
+                }
+                if (ii != j) {
+                  s[ii, j] <- -0.5 * (t[ii] * t[j] + c[ii] * c[j])
+                }
+            }
+        }
+        e <- rep(1, k)
+        e <- diag(e)
+        s <- solve(s, e)
+        tc1 <- t - c
+        tc2 <- t - c
+        stddiff <- sqrt(t(tc1) %*% s %*% tc2)
+
+	text <- ""
+	prop <- round(prop, digits=3)
+	for(i in 1:nr){
+		text <- paste(text, "p", i, "1=", prop[i,1], ", p", i, "2=", prop[i,2], ", ", sep="")
+	}
+	text <- paste(text, "Standardized difference=", round(stddiff, digits=3), sep="")
+
+    	return(text)
+	} else {
+		factors <- levels(as.factor(factor))
+		factor <- ifelse(factor==factors[1], 0, 1)
+		groups <- levels(as.factor(group))
+		sum.w1 <- 0; sum.w2 <- 0
+		n.w1 <- 0; n.w2 <- 0
+		for (i in 1:length(factor)){
+			if (!is.na(factor[i]) & !is.na(weight[i]) & !is.na(group[i])){
+				if (group[i]==groups[1]){
+					sum.w1 <- sum.w1 + factor[i] * weight[i]
+					n.w1 <- n.w1 + weight[i]
+				} else {
+					sum.w2 <- sum.w2 + factor[i] * weight[i]
+					n.w2 <- n.w2 + weight[i]
+				}
+			}
+		}
+		p1 <- sum.w1 / n.w1
+		p2 <- sum.w2 / n.w2
+
+		if(p1==p2){
+			d <- 0
+		} else {
+			d <- abs(p1-p2) / sqrt((p1*(1-p1)+p2*(1-p2))/2)
+		}
+		return(paste("p1=", round(p1, digits=3), ", p2=", round(p2, digits=3), ", Standardized difference=", round(d, digits=3), sep=""))
+	}
+}
+
+
 #roc.best <- function (..., roc){
 
 #	n <- length(roc[[4]])
@@ -3832,6 +4244,41 @@ SampleProportionNonInf <- function (group1, group2, delta, alpha, power, method)
 	abline(h=power, lty=2)
 	return(res)		
 }		
+
+
+SampleSelectionDesign <- function (p, D, k, DesiredProb) {
+
+#https://nshi.jp/contents/js/selection/
+#p: Lowest response rate among all treatments
+#D: Difference in response rate between the besttreatment and the other treatments
+#k: Number of treatment arms
+#n: Number of patients in each treatment arm
+#Prob: Probability of correctly selecting the besttreatment
+
+	n <- 1
+	Prob <- 0
+	while(Prob < DesiredProb){
+		Prob <- pbinom(0, n, p)^(k-1) * (1 - pbinom(0, n, p+D))
+		for(i in 1:n){
+			Prob <- Prob + (pbinom(i, n, p)^(k-1) - pbinom(i-1, n, p)^(k-1)) * (1 - pbinom(i, n, p+D))
+		}
+		for(i in 1:n){
+			tmp <- 0
+			for(j in 1:(k-1)){
+				tmp <- tmp + choose(k-1, j) * (dbinom(i, n, p)^j) * (pbinom(i-1, n, p)^(k-1-j)) / (j+1)
+			}
+			Prob <- Prob + tmp * dbinom(i, n, p+D)
+		}
+#		cat(paste("n=", n, ", prob=", Prob, "\n", sep=""))
+		if (Prob < DesiredProb) n <- n + 1
+	}
+	Prob <- signif(Prob, digits=3)
+	res <- data.frame(c(p, D, k, DesiredProb, " ", gettext(domain="R-RcmdrPlugin.EZR","Estimated"), n, Prob))
+	colnames(res) <- gettext(domain="R-RcmdrPlugin.EZR","Assumptions")
+	rownames(res) <- gettext(domain="R-RcmdrPlugin.EZR",c("Smallest response rate", "Difference in response rate", "Number of treatment arms", "Desired Probability", 
+	"  ", " ", "Required sample size per arm", "Probability estimated"))
+	return(res)	
+}
 
 
 SampleHazard <- function (enrol, observe, followup, group1, group2, alpha, power, method, ratio) {
@@ -4776,9 +5223,10 @@ StatMedImportMinitab <- function() {
 }
 
 
-readStataEZR <- function(file, rownames=FALSE, stringsAsFactors=default.stringsAsFactors(), convert.dates=TRUE, convert.underscore=TRUE){
+readStataEZR <- function(file, rownames=FALSE, stringsAsFactors=FALSE, convert.dates=TRUE, convert.underscore=TRUE){
     Data <- readstata13::read.dta13(file, convert.factors=stringsAsFactors, convert.dates=convert.dates, convert.underscore=convert.underscore)
 ###Just added convert.underscore = FALSE as option for EZR
+###default.stringsAsFactors() was deprecated from R 4.0.0 and changed to FALSE from EZR ver 1.50
     if (rownames){
         check <- length(unique(col1 <- Data[[1]])) == nrow(Data)
         if (!check) warning ("row names are not unique, ignored")
@@ -10171,6 +10619,142 @@ putDialog("StatMedLinearRegression", list(x=x, y=y, wald=wald, actmodel=actmodel
     }
 
 	
+listLMMs <- function(envir=.GlobalEnv, ...) {
+  objects <- ls(envir=envir, ...)
+  if (length(objects) == 0) NULL
+  else objects[sapply(objects,
+                      function(.x) "lmerMod" == (class(get(.x, envir=envir))[1]))]
+}
+
+	
+StatMedLinearMixedModel <- function(){
+  Library("lme4")
+  defaults <- list(lhs = "", rhs = "", subset = "", actmodel = 0, pvalue = 1, weight = gettextRcmdr("<no variable selected>"), estimType = "reml")
+dialog.values <- getDialog("StatMedLinearMixedModel", defaults)
+currentFields$lhs <- dialog.values$lhs			#Values in currentFields will be sent to modelFormula
+currentFields$rhs <- dialog.values$rhs
+currentFields$subset <- dialog.values$subset	
+
+    initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Linear Mixed Model"))		
+	dialog.values <- getDialog("StateMedLinearMixedModel", defaults)
+  .activeModel <- ActiveModel()
+  currentModel <- if (!is.null(.activeModel))
+    class(get(.activeModel, envir=.GlobalEnv))[1] == "lmerMod"
+  else FALSE
+  if (currentModel) {
+   currentFields <- formulaFields(get(.activeModel, envir=.GlobalEnv))
+    if (currentFields$data != ActiveDataSet()) currentModel <- FALSE
+  }
+   	currentModel <- TRUE
+
+  if (isTRUE(getRcmdr("reset.model"))) {
+    currentModel <- FALSE
+    putRcmdr("reset.model", FALSE)
+  }
+  UpdateModelNumber()
+  modelName <- tclVar(paste("LMM.", getRcmdr("modelNumber"), sep=""))
+  modelFrame <- tkframe(top)
+  model <- ttkentry(modelFrame, width="20", textvariable=modelName)
+
+  modelFormula(showBar=TRUE)
+  
+  	checkBoxes(frame="checkboxFrame", boxes=c("actmodel", "pvalue"), initialValues=c(dialog.values$actmodel, dialog.values$pvalue),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Keep results as active model for further analyses", "Show p value")))	
+  
+  radioButtons(name="estimType",
+               buttons=c("reml", "ml"), initialValue=dialog.values$estimType,
+               labels=gettextRcmdr(c("Restricted maximum likelihood (REML)", "Maximum likelihood (ML)")),
+               title=gettextRcmdr("Estimation Criterion"))
+
+  subsetWeightFrame <- tkframe(top)
+#  subsetBox(window=subsetWeightFrame, model=TRUE)
+  StatMedSubsetBox(window=subsetWeightFrame, model=TRUE)
+  weightComboBox <- variableComboBox(subsetWeightFrame, variableList=Numeric(), 
+                                     initialSelection=dialog.values$weight,
+                                     title=gettextRcmdr("Weights"))
+
+  onOK <- function(){
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Linear Mixed Model"), "#####", sep=""))
+    modelValue <- trim.blanks(tclvalue(modelName))
+    closeDialog()
+    if (!is.valid.name(modelValue)){
+      errorCondition(recall=linearMixedModel, message=sprintf(gettextRcmdr('"%s" is not a valid name.'), modelValue), model=TRUE)
+      return()
+    }
+    subset <- tclvalue(subsetVariable)
+    if (trim.blanks(subset) == gettextRcmdr("<all valid cases>") || trim.blanks(subset) == ""){
+      subset <- ""
+      putRcmdr("modelWithSubset", FALSE)
+    }
+    else{
+      subset <- paste(", subset=", subset, sep="")
+      putRcmdr("modelWithSubset", TRUE)
+    }
+	actmodel <- tclvalue(actmodelVariable)
+	pvalue <- tclvalue(pvalueVariable)
+	weight.var <- getSelection(weightComboBox)
+    estimType <- tclvalue(estimTypeVariable)
+
+	putDialog("StatMedLinearMixedModel", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), subset=tclvalue(subsetVariable), actmodel = actmodel, pvalue = pvalue, weight = weight.var, estimType = estimType))
+
+    weights <- if (weight.var == gettextRcmdr("<no variable selected>")) ""
+    else paste(", weights=", weight.var, sep="")
+    check.empty <- gsub(" ", "", tclvalue(lhsVariable))
+    if ("" == check.empty) {
+      errorCondition(recall=StatMedLinearMixedModel, message=gettextRcmdr("Left-hand side of model empty."), model=TRUE)
+      return()
+    }
+    check.empty <- gsub(" ", "", tclvalue(rhsVariable))
+    if ("" == check.empty) {
+      errorCondition(recall=StatMedLinearMixedModel, message=gettextRcmdr("Right-hand side of model empty."), model=TRUE)
+      return()
+    }
+    if (!grepl("\\(.*\\|.*\\)", tclvalue(rhsVariable))) {
+      errorCondition(recall=StatMedLinearMixedModel, message=gettextRcmdr("There are no random effects in the model."), model=TRUE)
+      return()
+    }
+    if (is.element(modelValue, listLMMs())) {
+      if ("no" == tclvalue(checkReplace(modelValue, type=gettextRcmdr("Model")))){
+        UpdateModelNumber(-1)
+        StatMedLinearMixedModel()
+        return()
+      }
+    }
+    formula <- paste(tclvalue(lhsVariable), tclvalue(rhsVariable), sep=" ~ ")
+    reml <- as.character(estimType == "reml")
+	
+	if("package:lmerTest" %in% search()==TRUE) doItAndPrint("detach(package:lmerTest)")		#To keep results as active model, originel lmer function should be done 
+			
+    command <- paste("lmer(", formula,
+                     ", data=", ActiveDataSet(), subset, weights, ", REML=", reml, ")", sep="")
+    doItAndPrint(paste(modelValue, " <- ", command, sep = ""))
+    if(pvalue==0) doItAndPrint(paste("summary(", modelValue, ")", sep=""))
+		
+	if(pvalue==1){
+		doItAndPrint("library(lmerTest)")
+		doItAndPrint(paste("res <- ", command, sep = "")) 		
+		doItAndPrint(paste("summary(res)", sep=""))
+		doItAndPrint("detach(package:lmerTest)")
+	}
+		#activeModel(modelValue)
+	if (actmodel==1) activeModel(modelValue)
+    tkfocus(CommanderWindow())
+  }
+  OKCancelHelp(helpSubject="lmer", model=TRUE, reset="resetLMM", apply="StatMedLinearMixedModel")
+  tkgrid(labelRcmdr(modelFrame, text=gettextRcmdr("Enter name for model:")), model, sticky="w")
+  tkgrid(modelFrame, sticky="w")
+  tkgrid(getFrame(xBox), sticky="w")
+  tkgrid(outerOperatorsFrame, sticky="w")
+  tkgrid(formulaFrame, sticky="w")
+  tkgrid(subsetFrame, tklabel(subsetWeightFrame, text="   "),
+         getFrame(weightComboBox), sticky="nw")
+  tkgrid(checkboxFrame, sticky="w")
+  tkgrid(subsetWeightFrame, sticky="w")	
+  tkgrid(estimTypeFrame, sticky="w")
+  tkgrid(buttonsFrame, sticky="w")
+  dialogSuffix(focus=lhsEntry, preventDoubleClick=TRUE)
+}	
+
+	
 StatMedMannW <- function(){
 defaults <- list(group=NULL, response=NULL, alternative="two.sided", test="default", subset = "")
 dialog.values <- getDialog("StatMedMannW", defaults)
@@ -10846,7 +11430,7 @@ StatMedProbCI <- function(){
 	dialogSuffix(rows=4, columns=1)
 }
 
-		
+
 StatMedProbSingle <- function(){
 defaults <- list(x=NULL, chisq=0, exact=1, continuity="TRUE", alternative="two.sided", p0="0.5", confidence="0.95", subset="")
 dialog.values <- getDialog("StatMedProbSingle", defaults)
@@ -10880,15 +11464,35 @@ putDialog("StatMedProbSingle", list(x=x, chisq=chisq, exact=exact, continuity=co
 		closeDialog()
 		doItAndPrint(".Table <- NULL")
 		doItAndPrint(paste("(.Table <- table(", subset1, ActiveDataSet(), subset2, "$", x, "))", sep="")) 
-		if(chisq==1){
-			doItAndPrint("res <- NULL")
-			command <- paste("(res <- prop.test(.Table[2], .Table[1]+ .Table[2], p=", p0, ', alternative="', alternative, '", conf.level=', level, ", correct=", continuity, "))", sep="")
-			doItAndPrint(command)
-		}
-		if(exact==1){
-			doItAndPrint("res <- NULL")
-			command <- paste("(res <- binom.test(.Table[2], .Table[1]+ .Table[2], p=", p0, ', alternative="', alternative, '", conf.level=', level, "))", sep="")
-			doItAndPrint(command)
+		
+		if (as.character(eval(parse(text=paste("length(.Table)"))))=="1"){
+				n <- as.character(eval(parse(text=paste(".Table"))))
+			if (eval(parse(text=paste("dimnames(.Table)")))=="1"){
+				m <- n
+			} else{
+				m <- "0"
+			}
+			if(chisq==1){
+				doItAndPrint("res <- NULL")
+				command <- paste("(res <- prop.test(", m, ", ", n, ", p=", p0, ', alternative="', alternative, '", conf.level=', level, ", correct=", continuity, "))", sep="")
+				doItAndPrint(command)
+			}
+			if(exact==1){
+				doItAndPrint("res <- NULL")
+				command <- paste("(res <- binom.test(", m, ", ", n, ", p=", p0, ', alternative="', alternative, '", conf.level=', level, "))", sep="")
+				doItAndPrint(command)
+			}		
+		} else {
+			if(chisq==1){
+				doItAndPrint("res <- NULL")
+				command <- paste("(res <- prop.test(.Table[2], .Table[1]+ .Table[2], p=", p0, ', alternative="', alternative, '", conf.level=', level, ", correct=", continuity, "))", sep="")
+				doItAndPrint(command)
+			}
+			if(exact==1){
+				doItAndPrint("res <- NULL")
+				command <- paste("(res <- binom.test(.Table[2], .Table[1]+ .Table[2], p=", p0, ', alternative="', alternative, '", conf.level=', level, "))", sep="")
+				doItAndPrint(command)
+			}
 		}
 		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "Single-Sample Proportion Test"), " ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
 #		doItAndPrint("remove(res)")	
@@ -10928,7 +11532,7 @@ putDialog("StatMedProbSingle", list(x=x, chisq=chisq, exact=exact, continuity=co
     tkgrid(buttonsFrame, columnspan=2, sticky="w")
     dialogSuffix(rows=4, columns=2)
     }
-
+		
 
 StatMedProbDiffCI <- function(){
 	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Confidence interval for a difference between two proportions"))
@@ -11663,7 +12267,7 @@ putDialog("StatMedPropTrend", list(response=response, group=group, subset=tclval
 
 
 StatMedLogisticRegression <- function(){
-defaults <- list(lhs = "", rhs = "", waldVariable = 0,  rocVariable = 0, diagnosisVariable = 0, actmodelVariable = 0, pscoreVariable = 0, stepwise1Variable = 0, stepwise2Variable = 0, stepwise3Variable = 0, subset = "")
+defaults <- list(lhs = "", rhs = "", wald = 0,  roc = 0, diagnosis = 0, actmodel = 0, pscore = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "")
 dialog.values <- getDialog("StatMedLogisticRegression", defaults)
 currentFields$lhs <- dialog.values$lhs			#Values in currentFields will be sent to modelFormula
 currentFields$rhs <- dialog.values$rhs
@@ -11692,7 +12296,7 @@ currentFields$subset <- dialog.values$subset
     model <- ttkentry(modelFrame, width="20", textvariable=modelName)
 	optionsFrame <- tkframe(top)
 	
-	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "pscore", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$actmodelVariable, dialog.values$rocVariable, dialog.values$diagnosisVariable, dialog.values$pscoreVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Make propensity score variable", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "pscore", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$actmodel, dialog.values$roc, dialog.values$diagnosis, dialog.values$pscore, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Make propensity score variable", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 
 #	waldVariable <- tclVar("0")
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -11719,7 +12323,7 @@ currentFields$subset <- dialog.values$subset
 		stepwise3 <- tclvalue(stepwise3Variable)
 		subset <- tclvalue(subsetVariable)
 #input values into dialog memory	
-putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  actmodelVariable = actmodel, rocVariable = roc, diagnosisVariable = diagnosis, pscoreVariable = pscore, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
+putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), wald = wald,  actmodel = actmodel, roc = roc, diagnosis = diagnosis, pscore = pscore, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset=tclvalue(subsetVariable)))
         check.empty <- gsub(" ", "", tclvalue(lhsVariable))
         if ("" == check.empty) {
             errorCondition(recall=StatMedLogisticRegression, model=TRUE, message=gettext(domain="R-RcmdrPlugin.EZR","Left-hand side of model empty."))
@@ -12423,11 +13027,12 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 #	doItAndPrint("res <- summary(res)")
 	doItAndPrint("cox.table <- NULL")
 	if(eval(parse(text="length(res$coefficients[,1])"))==1){
-		doItAndPrint("cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,5]), digits=4)")
+		doItAndPrint("cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,length(res$coefficients[1,])]), digits=4)")	
+																							#columns of p.value changes when weights option added
 		doItAndPrint("rownames(cox.table) <- rownames(res$coefficients)")
 		doItAndPrint('colnames(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))')
 	} else {
-		doItAndPrint("cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,5]), digits=4)")
+		doItAndPrint("cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,length(res$coefficients[1,])]), digits=4)")
 		doItAndPrint("cox.table <- data.frame(cox.table)")
 		doItAndPrint('colnames(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))')
 	}
@@ -12479,12 +13084,12 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 			doItAndPrint("summary(res)")
 			doItAndPrint("res2 <- summary(res)")
 			if(eval(parse(text="length(res2$coefficients[,1])"))==1){
-				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("rownames(cox.table) <- rownames(res2$coefficients)")
 				doItAndPrint('colnames(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')	
 				doItAndPrint("cox.table")
 			} else if(eval(parse(text="length(res2$coefficients[,1])"))>1){
-				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("cox.table <- data.frame(cox.table)")
 				doItAndPrint('names(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')
 				doItAndPrint("cox.table")
@@ -12496,12 +13101,12 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 			doItAndPrint("summary(res)")
 			doItAndPrint("res2 <- summary(res)")
 			if(eval(parse(text="length(res2$coefficients[,1])"))==1){
-				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("rownames(cox.table) <- rownames(res2$coefficients)")
 				doItAndPrint('colnames(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')	
 				doItAndPrint("cox.table")
 			} else if(eval(parse(text="length(res2$coefficients[,1])"))>1){
-				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("cox.table <- data.frame(cox.table)")
 				doItAndPrint('names(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')
 				doItAndPrint("cox.table")
@@ -12696,9 +13301,11 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
     }
     closeDialog()
     Library("survival")
+	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "(is.na(", group, ")==F", sep="")
+#	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "(is.na(", adjust[1], ")==F", sep="")
 	factor <- adjust[1]
-	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "(is.na(", adjust[1], ")==F", sep="")
-	if(length(adjust)>1){
+	if(length(adjust)>=1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, " & is.na(", adjust[1], ")==F", sep="")
+	if(length(adjust)>=2){
 		for (i in 2:length(adjust)){
 			factor <- paste(factor, " + ", adjust[i], sep="")
 			naexcludeSubdataSet <- paste(naexcludeSubdataSet, " & is.na(", adjust[i], ")==F", sep="")
@@ -12707,7 +13314,9 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 	factor2 <- factor
 	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "))", sep="")
 	if (length(group)==1) factor2 <- paste(factor, " + strata(", group, ")", sep="")	
-	command <- paste("coxmodel <- coxph(Surv((", timetoevent, "/", xscale, "), ", event, "==1)~ ", factor2, ", data=", subdataSet, ', method="breslow")', sep="")
+#	command <- paste("coxmodel <- coxph(Surv((", timetoevent, "/", xscale, "), ", event, "==1)~ ", factor2, ", data=", subdataSet, ', method="breslow")', sep="")
+#	use naexcludeSubdataset for rmean.table.adjusted() function. Can be replaced with complete.case() function.
+	command <- paste("coxmodel <- coxph(Surv((", timetoevent, "/", xscale, "), ", event, "==1)~ ", factor2, ", data=", naexcludeSubdataSet, ', method="breslow")', sep="")
 	doItAndPrint("coxmodel <- NULL")
 	doItAndPrint(command)
 	doItAndPrint("cox <- NULL")
@@ -13729,11 +14338,11 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 #	doItAndPrint("res <- summary(res)")
 	doItAndPrint("cox.table <- NULL")
 	if(eval(parse(text="length(res$coefficients[,1])"))==1){
-		doItAndPrint("cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,5]), digits=4)")
+		doItAndPrint("cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,length(res$coefficients[1,])]), digits=4)")
 		doItAndPrint("rownames(cox.table) <- rownames(res$coefficients)")
 		doItAndPrint('colnames(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))')
 	} else {
-		doItAndPrint("cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,5]), digits=4)")
+		doItAndPrint("cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,length(res$coefficients[1,])]), digits=4)")
 		doItAndPrint("cox.table <- data.frame(cox.table)")
 		doItAndPrint('colnames(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))')
 	}
@@ -13784,12 +14393,12 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 			doItAndPrint("summary(res)")
 			doItAndPrint("res2 <- summary(res)")
 			if(eval(parse(text="length(res2$coefficients[,1])"))==1){
-				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("rownames(cox.table) <- rownames(res2$coefficients)")
 				doItAndPrint('colnames(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')	
 				doItAndPrint("cox.table")
 			} else if(eval(parse(text="length(res2$coefficients[,1])"))>1){
-				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("cox.table <- data.frame(cox.table)")
 				doItAndPrint('names(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')
 				doItAndPrint("cox.table")
@@ -13801,12 +14410,12 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 			doItAndPrint("summary(res)")
 			doItAndPrint("res2 <- summary(res)")
 			if(eval(parse(text="length(res2$coefficients[,1])"))==1){
-				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("rownames(cox.table) <- rownames(res2$coefficients)")
 				doItAndPrint('colnames(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')	
 				doItAndPrint("cox.table")
 			} else if(eval(parse(text="length(res2$coefficients[,1])"))>1){
-				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("cox.table <- data.frame(cox.table)")
 				doItAndPrint('names(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')
 				doItAndPrint("cox.table")
@@ -14150,8 +14759,8 @@ putDialog("StatMedSurvivalROC", list(event = event, timetoevent = timetoevent, p
 	} else {
 		doItAndPrint(paste("ROC <- survivalROC(", dataSet, "$", timetoevent, ", ", dataSet, "$", event, ", ", dataSet, "$", predictor, ", predict.time=", point, ', method="NNE", span=', span, ")", sep=""))		
 	}
-	doItAndPrint('plot(ROC$FP, ROC$TP, type="l", xlim=c(0,1), ylim=c(0,1), xlab="1 - Specificity", ylab="Sensitivity", main=paste("AUC = ", round(ROC$AUC,3), sep=""))')
-	doItAndPrint("abline(0,1)")
+	doItAndPrint('plot(1-ROC$FP, ROC$TP, type="l", xlim=c(1,0), ylim=c(0,1), xlab="Specificity", ylab="Sensitivity", main=paste("AUC = ", round(ROC$AUC,3), sep=""))')
+	doItAndPrint("abline(1,-1)")
 
 	doItAndPrint("maxSensSpec <- max(1-ROC$FP + ROC$TP)")
 	doItAndPrint("maxThre <- ROC$cut.values[1-ROC$FP+ROC$TP==maxSensSpec]")
@@ -14411,7 +15020,7 @@ dialog.values <- getDialog("StatMedMatching", defaults)
 	    calipervalue <- tclvalue(calipervalueLevel)
         caliper <- as.character(tclvalue(caliperVariable))
 		if(caliper=="FALSE"){
-			caliper <- NULL
+			caliper <- "NULL"
 		} else {
 			caliper <- calipervalue
 		}
@@ -14853,11 +15462,11 @@ putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 
 	doItAndPrint("cox.table <- NULL")
 	if(eval(parse(text="length(res$coefficients[,1])"))==1){
-		doItAndPrint("cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,5]), digits=4)")
+		doItAndPrint("cox.table <- signif(cbind(t(res$conf.int[,c(1,3,4)]), p.value=res$coefficients[,length(res$coefficients[1,])]), digits=4)")
 		doItAndPrint("rownames(cox.table) <- rownames(res$coefficients)")
 		doItAndPrint('colnames(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))')
 	} else {
-		doItAndPrint("cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,5]), digits=4)")
+		doItAndPrint("cox.table <- signif(cbind(res$conf.int[,c(1,3,4)], res$coefficients[,length(res$coefficients[1,])]), digits=4)")
 		doItAndPrint("cox.table <- data.frame(cox.table)")
 		doItAndPrint('colnames(cox.table) <- gettext(domain="R-RcmdrPlugin.EZR",c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))')
 	}
@@ -14901,12 +15510,12 @@ putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 			doItAndPrint("summary(res)")
 			doItAndPrint("res2 <- summary(res)")
 			if(eval(parse(text="length(res2$coefficients[,1])"))==1){
-				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("rownames(cox.table) <- rownames(res2$coefficients)")
 				doItAndPrint('colnames(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')	
 				doItAndPrint("cox.table")
 			} else if(eval(parse(text="length(res2$coefficients[,1])"))>1){
-				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("cox.table <- data.frame(cox.table)")
 				doItAndPrint('names(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')
 				doItAndPrint("cox.table")
@@ -14918,12 +15527,12 @@ putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 			doItAndPrint("summary(res)")
 			doItAndPrint("res2 <- summary(res)")
 			if(eval(parse(text="length(res2$coefficients[,1])"))==1){
-				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(t(res2$conf.int[,c(1,3,4)]), p.value=res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("rownames(cox.table) <- rownames(res2$coefficients)")
 				doItAndPrint('colnames(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')	
 				doItAndPrint("cox.table")
 			} else if(eval(parse(text="length(res2$coefficients[,1])"))>1){
-				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,5]), digits=4)")
+				doItAndPrint("cox.table <- signif(cbind(res2$conf.int[,c(1,3,4)], res2$coefficients[,length(res2$coefficients[1,])]), digits=4)")
 				doItAndPrint("cox.table <- data.frame(cox.table)")
 				doItAndPrint('names(cox.table) <- c("Hazard ratio", "Lower 95%CI", "Upper 95%CI", "p.value")')
 				doItAndPrint("cox.table")
@@ -15652,6 +16261,45 @@ StatMedSampleProportionsNonInf <- function(){
 }
 
 
+StatMedSampleSelectionDesign <- function(){
+	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Calculate sample size for selection design in randomized phase II trials"))
+	Smallest <- tclVar("")
+	SmallestEntry <- ttkentry(top, width="20", textvariable=Smallest)
+	Diff <- tclVar("0.15")
+	DiffEntry <- ttkentry(top, width="20", textvariable=Diff)
+	Arms <- tclVar("")
+	ArmsEntry <- ttkentry(top, width="20", textvariable=Arms)
+	Desired <- tclVar("0.90")
+	DesiredEntry <- ttkentry(top, width="20", textvariable=Desired)
+	onOK <- function(){
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Calculate sample size for selection design in randomized phase II trials"), "#####", sep=""))
+		Smallest <- tclvalue(Smallest)
+		Diff <- tclvalue(Diff)
+		Arms <- tclvalue(Arms)
+		Desired <- tclvalue(Desired)
+		closeDialog()
+		if (length(Smallest) == 0 || length(Diff) == 0 || length(Arms) == 0 || length(Desired) == 0){
+			errorCondition(recall=StatMedSampleSelectionDesign, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
+			return()
+		}
+		command <- paste("SampleSelectionDesign(", Smallest, ", ", Diff, ", ", Arms, ", ", Desired, ")", sep="")
+		doItAndPrint(command)
+		tkfocus(CommanderWindow())
+	}
+	OKCancelHelp()
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Smallest response rate")), SmallestEntry, sticky="w")
+	tkgrid.configure(SmallestEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Difference in response rate")), DiffEntry, sticky="w")
+	tkgrid.configure(DiffEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Number of treatment arms")), ArmsEntry, sticky="w")
+	tkgrid.configure(ArmsEntry, sticky="w")
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Desired Probability")), DesiredEntry, sticky="w")
+	tkgrid.configure(DesiredEntry, sticky="w")
+	tkgrid(buttonsFrame, sticky="w")
+	dialogSuffix(rows=4, columns=1)
+}
+
+
 StatMedSampleHazard <- function(){
 	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Calculate sample size for comparison between two survival curves"))
 	enrol <- tclVar("")
@@ -16284,8 +16932,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.42", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","May 5, 2020"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.50", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","June 4, 2020"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -16399,7 +17047,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.42", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.50", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -16468,4 +17116,6 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'columnmergeVariable', 'column.name1', 'column.name2', 'columnmergeFrame',
 'deleteVariable', 'RecodeDialog', 'km', 'coxmodel', 'pscoreVariable',
 'ypercent', 'ypercentVariable', 'caliperVariable', 'caliperFrame', 
-'predictorVariale', 'predicorFrame'))
+'predictorVariale', 'predicorFrame', 'linearMixedModel', 'pvalueVariable',
+'estimTypeVariable', 'estimTypeFrame', 'numSummary', 'num', 'lev', 'smd', 
+'smdFrame', ''))

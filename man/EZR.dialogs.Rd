@@ -49,6 +49,7 @@
 \alias{StatMedKruWalli}
 \alias{StatMedLinePlot}
 \alias{StatMedLinearRegression}
+\alias{StatMedLinearMixedModel}
 \alias{StatMedLoadDataSet}
 \alias{StatMedLoadWorkspace}
 \alias{StatMedLog}
@@ -107,6 +108,7 @@
 \alias{StatMedSampleProportions}
 \alias{StatMedSampleProportionsCI}
 \alias{StatMedSampleProportionsNonInf}
+\alias{StatMedSampleSelectionDesign}
 \alias{StatMedSampleProportionsSingle}
 \alias{StatMedSaveDataSet}
 \alias{StatMedScatterPlot}

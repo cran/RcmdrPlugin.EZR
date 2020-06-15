@@ -9,13 +9,14 @@ Caluculate and compare restricted mean survival.
 }
 
 \usage{
-rmean.table(x=km, tau=NULL)
+rmean.table(x=km, tau=NULL, plot=0)
 rmean.table.adjusted(x=coxmodel, tau=NULL)
 }
 
 \arguments{
 \item{x}{survfit object}
 \item{tau}{specify a value of the truncation time point for the restricted mean survial calculation, e.g.,tau=365. When tau=NULL, the default value (i.e., the minimum of the largest observed "event" time in each of the two groups) is used.}
+\item{plot}{plot=1 to plot estimated area. }
 }
 
 \details{

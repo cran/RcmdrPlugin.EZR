@@ -22,6 +22,7 @@
 \alias{SampleProportion}
 \alias{SampleProportionCI}
 \alias{SampleProportionNonInf}
+\alias{SampleSelectionDesign}
 \alias{SampleProportionSingleArm}
 \alias{Steel}
 \alias{Steel.Dwass}
@@ -33,6 +34,7 @@
 \alias{get.median.ci}
 \alias{listCoxModels}
 \alias{listLMModels}
+\alias{listLMMs}
 \alias{logrank.trend}
 \alias{modelFormulaCox}
 \alias{nrisk}
@@ -84,8 +86,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.42\cr
-Date: \tab 2020-05-05\cr
+Version: \tab 1.50\cr
+Date: \tab 2020-06-04\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
@@ -138,6 +140,7 @@ Multi-way ANOVA\cr
 ANCOVA\cr
 Test for Pearson's correlation\cr
 Linear regression\cr\cr
+Linear Mixed Model\cr\cr
 \emph{For nonparametric tests for continuous variables}\cr\cr
 Mann-Whitney U test\cr
 Wilcoxon's signed rank test\cr
@@ -175,6 +178,7 @@ Calculate sample size from proportion and confidence interval\cr
 Calculate sample size or power for comparison with specified proportion\cr
 Calculate sample size or power for comparison between two proportions\cr
 Calculate sample size for non-inferiority trial of two proportions\cr
+Calculate sample size for selection design in randomized phase II trials\cr
 Calculate sample size from standard deviation and confidence interval\cr
 Calculate sample size or power for comparison between two means\cr
 Calculate sample size for non-inferiority trial of two means\cr
