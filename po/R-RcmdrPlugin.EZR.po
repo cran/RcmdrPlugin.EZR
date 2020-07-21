@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr Japanese Translation\n"
 "POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2020-06-13 10:29+0900\n"
-"Last-Translator: Y. Kanda <ycanda-tky@umin.ac.jp>\n"
+"PO-Revision-Date: 2020-07-16 16:13+0900\n"
+"Last-Translator: \n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -6529,4 +6529,73 @@ msgstr "計算された正しく選択する確率"
 
 msgid "Show standardized differences"
 msgstr "標準化差を表示する"
+
+msgid "Fine-Gray proportional hazard regression with time-dependent covariate"
+msgstr "時間依存性変数を含む累積発生率に対する多変量解析(Fine-Gray比例ハザード回帰)"
+
+msgid "Explanatory variables (pick 0, 1, or more)"
+msgstr "説明変数(0、1あるいは複数選択)。複数の選択はCtrlキーを押しながらクリック。"
+
+msgid "Adjusted cumulative incidence curve"
+msgstr "他の因子で調整した累積発生曲線の表示"
+
+msgid "Network metaanalysis"
+msgstr "ネットワークメタアナリシス"
+
+msgid "Variable to identify studies"
+msgstr "臨床試験の名称"
+
+msgid "Variable to identify treatment 1 name"
+msgstr "治療群1の名称"
+
+msgid "Variable to identify treatment 2 name"
+msgstr "治療群2の名称"
+
+msgid "Treatment effect"
+msgstr "治療効果"
+
+msgid "Standard error of treatment effect"
+msgstr "治療効果の標準誤差"
+
+msgid "Mean difference"
+msgstr "平均差"
+
+msgid "Standardized mean difference"
+msgstr "標準化平均差"
+
+msgid "Show net connection"
+msgstr "ネットワークの構造を示す"
+
+msgid "Show Treatment rank"
+msgstr "治療順位を示す"
+
+msgid "Show net heat plot"
+msgstr "ネットヒートプロットを示す"
+
+msgid "Compare direct and indirect evidence"
+msgstr "直接比較と間接比較の結果を比較する"
+
+msgid "Reference treatment name not include"
+msgstr "参照群の名称が治療群1、治療群2に含まれていません"
+
+msgid "Input OR/RR/HR for Treatment effect and 95% upper CI for SE to evaluate OR/RR/HR."
+msgstr "OR/RR/HRを評価する場合はOR/RR/HRの変数とその95%信頼区間上限の変数を選択してください"
+
+msgid "Name of the reference treatment:"
+msgstr "参照群の名称を入力する"
+
+msgid "Inverse probability of treatment weighting"
+msgstr "逆確率重みづけ(IPTW)のデータセットを作成する"
+
+msgid "Ordinal logistic regression"
+msgstr "順序変数に対する多変量解析(順序ロジスティック回帰)"
+
+msgid "###Test for proportional odds assumption and VIF calculation"
+msgstr "###比例オッズ性の検定とVIFの計算は"
+
+msgid "###requires at least two independent variables."
+msgstr "###2つ以上の独立変数が必要です。"
+
+msgid "Multinomial logistic regression"
+msgstr "多項ロジスティック回帰"
 

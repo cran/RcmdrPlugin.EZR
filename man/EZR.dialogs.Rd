@@ -3,6 +3,7 @@
 \alias{StatMedANCOVA}
 \alias{StatMedANOVA}
 \alias{StatMedAdjustedSurvival}
+\alias{StatMedAdjustedCumInc}
 \alias{StatMedBarGraph}
 \alias{StatMedBarMeans}
 \alias{StatMedBartlett}
@@ -20,6 +21,7 @@
 \alias{StatMedCoxRegression}
 \alias{StatMedCoxTD}
 \alias{StatMedCrr}
+\alias{StatMedCrrTD}
 \alias{StatMedCumInc}
 \alias{StatMedDatediff}
 \alias{StatMedDeleteVariable}
@@ -66,12 +68,15 @@
 \alias{StatMedMetaHazard}
 \alias{StatMedModelFormula}
 \alias{StatMedMultiANOVA}
+\alias{StatMedMultinomialLogitModel}
 \alias{StatMedNAgroup}
 \alias{StatMedNewVar}
 \alias{StatMedNewVar2}
+\alias{StatMedNetworkMeta}
 \alias{StatMedNumericToFactor}
 \alias{StatMedNumericalSummaries}
 \alias{StatMedOrderedChart}
+\alias{StatMedOrdinalRegressionModel}
 \alias{StatMedPairedTtest}
 \alias{StatMedPieChart}
 \alias{StatMedPlotMeans}
@@ -158,5 +163,5 @@ Survival curves adjusted for other factors by the mean of covariates method, in 
 Read follwing article for details. It can be freely downloaded from the journal website as shown below.\cr\cr 
 Yoshinobu Kanda (2012).
 Investigation of the freely available easy-to-use software EZR for medical statistics.
-\emph{Bone Marrow Transplantation} (Open article, URL: \url{http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf}).\cr\cr
+\emph{Bone Marrow Transplantation} (Open article, URL: \url{https://www.nature.com/articles/bmt2012244.pdf}).\cr\cr
 } 

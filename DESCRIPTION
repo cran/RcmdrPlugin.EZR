@@ -1,16 +1,16 @@
 Package: RcmdrPlugin.EZR
 Type: Package
 Title: R Commander Plug-in for the EZR (Easy R) Package
-Version: 1.50
-Date: 2020-06-04
+Version: 1.51
+Date: 2020-07-20
 Author: Yoshinobu Kanda
 Maintainer: Yoshinobu Kanda <ycanda-tky@umin.ac.jp>
 Depends: R (>= 3.5.0)
 Imports: Rcmdr (>= 2.6.0), readstata13
-Suggests: abind, aod, aplpack, car, clinfun, cmprsk, foreign, meta,
-        metatest, multcomp, mvtnorm, Matching, pROC (>= 1.15.0),
-        survivalROC, survRM2, tableone, readxl, lmerTest
-Description: EZR (Easy R) adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to statistical functions, especially for medical statistics. EZR is platform-independent and runs on Windows, Mac OS X, and UNIX. Its complete manual is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8 or Nankodo, ISBN: 978-4-524-26158-1), but an report that introduced the investigation of EZR was published in Bone Marrow Transplantation (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below. This report has been cited in more than 2,000 scientific articles.
+Suggests: abind, aod, aplpack, brant, car, clinfun, cmprsk, foreign,
+        meta, metatest, netmeta, multcomp, mvtnorm, Matching, pROC (>=
+        1.15.0), survivalROC, survRM2, tableone, readxl, lmerTest
+Description: EZR (Easy R) adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to statistical functions, especially for medical statistics. EZR is platform-independent and runs on Windows, Mac OS X, and UNIX. Its complete manual is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8 or Nankodo, ISBN: 978-4-524-26158-1), but an report that introduced the investigation of EZR was published in Bone Marrow Transplantation (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below. This report has been cited in more than 3,000 scientific articles.
 Copyright: The functionos in EZR package were programmed by Y. Kanda,
         except for the following functions. dot.plot(), prop.conf(),
         Cochran.Q.test(), pairwise.prop2.test(),
@@ -32,10 +32,9 @@ Copyright: The functionos in EZR package were programmed by Y. Kanda,
         corresponding functions in Rcmdr package and
         RcmdrPlugin.survivalT package.
 License: GPL (>= 2)
-URL:
-        http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf
+URL: https://www.nature.com/articles/bmt2012244.pdf
         http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html
 NeedsCompilation: no
-Packaged: 2020-06-13 02:55:45 UTC; KANDA
+Packaged: 2020-07-19 00:08:49 UTC; KANDA
 Repository: CRAN
-Date/Publication: 2020-06-15 08:30:02 UTC
+Date/Publication: 2020-07-21 06:40:06 UTC

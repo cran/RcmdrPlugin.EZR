@@ -60,6 +60,7 @@
 \alias{step.p.cox}
 \alias{step.p.coxtd}
 \alias{step.p.crr}
+\alias{step.p.coxcrrtd}
 \alias{step.AIC.crr}
 \alias{crrAIC}
 \alias{step.p.glm}
@@ -79,15 +80,15 @@
 Rcmdr Plug-In Package for the EZR (Easy R especially for medical statistics)
 }
 \description{
-This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in \emph{Bone Marrow Transplantation} (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: \url{http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf}). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8, URL: \url{http://www.chugaiigaku.jp/item/detail.php?id=1660} or Nankodo, ISBN: 978-4-524-26158-1, URL: \url{http://www.nankodo.co.jp/g/g9784524261581/})
+This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in \emph{Bone Marrow Transplantation} (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: \url{https://www.nature.com/articles/bmt2012244.pdf}). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8, URL: \url{http://www.chugaiigaku.jp/item/detail.php?id=1660} or Nankodo, ISBN: 978-4-524-26158-1, URL: \url{http://www.nankodo.co.jp/g/g9784524261581/})
 }
 
 \details{
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.50\cr
-Date: \tab 2020-06-04\cr
+Version: \tab 1.51\cr
+Date: \tab 2020-07-20\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
@@ -123,7 +124,9 @@ Compare two proportions (Fisher's exact test and Chi-square test)\cr
 Compare proportions of two paired samples (McNemar test)\cr
 Compare proportions of more than two paired samples (Cochran Q test)\cr
 Cochran-Armitage test for trend in proportions\cr
-Logistic regression\cr\cr
+Logistic regression\cr
+Ordinal logistic regression\cr
+Multinomial logistic regression\cr\cr
 \emph{For continuous variables}\cr\cr
 Numerical summaries\cr
 Smirnov-Grubbs test for outliers\cr
@@ -139,7 +142,7 @@ Repeated-measures ANOVA\cr
 Multi-way ANOVA\cr
 ANCOVA\cr
 Test for Pearson's correlation\cr
-Linear regression\cr\cr
+Linear regression\cr
 Linear Mixed Model\cr\cr
 \emph{For nonparametric tests for continuous variables}\cr\cr
 Mann-Whitney U test\cr
@@ -154,7 +157,8 @@ Logrank trend test\cr
 Cox proportional hazard regression\cr
 Cox proportional hazard regression with time-dependent covariate\cr
 Cumulative incidence of competing events and Gray test\cr
-Fine-Gray proportional hazard regression for competing events\cr\cr
+Fine-Gray proportional hazard regression for competing events\cr
+Fine-Gray proportional hazard with time-dependent covariate\cr\cr
 \emph{For diagnostic test analysis}\cr\cr
 Accuracy of qualitative test\cr
 Kappa statistics for agreement of two tests\cr
@@ -171,7 +175,8 @@ Stratified Cox proportional hazard regression for matched-pair analysis\cr\cr
 \emph{For meta-analysis and meta-regression test}\cr\cr
 Meta-analysis and meta-regression test for proportions\cr
 Meta-analysis and meta-regression test for means\cr
-Meta-analysis and meta-regression test for hazard ratios\cr\cr
+Meta-analysis and meta-regression test for hazard ratios\cr
+Network meta-analysis\cr\cr
 \emph{For smaple size and power calculation}\cr\cr
 Calculate sample size from control and desired response rates\cr
 Calculate sample size from proportion and confidence interval\cr
@@ -200,6 +205,7 @@ Ordered chart\cr
 Scatterplot\cr
 Scatterplot matrix\cr
 Adjusted survival curve\cr
+Adjusted cumulative incidence curve\cr
 Stacked cumulative incidences\cr\cr
 \emph{Statistical functions from original R commander}\cr\cr
 Principal-components analysis\cr
@@ -252,7 +258,7 @@ Its complete manual is available only in Japanese (Chugai Igakusha, ISBN: 978-4-
  
 Yoshinobu Kanda (2013).
 Investigation of the freely available easy-to-use software EZR for medical statistics.
-\emph{Bone Marrow Transplantation} (Open article, URL: \url{http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf}).\cr\cr
+\emph{Bone Marrow Transplantation} (Open article, URL: \url{https://www.nature.com/articles/bmt2012244.pdf}).\cr\cr
 
 EZR web site:
 Division of Hematology, Saitama Medical Center, Jichi Medical University. URL: \url{http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html}

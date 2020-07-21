@@ -1,3 +1,17 @@
+Changes to Version 1.51
+
+  o Added Fine-Gray proportional hazard regression with time-dependent covariate.
+
+  o Added function to draw cumulative incidence curve adjusted using Fine-Gray proportional hazard regression.
+
+  o Added network metaanalysis.
+
+  o Added ordinal logistic regression€and multinomial logistic regression.
+
+  o Enabled input/output via clipboard in Mac OS X.
+
+  o Added an option to create dataset including stabilized weights calculated based on propensity score and assess balance of covariates between the groups in logistic refression analysis.
+
 Changes to Version 1.50
 
   o Added linear mixed model in EZR menu.

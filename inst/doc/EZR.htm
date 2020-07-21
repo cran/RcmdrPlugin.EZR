@@ -11,7 +11,7 @@ Rcmdr Plug-In Package for the EZR (Easy R especially for medical statistics)
 
 <h3>Description</h3>
 
-<p>This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in <em>Bone Marrow Transplantation</em> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: <a href="http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf">http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf</a>). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8, URL: <a href="http://www.chugaiigaku.jp/item/detail.php?id=1660">http://www.chugaiigaku.jp/item/detail.php?id=1660</a> or Nankodo, ISBN: 978-4-524-26158-1, URL: <a href="http://www.nankodo.co.jp/g/g9784524261581/">http://www.nankodo.co.jp/g/g9784524261581/</a>)
+<p>This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in <em>Bone Marrow Transplantation</em> (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: <a href="https://www.nature.com/articles/bmt2012244.pdf">https://www.nature.com/articles/bmt2012244.pdf</a>). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8, URL: <a href="http://www.chugaiigaku.jp/item/detail.php?id=1660">http://www.chugaiigaku.jp/item/detail.php?id=1660</a> or Nankodo, ISBN: 978-4-524-26158-1, URL: <a href="http://www.nankodo.co.jp/g/g9784524261581/">http://www.nankodo.co.jp/g/g9784524261581/</a>)
 </p>
 
 
@@ -29,11 +29,11 @@ Type: </td><td style="text-align: left;"> Package</td>
 </tr>
 <tr>
  <td style="text-align: left;">
-Version: </td><td style="text-align: left;"> 1.50</td>
+Version: </td><td style="text-align: left;"> 1.51</td>
 </tr>
 <tr>
  <td style="text-align: left;">
-Date: </td><td style="text-align: left;"> 2020-06-04</td>
+Date: </td><td style="text-align: left;"> 2020-07-20</td>
 </tr>
 <tr>
  <td style="text-align: left;">
@@ -85,7 +85,9 @@ Compare two proportions (Fisher's exact test and Chi-square test)<br />
 Compare proportions of two paired samples (McNemar test)<br />
 Compare proportions of more than two paired samples (Cochran Q test)<br />
 Cochran-Armitage test for trend in proportions<br />
-Logistic regression<br /><br />
+Logistic regression<br />
+Ordinal logistic regression<br />
+Multinomial logistic regression<br /><br />
 <em>For continuous variables</em><br /><br />
 Numerical summaries<br />
 Smirnov-Grubbs test for outliers<br />
@@ -101,7 +103,7 @@ Repeated-measures ANOVA<br />
 Multi-way ANOVA<br />
 ANCOVA<br />
 Test for Pearson's correlation<br />
-Linear regression<br /><br />
+Linear regression<br />
 Linear Mixed Model<br /><br />
 <em>For nonparametric tests for continuous variables</em><br /><br />
 Mann-Whitney U test<br />
@@ -116,7 +118,8 @@ Logrank trend test<br />
 Cox proportional hazard regression<br />
 Cox proportional hazard regression with time-dependent covariate<br />
 Cumulative incidence of competing events and Gray test<br />
-Fine-Gray proportional hazard regression for competing events<br /><br />
+Fine-Gray proportional hazard regression for competing events<br />
+Fine-Gray proportional hazard with time-dependent covariate<br /><br />
 <em>For diagnostic test analysis</em><br /><br />
 Accuracy of qualitative test<br />
 Kappa statistics for agreement of two tests<br />
@@ -133,7 +136,8 @@ Stratified Cox proportional hazard regression for matched-pair analysis<br /><br
 <em>For meta-analysis and meta-regression test</em><br /><br />
 Meta-analysis and meta-regression test for proportions<br />
 Meta-analysis and meta-regression test for means<br />
-Meta-analysis and meta-regression test for hazard ratios<br /><br />
+Meta-analysis and meta-regression test for hazard ratios<br />
+Network meta-analysis<br /><br />
 <em>For smaple size and power calculation</em><br /><br />
 Calculate sample size from control and desired response rates<br />
 Calculate sample size from proportion and confidence interval<br />
@@ -162,6 +166,7 @@ Ordered chart<br />
 Scatterplot<br />
 Scatterplot matrix<br />
 Adjusted survival curve<br />
+Adjusted cumulative incidence curve<br />
 Stacked cumulative incidences<br /><br />
 <em>Statistical functions from original R commander</em><br /><br />
 Principal-components analysis<br />
@@ -222,7 +227,7 @@ Maintainer: Yoshinobu Kanda &lt;ycanda-tky@umin.ac.jp&gt;
 </p>
 <p>Yoshinobu Kanda (2013).
 Investigation of the freely available easy-to-use software EZR for medical statistics.
-<em>Bone Marrow Transplantation</em> (Open article, URL: <a href="http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf">http://www.nature.com/bmt/journal/vaop/ncurrent/pdf/bmt2012244a.pdf</a>).<br /><br />
+<em>Bone Marrow Transplantation</em> (Open article, URL: <a href="https://www.nature.com/articles/bmt2012244.pdf">https://www.nature.com/articles/bmt2012244.pdf</a>).<br /><br />
 </p>
 <p>EZR web site:
 Division of Hematology, Saitama Medical Center, Jichi Medical University. URL: <a href="http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html">http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html</a>
