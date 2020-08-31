@@ -1,3 +1,11 @@
+Changes to Version 1.52
+
+  o Enabled multiple use of time-dependent covariates in Cox and Fine-Gray proportional hazard regression models.
+
+  o Added function to draw propensity score distribution graph with or without weighting.
+
+  o Chaged the output of IPTW variable from a new dataset to thre original dataset.
+
 Changes to Version 1.51
 
   o Added Fine-Gray proportional hazard regression with time-dependent covariate.

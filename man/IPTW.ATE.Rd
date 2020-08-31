@@ -4,7 +4,7 @@
 \title{Inverse probability of treatment weighting using stabilized weights based on propensity score}
 
 \description{
-Return dataset including stabilized weights calculated based on propensity score and assess balance of covariates between the groups.
+Return stabilized weights calculated based on propensity score and assess balance of covariates between the groups.
 }
 
 \usage{
@@ -16,7 +16,7 @@ IPTW.ATE(GLM)
 }
 
 \details{
-By putting the result of a logistic regression analysis to calculate propensity scores into IPTW.ATE(), this function returns dataset including a stabilized weight variable, named weight.ATE, calculated based on propensity scores and assesses the balance of covariates between the groups.
+By putting the result of a logistic regression analysis to calculate propensity scores into IPTW.ATE(), this function returns a stabilized weight variable calculated based on propensity scores and assesses the balance of covariates between the groups.
 }
 
 \value{

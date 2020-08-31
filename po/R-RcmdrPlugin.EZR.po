@@ -1,24 +1,24 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Rcmdr Japanese Translation\n"
-"POT-Creation-Date: 2010-07-10 19:00\n"
-"PO-Revision-Date: 2020-07-16 16:13+0900\n"
-"Last-Translator: \n"
+"Project-Id-Version: Rcmdr 2.7-0 Japanese Translation\n"
+"POT-Creation-Date: 2019-01-08 16:30:00\n"
+"PO-Revision-Date: 2020-08-29 18:24+0900\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ja_JP\n"
-"X-Generator: Poedit 1.5.7\n"
+"X-Generator: Poedit 2.4.1\n"
+"Last-Translator: Y. Kanda <ycanda-tky@umin.ac.jp>\n"
 
 msgid "KMeans Clustering"
-msgstr "k平均クラスタリング"
+msgstr "ｋ平均クラスタリング"
 
 msgid "Variables (pick one or more)"
 msgstr "変数 (１つ以上選択)"
 
 msgid "No variables selected."
-msgstr "変数が選択されていません"
+msgstr "変数が選択されていません."
 
 msgid "<all valid cases>"
 msgstr "<全ての有効なケース>"
@@ -106,10 +106,10 @@ msgid "There are no hierachical clustering solutions"
 msgstr "階層的クラスタラリングの解がありません"
 
 msgid "No hierachical clustering solutions are associated with this data set."
-msgstr "このデータセットに関連する階層的クラスタリングの結果がありません．"
+msgstr "このデータセットに関連する階層的クラスタリングの結果がありません."
 
 msgid "A clustering solution has not been selected."
-msgstr "クラスタリングの解が選択されていません．"
+msgstr "クラスタリングの解が選択されていません."
 
 msgid "Append Cluster Groups to the Active Data Set"
 msgstr "アクティブデータセットにクラスタグループに関するデータを加える"
@@ -136,10 +136,10 @@ msgid "Search Direction"
 msgstr "検索の方向"
 
 msgid "No search text specified."
-msgstr "検索するテキストが指定されていません．"
+msgstr "検索するテキストが指定されていません."
 
 msgid "Text not found."
-msgstr "テキストがありませんでした．"
+msgstr "テキストがありませんでした."
 
 msgid "Search for:"
 msgstr "検索："
@@ -154,7 +154,7 @@ msgid "menu definition error:"
 msgstr "メニュー定義のエラー："
 
 msgid "Nothing is selected."
-msgstr "何も選択されていません．"
+msgstr "何も選択されていません."
 
 msgid "Clear window"
 msgstr "ウィンドウをクリア"
@@ -208,7 +208,7 @@ msgid "Messages"
 msgstr "メッセージ"
 
 msgid "The rgl package is absent; 3D plots are unavailable."
-msgstr "パッケージ rgl がありません． ３Ｄプロットを作成できません．"
+msgstr "パッケージ rgl がありません. ３Ｄプロットを作成できません."
 
 msgid "R Commander Version"
 msgstr "Rコマンダーのバージョン"
@@ -238,25 +238,25 @@ msgid "Dataset"
 msgstr "Dataset"
 
 msgid "You must enter the name of a data set."
-msgstr "データセット名を入力してください．"
+msgstr "データセット名を入力してください."
 
 msgid "is not a valid name."
-msgstr "は有効な名前ではありません．"
+msgstr "は有効な名前ではありません."
 
 msgid "Data set"
 msgstr "データセット"
 
 msgid "empty data set."
-msgstr "データセットがありません．"
+msgstr "データセットがありません."
 
 msgid "Enter name for data set:"
 msgstr "データセット名を入力："
 
 msgid "There is only one dataset in memory."
-msgstr "メモリにあるデータセットは1つだけです．"
+msgstr "メモリにあるデータセットは1つだけです."
 
 msgid "There are no data sets from which to choose."
-msgstr "データセットが無いので選択できません．"
+msgstr "データセットが無いので選択できません."
 
 msgid "Select Data Set"
 msgstr "データセットの選択"
@@ -274,10 +274,10 @@ msgid "variable"
 msgstr "変数"
 
 msgid "You must select a variable."
-msgstr "変数を１つ選択してください．"
+msgstr "変数を１つ選択してください."
 
 msgid "No recode directives specified."
-msgstr "再コード化の方法の指示がありません．"
+msgstr "再コード化の方法の指示がありません."
 
 msgid "Use only double-quotes (\" \") in recode directives"
 msgstr "再コードのディレクトリにはダブルクオーツ(\" \") のみを使用すること"
@@ -301,7 +301,7 @@ msgid "Current variables (double-click to expression)"
 msgstr "現在の変数 (ダブルクリックして計算式のテキストボックスに入力)"
 
 msgid "No expression specified."
-msgstr "表現が指定されていません．"
+msgstr "表現が指定されていません."
 
 msgid "Variable"
 msgstr "変数"
@@ -316,21 +316,21 @@ msgid "Variable(s) to delete (pick one or more)"
 msgstr "削除する変数 (１つ以上を選択)"
 
 msgid "You must select one or more variables."
-msgstr "変数を１つ以上選択してください．"
+msgstr "変数を１つ以上選択してください."
 
 msgid ""
 "Delete %s?\n"
 "Please confirm."
 msgstr ""
 " %s を削除?\n"
-"確認してください．"
+"確認してください."
 
 msgid ""
 "Delete %d variables?\n"
 "Please confirm."
 msgstr ""
 "変数 %d を削除?\n"
-"確認してください．"
+"確認してください."
 
 msgid "Read Data From Text File"
 msgstr "テキストファイルからデータを読み込む"
@@ -357,7 +357,7 @@ msgid "Decimal-Point Character"
 msgstr "小数点の記号"
 
 msgid "You must enter a name for the data set."
-msgstr "データセット名を入力してください．"
+msgstr "データセット名を入力してください."
 
 msgid "{\"Text Files\" {\".txt\" \".TXT\" \".dat\" \".DAT\" \".csv\" \".CSV\"}} {\"All Files\" {\"*\"}}"
 msgstr "{\"テキストファイル\" {\".txt\" \".TXT\" \".dat\" \".DAT\" \".csv\" \".CSV\"}} {\"すべてのファイル\" {\"*\"}}"
@@ -384,10 +384,10 @@ msgid "Data set %s does not exit"
 msgstr "データセット %s がありません"
 
 msgid "You must select a package."
-msgstr "パッケージを選択してください．"
+msgstr "パッケージを選択してください."
 
 msgid "You must select a data set."
-msgstr "データセットを選択してください．"
+msgstr "データセットを選択してください."
 
 msgid "Package (Double-click to select)"
 msgstr "パッケージ（ダブルクリックして選択）"
@@ -434,7 +434,7 @@ msgid ""
 "Data set cannot be converted."
 msgstr ""
 "Minitab データセットが長さの異なる要素を含んでいます\n"
-"データセットを変換できません．"
+"データセットを変換できません."
 
 msgid "Import STATA Data Set"
 msgstr "STATAデータセットのインポート"
@@ -473,16 +473,16 @@ msgid "<same as variable>"
 msgstr "<変数と同じ>"
 
 msgid "Number of levels (%d) too large."
-msgstr "水準数 (%d) が多すぎます．"
+msgstr "水準数 (%d) が多すぎます."
 
 msgid "Level Names"
 msgstr "水準名"
 
 msgid "Levels names are not unique."
-msgstr "水準名がユニークではありません．"
+msgstr "水準名がユニークではありません."
 
 msgid "A level name is empty."
-msgstr "水準名がありません．"
+msgstr "水準名がありません."
 
 msgid "Numeric value"
 msgstr "数値"
@@ -526,7 +526,7 @@ msgid "Bin Names"
 msgstr "区間名"
 
 msgid "Level names must be unique."
-msgstr "水準名が重複してはだめです．"
+msgstr "水準名が重複しています."
 
 msgid "Bin"
 msgstr "区間"
@@ -595,7 +595,7 @@ msgid "<same as active data set>"
 msgstr "<アクティブデータセットと同じ>"
 
 msgid "No variables were selected."
-msgstr "変数を選択していません．"
+msgstr "変数を選択していません."
 
 msgid "Include all variables"
 msgstr "すべての変数を含む"
@@ -610,7 +610,7 @@ msgid "<all cases>"
 msgstr "<全てのケース>"
 
 msgid "New data set same as active data set."
-msgstr "新しいデータセット名がアクティブデータセット名と同じです．"
+msgstr "新しいデータセット名がアクティブデータセット名と同じです."
 
 msgid "Subset expression"
 msgstr "部分集合の表現"
@@ -622,7 +622,7 @@ msgid "Select variable containing row names"
 msgstr "行名を含む変数を選択"
 
 msgid "Case names must be unique."
-msgstr "ケース名が重複しているとだめです．"
+msgstr "ケース名が重複しているとだめです."
 
 msgid "Rename Variables"
 msgstr "変数名の変更"
@@ -631,7 +631,7 @@ msgid "Variable Names"
 msgstr "変数名"
 
 msgid "A variable name is empty."
-msgstr "変数名がありません．"
+msgstr "変数名がありません."
 
 msgid "The following variable names are not valid:"
 msgstr "次の変数名は無効です："
@@ -692,7 +692,7 @@ msgid "Normal Quantiles"
 msgstr "正規分布の分位点"
 
 msgid "No probabilities specified."
-msgstr "確率が指定されていません．"
+msgstr "確率が指定されていません."
 
 msgid "Probabilities"
 msgstr "確率"
@@ -713,7 +713,7 @@ msgid "Normal Probabilities"
 msgstr "正規分布の確率"
 
 msgid "No values specified."
-msgstr "値が指定されていません．"
+msgstr "値が指定されていません."
 
 msgid "Variable value(s)"
 msgstr "変数の値"
@@ -722,7 +722,7 @@ msgid "t Quantiles"
 msgstr "ｔ分布の分位点"
 
 msgid "Degrees of freedom not specified."
-msgstr "自由度を指定していません．"
+msgstr "自由度を指定していません."
 
 msgid "Degrees of freedom"
 msgstr "自由度"
@@ -752,19 +752,19 @@ msgid "F Probabilities"
 msgstr "F分布の確率"
 
 msgid "Values not specified."
-msgstr "値が指定されていません．"
+msgstr "値が指定されていません."
 
 msgid "Binomial Quantiles"
 msgstr "２項分布の分位点"
 
 msgid "Probabilities not specified."
-msgstr "確率が指定されていません．"
+msgstr "確率が指定されていません."
 
 msgid "Binomial trials not specified."
-msgstr "試行数が指定されていません．"
+msgstr "試行数が指定されていません."
 
 msgid "Probability of success not specified."
-msgstr "成功の確率が指定されていません．"
+msgstr "成功の確率が指定されていません."
 
 msgid "Binomial trials"
 msgstr "試行回数"
@@ -779,7 +779,7 @@ msgid ""
 "Number of trials, %d, is large.\n"
 "Create long output?"
 msgstr ""
-"試行回数, %d, が大きい．\n"
+"試行回数, %d, が大きい.\n"
 "出力が長くなっても良いですか?"
 
 msgid "Binomial Probabilities"
@@ -789,14 +789,14 @@ msgid ""
 "Range of values over which to plot, %d, is large.\n"
 "Create long output?"
 msgstr ""
-"プロットする値の範囲, %d, が広い．\n"
+"プロットする値の範囲, %d, が広い.\n"
 "出力が長くなっても良いですか?"
 
 msgid "Poisson Probabilities"
 msgstr "ポアソン分布の確率"
 
 msgid "Poisson mean not specified."
-msgstr "ポアソン分布の平均が指定されていません．"
+msgstr "ポアソン分布の平均が指定されていません."
 
 msgid "Mean"
 msgstr "平均"
@@ -820,10 +820,10 @@ msgid "F Distribution"
 msgstr "F分布"
 
 msgid "Numerator degrees of freedom not specified."
-msgstr "分子の自由度が指定されていません．"
+msgstr "分子の自由度が指定されていません."
 
 msgid "Denominator degrees of freedom not specified."
-msgstr "分母の自由度が指定されていません．"
+msgstr "分母の自由度が指定されていません."
 
 msgid "Binomial Distribution"
 msgstr "２項分布"
@@ -835,7 +835,7 @@ msgid "Poisson Distribution"
 msgstr "ポアソン分布"
 
 msgid "Mean not specified."
-msgstr "平均が指定されていません．"
+msgstr "平均が指定されていません."
 
 msgid "mean"
 msgstr "平均"
@@ -923,7 +923,7 @@ msgid "Default font"
 msgstr "デフォルトのフォント"
 
 msgid "No packages available to load."
-msgstr "ロードできるパッケージがありません．"
+msgstr "ロードできるパッケージがありません."
 
 msgid "Load Packages"
 msgstr "パッケージのロード"
@@ -932,7 +932,7 @@ msgid "Packages (pick one or more)"
 msgstr "パッケージ (１つ以上選択)"
 
 msgid "You must select at least one package."
-msgstr "少なくとも１つのパッケージを選択してください．"
+msgstr "少なくとも１つのパッケージを選択してください."
 
 msgid "Packages loaded:"
 msgstr "ロードされたパッケージ："
@@ -1083,7 +1083,7 @@ msgid "On Diagonal"
 msgstr "対角位置に"
 
 msgid "Fewer than 3 variable selected."
-msgstr "変数を３つ以上選択してください．"
+msgstr "変数を３つ以上選択してください."
 
 msgid "Bar Graph"
 msgstr "棒グラフ"
@@ -1104,19 +1104,19 @@ msgid "<use y-variable names>"
 msgstr "<y変数名を用いる>"
 
 msgid "No x variable selected."
-msgstr "x 変数が選択されていません．"
+msgstr "x 変数が選択されていません."
 
 msgid "No y variables selected."
-msgstr "y 変数が選択されていません．"
+msgstr "y 変数が選択されていません."
 
 msgid "x and y variables must be different."
-msgstr "x 変数と ｙ 変数は異なる必要があります．"
+msgstr "x 変数と ｙ 変数は異なる必要があります."
 
 msgid ""
 "x-values are not in order.\n"
 "Continue?"
 msgstr ""
-"x の値が大きさの順に並んでいません．\n"
+"x の値が大きさの順に並んでいません.\n"
 "続けますか?"
 
 msgid "Label for y-axis"
@@ -1129,17 +1129,17 @@ msgid "Quantile-Comparison (QQ) Plot"
 msgstr "QQプロット"
 
 msgid "df for t must be a positive number."
-msgstr "ｔ分布の自由度は正の値である必要があります．"
+msgstr "ｔ分布の自由度は正の値である必要があります."
 
 msgid "df for chi-square must be a positive number."
-msgstr "カイ２乗分布の自由度は正の値である必要があります．"
+msgstr "カイ２乗分布の自由度は正の値である必要があります."
 
 msgid ""
 "numerator and denominator \n"
 "df for F must be positive numbers."
 msgstr ""
 "F分布の分子と分母の\n"
-"自由度は正の値である必要があります．"
+"自由度は正の値である必要があります."
 
 msgid "Identify observations with mouse"
 msgstr "マウスでデータ情報を表示"
@@ -1172,13 +1172,13 @@ msgid "Response Variable (pick one)"
 msgstr "目的変数(１つ選択)"
 
 msgid "No factors selected."
-msgstr "因子が選択されていません．"
+msgstr "因子が選択されていません."
 
 msgid "More than two factors selected."
-msgstr "因子が２つ以上選択されました．"
+msgstr "因子が２つ以上選択されました."
 
 msgid "No response variable selected."
-msgstr "目的変数が選択されていません．"
+msgstr "目的変数が選択されていません."
 
 msgid "Error Bars"
 msgstr "エラーバー"
@@ -1211,13 +1211,13 @@ msgid "Response variable (pick one)"
 msgstr "目的変数 (１つ選択)"
 
 msgid "You must select a response variable."
-msgstr "目的変数を選択してください．"
+msgstr "目的変数を選択してください."
 
 msgid "You must select 2 explanatory variables."
-msgstr "説明変数を２つ選択してください．"
+msgstr "説明変数を２つ選択してください."
 
 msgid "Response and explanatory variables must be different."
-msgstr "目的変数と説明変数は異なっている必要があります．"
+msgstr "目的変数と説明変数は異なっている必要があります."
 
 msgid "Parallel regression surfaces"
 msgstr "平行回帰表面"
@@ -1256,7 +1256,7 @@ msgid "Save Graph as Bitmap"
 msgstr "図を Bitmap で保存"
 
 msgid "There is no current graphics device to save."
-msgstr "保存できるグラフィックスデバイスがありません．"
+msgstr "保存できるグラフィックスデバイスがありません."
 
 msgid "Graphics File Type"
 msgstr "グラフィックファイルのタイプ"
@@ -1307,16 +1307,16 @@ msgid "Text size (points)"
 msgstr "文字の大きさ (ポイント)"
 
 msgid "There is no current RGL graphics device to save."
-msgstr "保存できるRGLの図がありません．"
+msgstr "保存できるRGLの図がありません."
 
 msgid "{\"PNG Bitmap Files\" {\".png\" \".PNG\"}} {\"All Files\" {\"*\"}}"
 msgstr "{\"PNG Bitmap ファイル\" {\".png\" \".PNG\"}} {\"全てのファイル\" {\"*\"}}"
 
 msgid "There is only one model in memory."
-msgstr "メモリにモデルが1つしかありません．"
+msgstr "メモリにモデルが1つしかありません."
 
 msgid "There are no models from which to choose."
-msgstr "選択できるモデルがありません．"
+msgstr "選択できるモデルがありません."
 
 msgid "Select Model"
 msgstr "モデルの選択"
@@ -1325,10 +1325,10 @@ msgid "Models (pick one)"
 msgstr "モデル (１つ選択)"
 
 msgid "There is no dataset associated with this model."
-msgstr "このモデルと関連づけられたデータセットがありません．"
+msgstr "このモデルと関連づけられたデータセットがありません."
 
 msgid "The dataset associated with this model, %s, is not in memory."
-msgstr "このモデルに関連づけられたデータセット %s がメモリにありません．"
+msgstr "このモデルに関連づけられたデータセット %s がメモリにありません."
 
 msgid "Current Model:"
 msgstr "現在のモデル："
@@ -1337,14 +1337,14 @@ msgid "Identify points with mouse?"
 msgstr "マウスで点を識別?"
 
 msgid "There is no appropriate Anova method for a model of this class."
-msgstr "このクラスのモデルに対する適切な分散分析法がありません．"
+msgstr "このクラスのモデルに対する適切な分散分析法がありません."
 
 msgid ""
 "Observation statistics not available\n"
 "for a model fit to a subset of the data."
 msgstr ""
 "データの部分集合に適合させたモデル\n"
-"に対する統計量を利用できません．"
+"に対する統計量を利用できません."
 
 msgid "Add Observation Statistics to Data"
 msgstr "求めた統計量をデータに追加"
@@ -1384,17 +1384,17 @@ msgid ""
 "not equal to number of rows (%d) * number of columns (%d)."
 msgstr ""
 "仮説行列(%d)内の有効な要素数\n"
-"が、行の数 (%d) *列の数 (%d)と異なっています．"
+"が、行の数 (%d) *列の数 (%d)と異なっています."
 
 msgid "Hypothesis matrix is not of full row rank."
-msgstr "仮説行列が、行フルランクではありません．"
+msgstr "仮説行列が、行フルランクではありません."
 
 msgid ""
 "Number of valid entries in rhs vector (%d)\n"
 "is not equal to number of rows (%d)."
 msgstr ""
 "右辺のベクトルの有効項目数(%d)が\n"
-"行数 (%d)と等しくありません．"
+"行数 (%d)と等しくありません."
 
 msgid "Number of Rows:"
 msgstr "行数："
@@ -1403,7 +1403,7 @@ msgid "Enter hypothesis matrix and right-hand side vector:"
 msgstr "仮説の行列と右辺の値（ベクトル）を入力してください："
 
 msgid "There are fewer than two models."
-msgstr "２つ以上のモデルが必要です．"
+msgstr "２つ以上のモデルが必要です."
 
 msgid "Compare Models"
 msgstr "モデルの比較"
@@ -1415,10 +1415,10 @@ msgid "Second model (pick one)"
 msgstr "第２のモデル(１つ選択)"
 
 msgid "You must select two models."
-msgstr "モデルを２つ選択してください．"
+msgstr "モデルを２つ選択してください."
 
 msgid "Models are not of the same class."
-msgstr "モデルが同じクラスではありません．"
+msgstr "モデルが同じクラスではありません."
 
 msgid "Breusch-Pagan Test"
 msgstr "ブルーシュ－ペーガン検定"
@@ -1451,7 +1451,7 @@ msgid "Test for Nonlinearity"
 msgstr "非線形性の検定"
 
 msgid "No powers are checked."
-msgstr "検出力をチェックしていません．"
+msgstr "検出力をチェックしていません."
 
 msgid "First principal component"
 msgstr "第１主成分"
@@ -1469,7 +1469,7 @@ msgid "3 (cubes)"
 msgstr "３（立方）"
 
 msgid "There is no appropriate outlier.test method for a model of this class."
-msgstr "このタイプのモデルに対する適切な外れ値の検定がありません．"
+msgstr "このタイプのモデルに対する適切な外れ値の検定がありません."
 
 msgid "Confidence Intervals"
 msgstr "信頼区間"
@@ -1478,7 +1478,7 @@ msgid "Confidence Intervals for Individual Coefficients"
 msgstr "各係数に対する信頼区間"
 
 msgid "Confidence level must be a number between 0 and 1."
-msgstr "信頼水準は 0 から 1 の間の値でなければだめです．"
+msgstr "信頼水準は 0 から 1 の間の値でなければだめです."
 
 msgid "Likelihood-ratio statistic"
 msgstr "尤度比統計量"
@@ -1496,7 +1496,7 @@ msgid "Rcmdr Version"
 msgstr "Rcmdrのバージョン"
 
 msgid "The tcltk package is absent. The R Commander cannot function."
-msgstr "tcltk パッケージがないので、Rコマンダーは機能しません．"
+msgstr "tcltk パッケージがないので、Rコマンダーは機能しません."
 
 msgid "R-Rcmdr"
 msgstr "R-Rcmdr"
@@ -1505,7 +1505,7 @@ msgid "The following packages used by Rcmdr are missing:"
 msgstr "Rcmdrが利用する次のパッケージがありません："
 
 msgid "Without these packages, some features will not be available."
-msgstr "これらのパッケージがなければ、利用できない機能があります．"
+msgstr "これらのパッケージがなければ、利用できない機能があります."
 
 msgid "Install these packages?"
 msgstr "これらのパッケージをインストールしますか?"
@@ -1549,7 +1549,7 @@ msgid "Variables (pick three or more)"
 msgstr "変数（３つ以上選択）"
 
 msgid "Fewer than 3 variables selected."
-msgstr "選択した変数が３つ未満です．"
+msgstr "選択した変数が３つ未満です."
 
 msgid "Principal Components Analysis"
 msgstr "主成分分析"
@@ -1567,7 +1567,7 @@ msgid "Add principal components to data set"
 msgstr "データセットに主成分得点を保存"
 
 msgid "Fewer than 2 variables selected."
-msgstr "変数を２つ以上選択してください．"
+msgstr "変数を２つ以上選択してください."
 
 msgid "Number of Components"
 msgstr "主成分の数"
@@ -1612,13 +1612,10 @@ msgid "Groups (pick one)"
 msgstr "グループ（１つ選択）"
 
 msgid "You must select a groups variable."
-msgstr "質的変数を選択してください．"
+msgstr "質的変数を選択してください."
 
 msgid "Two-sided"
 msgstr "両側"
-
-msgid "One-sided"
-msgstr "片側"
 
 msgid "Difference < 0"
 msgstr "差 < 0"
@@ -1627,18 +1624,15 @@ msgid "Difference > 0"
 msgstr "差 > 0"
 
 msgid "Yes"
-msgstr "はい"
+msgstr "Yes"
 
 msgid "No"
-msgstr "いいえ"
+msgstr "No"
 
 msgid "Assume equal variances?"
 msgstr "等分散と考えますか?"
 
 msgid "Confidence Level"
-msgstr "信頼水準"
-
-msgid "Confidence level"
 msgstr "信頼水準"
 
 msgid "Paired t-Test"
@@ -1651,10 +1645,10 @@ msgid "Second variable (pick one)"
 msgstr "第２の変数（１つ選択）"
 
 msgid "You must select two variables."
-msgstr "１つの変数を選択してください．"
+msgstr "１つの変数を選択してください."
 
 msgid "Variables must be different."
-msgstr "変数は違っていないといけません．"
+msgstr "変数は違っていないといけません."
 
 msgid "Single-Sample t-Test"
 msgstr "１標本の ｔ 検定"
@@ -1675,10 +1669,10 @@ msgid "One-Way Analysis of Variance"
 msgstr "１元配置分散分析"
 
 msgid "You must select a groups factor."
-msgstr "質的因子を１つ選択してください．"
+msgstr "質的因子を１つ選択してください."
 
 msgid "Factor has fewer than 3 levels; pairwise comparisons omitted."
-msgstr "因子の水準が３未満です；多重比較は省略します．"
+msgstr "因子の水準が３未満です；多重比較は省略します."
 
 msgid "Pairwise comparisons of means"
 msgstr "２組ずつの平均の比較（多重比較）"
@@ -1690,7 +1684,7 @@ msgid "Factors (pick one or more)"
 msgstr "因子（１つ以上選択）"
 
 msgid "You must select at least one factor."
-msgstr "因子を１つ以上選択してください．"
+msgstr "因子を１つ以上選択してください."
 
 msgid "Linear Regression"
 msgstr "線形回帰"
@@ -1699,10 +1693,10 @@ msgid "Explanatory variables (pick one or more)"
 msgstr "説明変数（１つ以上選択）"
 
 msgid "No explanatory variables selected."
-msgstr "説明変数を選択していません．"
+msgstr "説明変数を選択していません."
 
 msgid "\"%s\" is not a valid name."
-msgstr "\"%s\" は有効な名前ではありません．"
+msgstr "\"%s\" は有効な名前ではありません."
 
 msgid "Model"
 msgstr "モデル"
@@ -1714,10 +1708,10 @@ msgid "Linear Model"
 msgstr "線形モデル"
 
 msgid "Left-hand side of model empty."
-msgstr "モデルの左辺が指定されていません．"
+msgstr "モデルの左辺が指定されていません."
 
 msgid "Right-hand side of model empty."
-msgstr "モデルの右辺が指定されていません．"
+msgstr "モデルの右辺が指定されていません."
 
 msgid "Generalized Linear Model"
 msgstr "一般化線形モデル"
@@ -1760,7 +1754,7 @@ msgid "Paired Wilcoxon Test"
 msgstr "対応のあるウィルコクソン検定"
 
 msgid "The two variables must be different."
-msgstr "２つの変数は異なっていないとだめです．"
+msgstr "２つの変数は異なっていないとだめです."
 
 msgid "Kruskal-Wallis Rank Sum Test"
 msgstr "クラスカル・ウォリスの順位和検定"
@@ -1787,13 +1781,13 @@ msgid "Two-Sample Proportions Test"
 msgstr "２標本の比率の検定"
 
 msgid "Groups and response variables must be different."
-msgstr "質的変数と目的変数は違っている必要があります．"
+msgstr "質的変数と目的変数は違っている必要があります."
 
 msgid ""
 "There are %d variables in the data set %s.\n"
 "Do you want to proceed?"
 msgstr ""
-"There are %d variables in the data set %s.\n"
+"データセット %s には %d 変数があります.\n"
 "続けますか?"
 
 msgid "Numerical Summaries"
@@ -1821,23 +1815,23 @@ msgid "Goodness-of-Fit Test"
 msgstr "適合度検定"
 
 msgid "Invalid entry."
-msgstr "入力が誤っています．"
+msgstr "入力が誤っています."
 
 msgid "Missing entry."
-msgstr "入力されていません．"
+msgstr "入力されていません."
 
 msgid ""
 "Number of valid entries (%d)\n"
 "not equal to number levels (%d)."
 msgstr ""
 "仮説行列内の有効な要素数\n"
-"が水準数 (%d)と等しくありません．"
+"が水準数 (%d)と等しくありません."
 
 msgid "Negative probabilities not allowed."
-msgstr "確率に負の値を指定できません．"
+msgstr "確率に負の値を指定できません."
 
 msgid "Probabilities rescaled to sum to 1."
-msgstr "確率に負の値を指定できません．"
+msgstr "確率に負の値を指定できません."
 
 msgid "Chi-square goodness-of-fit test"
 msgstr "カイ２乗適合度検定"
@@ -1845,10 +1839,8 @@ msgstr "カイ２乗適合度検定"
 msgid "Table of Statistics"
 msgstr "統計量の表"
 
-# msgid "Median"
-# msgstr "メディアン"
 msgid "Median"
-msgstr "中央値"
+msgstr "メディアン"
 
 msgid "Standard deviation"
 msgstr "標準偏差"
@@ -1876,7 +1868,7 @@ msgid ""
 "for partial correlations."
 msgstr ""
 "偏相関を計算するには\n"
-"変数を３つ以上選択してください．"
+"変数を３つ以上選択してください."
 
 msgid "Two-Way Table"
 msgstr "２元表"
@@ -1888,7 +1880,7 @@ msgid "Column variable (pick one)"
 msgstr "列の変数（１つ選択）"
 
 msgid "Row and column variables are the same."
-msgstr "行の変数と列の変数が同じです．"
+msgstr "行の変数と列の変数が同じです."
 
 msgid "expected frequencies are less than 1"
 msgstr "期待度数が１より小さい"
@@ -1930,7 +1922,7 @@ msgid "You must select row, column, and control variables"
 msgstr "行、列、コントロール変数を選択してください"
 
 msgid "Row, column, and control variables must be different."
-msgstr "行、列、コントロール変数は異なっている必要があります．"
+msgstr "行、列、コントロール変数は異なっている必要があります."
 
 msgid "Enter Two-Way Table"
 msgstr "２元表を入力"
@@ -1940,13 +1932,13 @@ msgid ""
 "not equal to number of rows (%d) * number of columns (%d)."
 msgstr ""
 "入力の有効数 (%d)が、\n"
-"行数 (%d)と列数 (%d)の積と異なります．"
+"行数 (%d)と列数 (%d)の積と異なります."
 
 msgid "Row names are not unique."
-msgstr "行名がユニークではありません．"
+msgstr "行名がユニークではありません."
 
 msgid "Column names are not unique."
-msgstr "列名がユニークではありません．"
+msgstr "列名がユニークではありません."
 
 msgid "Number of Columns:"
 msgstr "列数："
@@ -1964,16 +1956,16 @@ msgid "Levene's Test"
 msgstr "ルビーンの検定"
 
 msgid "There is no active data set."
-msgstr "アクティブデータセットがありません．"
+msgstr "アクティブデータセットがありません."
 
 msgid "is not a data frame and cannot be attached."
-msgstr "はデータフレームではないので、アタッチできません．"
+msgstr "はデータフレームではないので、アタッチできません."
 
 msgid "The dataset %s has %d rows and %d columns."
-msgstr "データセット %s には %d 行、%d 列あります．"
+msgstr "データセット %s には %d 行、%d 列あります."
 
 msgid "There is no active model."
-msgstr "アクティブモデルがありません．"
+msgstr "アクティブモデルがありません."
 
 msgid "argument must be a square, symmetric, numeric covariance matrix"
 msgstr "引数は、平方・対称・数値の共分散行列でないとだめです"
@@ -1982,25 +1974,25 @@ msgid "there are fewer than 3 items in the scale"
 msgstr "尺度には３項目以上が必要です"
 
 msgid "Argument response must be numeric."
-msgstr "引数： response は数値でないとだめです．"
+msgstr "引数： response は数値でないとだめです."
 
 msgid "Argument factor1 must be a factor."
-msgstr "引数： factor1は、因子でないとだめです．"
+msgstr "引数： factor1は、因子でないとだめです."
 
 msgid "Arguments factor1 and factor2 must be factors."
-msgstr "引数： factor1 と factor2 は、因子でないとだめです．"
+msgstr "引数： factor1 と factor2 は、因子でないとだめです."
 
 msgid "Number of groups for factor2, %d, exceeds number of distinct colours, %d."
-msgstr "factor2 に対するグループ数, %d, は異なる色の数 %d 以上でないとだめです． "
+msgstr "factor2 に対するグループ数, %d, は異なる色の数 %d 以上でないとだめです. "
 
 msgid "The number of bins exceeds the number of data values"
 msgstr "区間数がデータ数より多い"
 
 msgid "Number of groups (%d) exceeds number of colors (%d)."
-msgstr "グループ数 (%d) が色の数 (%d)より多い．"
+msgstr "グループ数 (%d) が色の数 (%d)より多い."
 
 msgid "groups variable must be a factor."
-msgstr "グループ変数は因子でないとだめです．"
+msgstr "グループ変数は因子でないとだめです."
 
 msgid "cannot plot both multiple surfaces and residuals"
 msgstr "複数の表面と残差を同時にプロットできません"
@@ -2012,34 +2004,34 @@ msgid "OK"
 msgstr "OK"
 
 msgid "There fewer than %d factors in the active data set."
-msgstr "アクティブデータセット内の因子数が %d より小さくなっています．"
+msgstr "アクティブデータセット内の因子数が %d より小さくなっています."
 
 msgid "There are no factors in the active data set."
-msgstr "アクティブデータセットに層別因子がありません．"
+msgstr "アクティブデータセットに層別因子がありません."
 
 msgid "There fewer than %d two-level factors in the active data set."
-msgstr "アクティブデータセット内の２水準因子数が %d より小さくなっています．"
+msgstr "アクティブデータセット内の２水準因子数が %d より小さくなっています."
 
 msgid "There are no two-level factors in the active data set."
-msgstr "アクティブデータセットに２水準因子がありません．"
+msgstr "アクティブデータセットに２水準因子がありません."
 
 msgid "There fewer than %d numeric variables in the active data set."
-msgstr "アクティブデータセット内の数値変数の数が %d より小さくなっています．"
+msgstr "アクティブデータセット内の数値変数の数が %d より小さくなっています."
 
 msgid "There are no numeric variables in the active data set."
-msgstr "アクティブデータセットに数値変数がありません．"
+msgstr "アクティブデータセットに数値変数がありません."
 
 msgid "There fewer than %d variables in the active data set."
-msgstr "アクティブデータセット内の変数の数が %d より小さくなっています．"
+msgstr "アクティブデータセット内の変数の数が %d より小さくなっています."
 
 msgid "There are no variables in the active data set."
-msgstr "アクティブデータセットに変数がありません．"
+msgstr "アクティブデータセットに変数がありません."
 
 msgid ""
 "%s %s already exists.\n"
 "Overwrite %s?"
 msgstr ""
-"%s %s がすでに存在します．\n"
+"%s %s がすでに存在します.\n"
 " %s に上書きしますか?"
 
 msgid "Plot by:"
@@ -2052,7 +2044,7 @@ msgid "Plot lines by group"
 msgstr "層別して線を描く"
 
 msgid "There no factors in the active data set."
-msgstr "アクティブデータセットに因子がありません．"
+msgstr "アクティブデータセットに因子がありません."
 
 msgid "Groups"
 msgstr "質的変数"
@@ -2080,10 +2072,10 @@ msgid ""
 "for a model of this class."
 msgstr ""
 "このクラスのモデルに対する\n"
-"適切な %s 法がありません．"
+"適切な %s 法がありません."
 
 msgid "The model is not of class \"%s\"."
-msgstr "モデルが、クラス \"%s\"ではありません．"
+msgstr "モデルが、クラス \"%s\"ではありません."
 
 msgid "Open script file..."
 msgstr "スクリプトファイルを開く..."
@@ -2562,7 +2554,7 @@ msgstr ""
 # # messages added to Rcmdr version 1.2-0
 # importRODBCtable dialog
 msgid "This function requires the RODBC package.\n"
-msgstr "この関数には RODBC パッケージが必要です．\n"
+msgstr "この関数には RODBC パッケージが必要です.\n"
 
 msgid "Import from Excel, Access or dBase data set"
 msgstr "Excel またはAccess、dBaseデータセットから読み込む"
@@ -2581,22 +2573,22 @@ msgstr "Excel または Access，dBase のデータセットから..."
 
 # probability distributions
 msgid "Standard deviation must be positive."
-msgstr "標準偏差は正の値である必要があります．"
+msgstr "標準偏差は正の値である必要があります."
 
 msgid "Degrees of freedom must be positive."
-msgstr "自由度は正の値である必要があります．"
+msgstr "自由度は正の値である必要があります."
 
 msgid "Numerator degrees of freedom must be positive."
-msgstr "分子の自由度が正の値ではありません．"
+msgstr "分子の自由度が正の値ではありません."
 
 msgid "Denominator degrees of freedom must be positive."
-msgstr "分母の自由度が正の値ではありません．"
+msgstr "分母の自由度が正の値ではありません."
 
 msgid "Exponential Distribution"
 msgstr "指数分布"
 
 msgid "Rate must be positive."
-msgstr "比率は正の値である必要があります．"
+msgstr "比率は正の値である必要があります."
 
 msgid "Rate"
 msgstr "比率"
@@ -2605,7 +2597,7 @@ msgid "Uniform Distribution"
 msgstr "一様分布"
 
 msgid "Lower limit must be less than upper limit."
-msgstr "下限値は上限値より小さい必要があります．"
+msgstr "下限値は上限値より小さい必要があります."
 
 msgid "Minimum"
 msgstr "最小"
@@ -2617,10 +2609,10 @@ msgid "Beta Distribution"
 msgstr "ベータ分布"
 
 msgid "Shapes not specified."
-msgstr "形状パラメータが指定されていません．"
+msgstr "形状パラメータが指定されていません."
 
 msgid "Shapes must be positive."
-msgstr "形状パラメータは正の値である必要があります．"
+msgstr "形状パラメータは正の値である必要があります."
 
 msgid "Shape"
 msgstr "形状パラメータ"
@@ -2629,7 +2621,7 @@ msgid "Cauchy Distribution"
 msgstr "コーシー分布"
 
 msgid "Scale must be positive."
-msgstr "尺度パラメータは正の値である必要があります．"
+msgstr "尺度パラメータは正の値である必要があります."
 
 msgid "Location"
 msgstr "位置パラメータ"
@@ -2653,10 +2645,10 @@ msgid "Gamma Distribution"
 msgstr "ガンマ分布"
 
 msgid "Shape not specified."
-msgstr "形状パラメータが指定されていません．"
+msgstr "形状パラメータが指定されていません."
 
 msgid "Shape must be positive."
-msgstr "形状パラメータは正の値である必要があります．"
+msgstr "形状パラメータは正の値である必要があります."
 
 msgid "Weibull Distribution"
 msgstr "ワイブル分布"
@@ -2722,7 +2714,7 @@ msgid "Gumbel Probabilities"
 msgstr "グンベル分布の確率"
 
 msgid "Probability of success must be between 0 and 1."
-msgstr "成功の確率は０から１の範囲内にある必要があります．"
+msgstr "成功の確率は０から１の範囲内にある必要があります."
 
 msgid "Poisson Quantiles"
 msgstr "ポアソン分布の分位点"
@@ -2737,25 +2729,25 @@ msgid "Hypergeometric Quantiles"
 msgstr "超幾何分布の分位点"
 
 msgid "The m parameter was not specified."
-msgstr "パラメータ ｍ が指定されていません．"
+msgstr "パラメータ ｍ が指定されていません."
 
 msgid "The m parameter cannot be negative."
-msgstr "パラメータ ｍ は負になってはだめです．"
+msgstr "パラメータ ｍ は負になってはだめです."
 
 msgid "The n parameter was not specified."
-msgstr "パラメータ ｎ が指定されていません．"
+msgstr "パラメータ ｎ が指定されていません."
 
 msgid "The n parameter cannot be negative."
-msgstr "パラメータ ｎ は負になってはだめです．"
+msgstr "パラメータ ｎ は負になってはだめです."
 
 msgid "The k parameter was not specified."
-msgstr "パラメータ ｋ が指定されていません．"
+msgstr "パラメータ ｋ が指定されていません."
 
 msgid "The k parameter cannot be greater than m + n."
-msgstr "パラメータ ｋ は、ｍ＋ｎを超えてはだめです．"
+msgstr "パラメータ ｋ は、ｍ＋ｎを超えてはだめです."
 
 msgid "The k parameter cannot be negative."
-msgstr "パラメータ ｋ は負になってはだめです．"
+msgstr "パラメータ ｋ は負になってはだめです."
 
 msgid "m (number of white balls in the urn)"
 msgstr "ｍ（壺の中の白球の数）"
@@ -2773,10 +2765,10 @@ msgid "Negative Binomial Quantiles"
 msgstr "負の２項分布の分位点"
 
 msgid "Target number of successes not specified."
-msgstr "成功の目標数が指定されていません．"
+msgstr "成功の目標数が指定されていません."
 
 msgid "Target number of successes cannot be negative."
-msgstr "成功の目標数は正の値である必要があります．"
+msgstr "成功の目標数は正の値である必要があります."
 
 msgid "Target number of successes"
 msgstr "成功の目標数"
@@ -2809,10 +2801,10 @@ msgid "Sample standard deviations"
 msgstr "標本標準偏差"
 
 msgid "Sample size must be positive."
-msgstr "サンプルサイズは正の値でないとだめです．"
+msgstr "サンプルサイズは正の値でないとだめです."
 
 msgid "Number of samples must be positive."
-msgstr "標本の数は正の値でないとだめです．"
+msgstr "標本の数は正の値でないとだめです."
 
 msgid "Number of samples (rows) "
 msgstr "サンプル数（行）"
@@ -2902,7 +2894,7 @@ msgid "BinomialSamples"
 msgstr "BinomialSamples"
 
 msgid "Poisson mean cannot be negative."
-msgstr "ポアソン分布の平均は正の値でないとだめです．"
+msgstr "ポアソン分布の平均は正の値でないとだめです."
 
 msgid "Sample from Poisson Distribution"
 msgstr "ポアソン分布からのサンプル"
@@ -3179,10 +3171,10 @@ msgid "Y-Axis Scales in Different Panels"
 msgstr "異なるパネルに対するY軸のスケール"
 
 msgid "At least one response variable must be selected."
-msgstr "少なくとも１つの目的変数を選択してください．"
+msgstr "少なくとも１つの目的変数を選択してください."
 
 msgid "At least one explanatory variable must be selected."
-msgstr "少なくとも１つの説明変数を選択してください．"
+msgstr "少なくとも１つの説明変数を選択してください."
 
 msgid "XY conditioning plot..."
 msgstr "条件付き散布図"
@@ -3232,7 +3224,7 @@ msgid "Correlation > 0"
 msgstr "相関＞０"
 
 msgid "More than 2 variables selected."
-msgstr "変数が３つ以上選択されています．"
+msgstr "変数が３つ以上選択されています."
 
 msgid "Correlation test..."
 msgstr "相関の検定..."
@@ -3261,7 +3253,7 @@ msgid "Chi-square goodness-of-fit test (for one variable only)"
 msgstr "カイ２乗適合度検定"
 
 msgid "Goodness-of-fit test not available when more than one variable is selected."
-msgstr "１つ以上の変数が選択されたとき、適合度検定を利用することはできません．"
+msgstr "１つ以上の変数が選択されたとき、適合度検定を利用することはできません."
 
 msgid "Frequency distributions..."
 msgstr "頻度分布..."
@@ -3296,10 +3288,10 @@ msgid "StackedData"
 msgstr "積み重ねられたデータ"
 
 msgid "You must select at least two variables."
-msgstr "少なくとも２つ以上の変数を選択してください．"
+msgstr "少なくとも２つ以上の変数を選択してください."
 
 msgid "Name for stacked data set:"
-msgstr "積み重ねて作る新しいデータセットの名前："
+msgstr "積み重ねて作ったデータセットの名前："
 
 msgid "Name for variable:"
 msgstr "変数名："
@@ -3319,14 +3311,14 @@ msgid ""
 "right button to exit."
 msgstr ""
 "点を特定するには左クリック、\n"
-"右クリックで終了．"
+"右クリックで終了."
 
 msgid ""
 "Drag right mouse button to identify points,\n"
 "click right button to exit."
 msgstr ""
 "点を特定するためにマウスの右ボタンでドラッグ\n"
-"右ボタンのクリックで終了．"
+"右ボタンのクリックで終了."
 
 msgid "Read Data From Text File or Clipboard"
 msgstr "テキストファイルまたはクリップボードからデータを読み込む"
@@ -3344,7 +3336,7 @@ msgid "Refresh active data set"
 msgstr "アクティブデータセットを新しくする"
 
 msgid "No statistics selected."
-msgstr "統計量を選択してください．"
+msgstr "統計量を選択してください."
 
 msgid "Variable (pick one or more)"
 msgstr "変数（１つ以上選択）"
@@ -3358,7 +3350,7 @@ msgid "Plug-ins (pick one or more)"
 msgstr "プラグイン（1つ以上選択）"
 
 msgid "You must select at least one plug-in."
-msgstr "少なくとも1つのプラグインを選択してください．"
+msgstr "少なくとも1つのプラグインを選択してください."
 
 msgid "Plug-ins loaded:"
 msgstr "ロードされたプラグイン："
@@ -3367,7 +3359,7 @@ msgid ""
 "The plug-in(s) will not be available until the Commander is restarted.\n"
 "Restart now?"
 msgstr ""
-"Rコマンダーを再起動しないとプラグインを利用できません．\n"
+"Rコマンダーを再起動しないとプラグインを利用できません.\n"
 "再起動しますか？"
 
 msgid "objects have different numbers of columns"
@@ -3399,7 +3391,7 @@ msgid "Set Color Palette"
 msgstr "色パレットの設定"
 
 msgid "Color palette reset."
-msgstr "色パレットの再設定．"
+msgstr "色パレットの再設定."
 
 msgid "Save active data set..."
 msgstr "アクティブデータセットの保存..."
@@ -3412,9 +3404,6 @@ msgstr "{\"R データファイル\" {\".rda\" \".Rda\" \".RDA\"}} {\"全ての�
 
 msgid "Shapiro-Wilk test of normality..."
 msgstr "シャピロ－ウィルクの正規性の検定..."
-
-msgid "Shapiro-Wilk Test for Normality"
-msgstr "シャピロ－ウィルクの正規性の検定"
 
 msgid "Ordinal regression model..."
 msgstr "順序回帰モデル..."
@@ -3438,7 +3427,7 @@ msgid "y-axis label"
 msgstr "y 軸のラベル"
 
 msgid "No plotting characters."
-msgstr "プロットする記号がありません．"
+msgstr "プロットする記号がありません."
 
 msgid "Plotting Parameters"
 msgstr "プロットするパラメータ"
@@ -3471,7 +3460,7 @@ msgstr "モデル  %s は利用できません"
 
 # message added to version 1.3-10
 msgid "The Commander GUI is launched only in interactive sessions"
-msgstr "コマンダーの GUI はインタラクティブなセッションでしか起動しません．"
+msgstr "コマンダーの GUI はインタラクティブなセッションでしか起動しません."
 
 # messages added to version 1.3-15
 # Note: translate these messages only if the corresponding
@@ -3510,10 +3499,10 @@ msgid "Partial ignoring marginality (\"Type III\")"
 msgstr "Partial ignoring marginality (\"Type III\")"
 
 msgid "Type III tests require careful attention to contrast coding."
-msgstr "タイプ III 検定では対比のコーディングに注意が必要です．"
+msgstr "タイプ III 検定では対比のコーディングに注意が必要です."
 
 msgid "There is no appropriate anova method for a model of this class."
-msgstr "モデルのこのクラスに対する適切な分散分析法がありません．"
+msgstr "モデルのこのクラスに対する適切な分散分析法がありません."
 
 msgid "Duplicate menu names:"
 msgstr "重複したメニュー名："
@@ -3601,7 +3590,7 @@ msgstr "分散分析表..."
 
 # messages added to version 1.4-2
 msgid "Location not specified."
-msgstr "ロケーションが指定されていません．"
+msgstr "ロケーションが指定されていません."
 
 # messages added to version 1.5-0
 #     "Models -> Stepwise model selection" dialog and menu item
@@ -3687,7 +3676,7 @@ msgid "Direction of Merge"
 msgstr "結合の方法"
 
 msgid "You cannot merge a data set with itself."
-msgstr "同じもの同士の結合はできません．"
+msgstr "同じもの同士の結合はできません."
 
 msgid "Name for merged data set:"
 msgstr "結合したデータセット名："
@@ -3724,13 +3713,13 @@ msgid "Sum"
 msgstr "合計"
 
 msgid "You must select at least one variable to aggregate."
-msgstr "集計対象の変数を少なくとも一つ選択する必要があります．"
+msgstr "集計対象の変数を少なくとも一つ選択する必要があります."
 
 msgid "You must select at least one variable to aggregate by."
-msgstr "層別の変数を少なくとも一つ選択する必要があります．"
+msgstr "層別の変数を少なくとも一つ選択する必要があります."
 
 msgid "Variables to aggregate and those to aggregate by must be different."
-msgstr "集計対象の変数と層別の変数は異なる必要があります．"
+msgstr "集計対象の変数と層別の変数は異なる必要があります."
 
 msgid "Name for aggregated data set:"
 msgstr "集計したデータセット名："
@@ -3740,7 +3729,7 @@ msgid "{\"R Data Files\" {\".rda\" \".Rda\" \".RDA\" \".RData\"}} {\"All Files\"
 msgstr "{\"R データファイル\" {\".rda\" \".Rda\" \".RDA\" \".RData\"}} {\"全てのファイル\" {\"*\"}}"
 
 msgid "No data set selected."
-msgstr "データセットが選択されていません．"
+msgstr "データセットが選択されていません."
 
 msgid "Help on selected data set"
 msgstr "選択されたデータセットに対するヘルプ"
@@ -3766,7 +3755,7 @@ msgid ""
 "with the single-document interface (SDI); see ?Commander."
 msgstr ""
 "RコマンダーのWindows版ではSDI\n"
-"（シングルドキュメントインターフェース）に設定してください：?Commanderを参照．"
+"（シングルドキュメントインターフェース）に設定してください：?Commanderを参照."
 
 # messages added to version 1.6-0
 # for Levene test
@@ -3789,7 +3778,7 @@ msgid ""
 "Right-click to exit."
 msgstr ""
 "マウスで点の情報を表示？\n"
-"右クリックで終了．"
+"右クリックで終了."
 
 # for interactive point identification
 msgid "Use left mouse button to identify points,\n"
@@ -3879,17 +3868,17 @@ msgstr "対での完全なケースの利用"
 
 # messages added to version 1.7-4
 msgid "Component scores are not available when subset is specified."
-msgstr "部分集合を指定した場合，主成分得点を利用できない．"
+msgstr "部分集合を指定した場合，主成分得点を利用できない."
 
 msgid "Factor scores are not available when subset is specified."
-msgstr "部分集合を指定した場合，因子得点を利用できない．"
+msgstr "部分集合を指定した場合，因子得点を利用できない."
 
 # messages added to version 1.8-0
 msgid "Confirmatory Factor Analysis"
 msgstr "検証的因子分析"
 
 msgid "Fewer than 2 variables selected to load on factor."
-msgstr "因子に付加する変数の数が2より少ない．"
+msgstr "因子に付加する変数の数が2より少ない."
 
 msgid "Define factor"
 msgstr "因子の定義"
@@ -3920,7 +3909,7 @@ msgid "Factor Correlations"
 msgstr "因子の相関"
 
 msgid "There are too many factors."
-msgstr "因子数が多い．"
+msgstr "因子数が多い."
 
 msgid "Identifying Constraints"
 msgstr "一意性のための制約"
@@ -3940,7 +3929,7 @@ msgid "Robust standard errors"
 msgstr "ロバスト標準誤差"
 
 msgid "No factors defined."
-msgstr "因子が定義されていない．"
+msgstr "因子が定義されていない."
 
 # message added to version 1.8-2
 msgid "Default-font size (points)"
@@ -4288,10 +4277,10 @@ msgid "R Profile saved to"
 msgstr "Rプロファイルを次に保存"
 
 msgid "The following commands will be saved in the file .Rprofile."
-msgstr "次のコマンドは .Rprofileファイルに保存されます．"
+msgstr "次のコマンドは .Rprofileファイルに保存されます."
 
 msgid "You may edit this file before saving it."
-msgstr "保存する前にこのファイルを編集することができます．"
+msgstr "保存する前にこのファイルを編集することができます."
 
 msgid "Save Rcmdr options..."
 msgstr "Rcmdrオプションの保存..."
@@ -4444,6 +4433,1047 @@ msgstr "文書を保存"
 msgid "Save document and exit?"
 msgstr "文書を保存して終了？"
 
+# msgid  "the RcmdrMisc package is missing and should be installed\n  many features will not work"
+# msgstr ""
+# msgid "the car package is missing and should be installed\n  many features will not work"
+# msgstr ""
+# for numerical summaries dialog
+msgid "Standard Error of Mean"
+msgstr "平均の標準誤差"
+
+# for CFA dialog
+msgid "Fit Indices"
+msgstr "適合性の指標"
+
+# for read Excel file dialog
+msgid "Variable names in first row of spreadsheet"
+msgstr "スプレッドシートの1行目の変数名"
+
+msgid "Row names in first column of spreadsheet"
+msgstr "スプレッドシートの1列目の行名"
+
+# for selecting weights in LM and GLM dialogs
+msgid "<no variable selected>"
+msgstr "<変数が選択されていません>"
+
+# new effect-plots dialog
+msgid "Model Effect Plots"
+msgstr "モデルの効果プロット"
+
+msgid "Plot All High-Order Effects?"
+msgstr "全ての高次効果をプロットしますか？"
+
+msgid "Predictors (pick one or more)"
+msgstr "予測変数（1つ以上選択）"
+
+msgid ""
+"You must select one or more predictors\n"
+" or plot all high-order effects."
+msgstr ""
+"1つ以上の予測変数を選択するか\n"
+"全ての高次効果をプロットする必要がある."
+
+msgid ""
+"To plot partial residuals,\n"
+" there must be a least one numeric predictor."
+msgstr ""
+"偏残差をプロットするには\n"
+"少なくとも１つの数値予測変数が必要です."
+
+msgid "Plot partial residuals"
+msgstr "偏残差のプロット"
+
+msgid "Style of Graph"
+msgstr "グラフのスタイル"
+
+msgid "Stacked areas"
+msgstr "層"
+
+msgid "Lines with confidence bands"
+msgstr "信頼幅付きの線"
+
+# new one-sample Wilcoxon test dialog
+msgid "Single-Sample Wilcoxon Test"
+msgstr "1標本Wilcoxon検定"
+
+msgid "Single-sample Wilcoxon test..."
+msgstr "1標本Wilcoxon検定..."
+
+# new drop unused factor levels dialog
+msgid "Drop Unused Factor Levels"
+msgstr "利用されていない因子水準の削除"
+
+msgid "Factors(s) to drop levels (pick one or more)"
+msgstr "水準を落とす因子（1つ以上選択）"
+
+msgid ""
+"Drop unused factor levels\n"
+"Please confirm."
+msgstr ""
+"利用されていない因子水準の削除\n"
+"確認してください."
+
+msgid "Drop unused factor levels..."
+msgstr "利用されていない因子水準の削除..."
+
+msgid "all factors"
+msgstr "全ての因子"
+
+# messages related to sandwich variance estimator
+msgid "Linear Model Summary"
+msgstr "線型モデルの要約情報"
+
+msgid "Sandwich estimator"
+msgstr "サンドウィッチ推定量"
+
+msgid ""
+"Use sandwich estimator of    \n"
+"coefficient standard errors"
+msgstr ""
+"回帰係数の標準誤差の\n"
+"サンドウィッチ推定量を利用"
+
+msgid ""
+"Use sandwich estimator of\n"
+"coefficient covariance matrix   "
+msgstr ""
+"回帰係数の共分散行列の\n"
+"サンドウィッチ推定量を利用"
+
+msgid "sandwich covariance matrix unavailable with type I tests"
+msgstr "タイプI検定を利用できるサンドウィッチ共分散行列はありません"
+
+# messages related to ttk theme selection
+msgid "non-existent theme"
+msgstr "存在しないテーマ"
+
+msgid "theme set to"
+msgstr "テーマを次に指定"
+
+# modified message
+msgid "Restart R Commander"
+msgstr "R Commanderの再起動"
+
+# formula-help button
+msgid ""
+"Model formula\n"
+"help"
+msgstr ""
+"モデル式の\n"
+"ヘルプ"
+
+# messages added for version 2.1-1
+# messages for the new dataset editor
+msgid "Data Editor"
+msgstr "データエディタ"
+
+msgid "Delete current row"
+msgstr "現在の行の削除"
+
+msgid "Delete current column"
+msgstr "現在の列の削除"
+
+msgid "Delete cell"
+msgstr "セルの削除"
+
+msgid "Cut cell"
+msgstr "セルの切り取り"
+
+msgid "Copy cell"
+msgstr "セルのコピー"
+
+msgid "Paste cell"
+msgstr "セルの貼り付け"
+
+msgid "Exit and save"
+msgstr "修了と保存"
+
+msgid "Add row"
+msgstr "行の追加"
+
+msgid "Add column"
+msgstr "列の追加"
+
+# messages added for version 2.1-3
+# to manage app nap under Mac OS X Mavericks
+msgid "Manage Mac OS X app nap for R.app..."
+msgstr "R.appのためのMac OS Xのapp pnapの管理..."
+
+msgid "Mac OS X app nap for R.app"
+msgstr "R.appのためのMac OS Xのapp nap"
+
+msgid "Set app nap"
+msgstr "app napの設定"
+
+msgid "off (recommended)"
+msgstr "オフ（推奨）"
+
+msgid "on"
+msgstr "オン"
+
+# set random seed dialog
+msgid "Set random number generator seed..."
+msgstr "乱数生成関数のシード..."
+
+msgid "Set Random Number Generator Seed"
+msgstr "乱数生成関数のシード"
+
+# messages added for version 2.2-0
+# messages that were inadvertently missing in previous versions
+msgid "The following variable names are not valid:\n"
+msgstr "次の変数名は有効ではありません:\n"
+
+msgid "Save R Markdown file?"
+msgstr "Rマークダウンファイルを保存しますか？"
+
+msgid "Theme (pick one)"
+msgstr "テーマ（1つ選択）"
+
+msgid "Both or neither layout values must be numbers."
+msgstr "レイアウト値の両者とも数値か数値でない必要があります."
+
+msgid "ANOVA Table"
+msgstr "分散分析表"
+
+msgid "There is no appropriate outlierTest method for a model of this class."
+msgstr "このクラスのモデルに対して適切な外れ値の検定はありません."
+
+msgid "Shapiro-Wilk Test for Normality"
+msgstr "シャピロ－ウィルクの正規性の検定"
+
+msgid "Hypothesis Test"
+msgstr "仮説検定"
+
+msgid "Load Plug-ins"
+msgstr "プラグインのロード"
+
+# for report generation
+msgid "Generate report"
+msgstr "レポートの生成"
+
+msgid "Install Auxiliary Software"
+msgstr "補助ソフトウェアのインストール"
+
+msgid "Install auxiliary software..."
+msgstr "補助ソフトウェアのインストール..."
+
+msgid "(already installed)"
+msgstr "(既にインストールされている)"
+
+msgid "LaTeX"
+msgstr "LaTeX"
+
+msgid "Pandoc"
+msgstr "Pandoc"
+
+msgid "Software to Install"
+msgstr "インストールするソフトウェア"
+
+msgid ""
+"Please read the help for this dialog\n"
+"before installing auxiliary software."
+msgstr ""
+"ソフトウェアをインストールする前に\n"
+"このダイアログのヘルプを参照してください."
+
+msgid "Select Output Format"
+msgstr "出力形式の選択"
+
+msgid ".html (web page)"
+msgstr ".html (ウェブページ)"
+
+msgid ".pdf (PDF file)"
+msgstr ".pdf (PDFファイル)"
+
+msgid ".docx (Word file)"
+msgstr ".docx (Wordファイル)"
+
+msgid "HTML file written to:"
+msgstr "HTMLファイルを書き込む:"
+
+msgid "PDF file written to:"
+msgstr "PDFファイルを書き込む:"
+
+msgid "Word file written to:"
+msgstr "Wordファイルを書き込む:"
+
+# additions to scatterplot and scatterplot-matrix dialogs
+msgid ""
+"Levels for ellipses must be numeric values\n"
+"  separated by spaces or commas."
+msgstr ""
+"楕円の集中度は数値\n"
+"（空白またはコンマで区切って）"
+
+msgid "Plot concentration ellipse(s)"
+msgstr "集中楕円のプロット"
+
+msgid "Concentration levels:"
+msgstr "集中度:"
+
+msgid "Legend Position"
+msgstr "凡例の位置"
+
+msgid "Above plot"
+msgstr "図の上"
+
+msgid "Top left"
+msgstr "左上"
+
+msgid "Top right"
+msgstr "右上"
+
+msgid "Bottom left"
+msgstr "左下"
+
+msgid "Bottom right"
+msgstr "右下"
+
+# additions to bargraph dialog
+msgid "Style of Group Bars"
+msgstr "グループ分けした棒のスタイル"
+
+msgid "Divided (stacked)"
+msgstr "分割（積み上げ）"
+
+msgid "Side-by-side (parallel)"
+msgstr "グループ化（並列）"
+
+msgid "Position of Legend"
+msgstr "凡例の位置"
+
+msgid "Left"
+msgstr "左"
+
+msgid "Right"
+msgstr "右"
+
+msgid "plotting and grouping variables must be different"
+msgstr "プロットする変数とグループ化の変数は異なる必要があります"
+
+# dot plot dialog
+msgid "Dot Plot"
+msgstr "ドットプロット"
+
+msgid "Bin variable"
+msgstr "ビンの変数"
+
+msgid "Dot plot..."
+msgstr "ドットプロット..."
+
+# for reading Excel files (new dialog)
+msgid "Convert character data to factors"
+msgstr "文字列を因子に変換"
+
+msgid "<empty cell>"
+msgstr "<空のセル>"
+
+msgid "{\"All Files\" {\"*\"}} {\"MS Excel file\" {\".xlsx\" \".XLSX\" \".xls\" \".XLS\"}}"
+msgstr "{\"All Files\" {\"*\"}} {\"MS Excel file\" {\".xlsx\" \".XLSX\" \".xls\" \".XLS\"}}"
+
+# corrected messages in version 2.2-1
+# The following messages had trailing blanks. These messages were deleted from
+#   their previous locations in this .pot file and transferred here in corrected form,
+#   with the trailing blanks removed.
+# I suggest that you likewise delete the earlier versions of these messages from
+#   your .po file and provide corrected translations here, without trailing blanks.
+msgid ""
+"Number of points to identify  \n"
+"in each panel and group"
+msgstr ""
+"各パネルとグループで\n"
+"確認する点の数"
+
+msgid ""
+"Use sandwich estimator of\n"
+"coefficient covariance matrix"
+msgstr ""
+"共分散行列の\n"
+"サンドウィッチ推定量を利用"
+
+# additional messages in version 2.3-0
+# .rtf output from RMarkdown reports
+msgid ".rtf (rich text file)"
+msgstr ".rtf (リッチテキストファイル)"
+
+msgid "Rich text file written to:"
+msgstr "リッチテキストファイルの書き込み先："
+
+# bootstrapping dialog
+msgid "Bootstrap confidence intervals..."
+msgstr "ブートストラップ信頼区間..."
+
+msgid "Bootstrap"
+msgstr "ブートストラップ"
+
+msgid "Bootstrap Confidence Intervals for Coefficients"
+msgstr "係数のブートストラップ信頼区間"
+
+msgid "Number of bootstrap samples:"
+msgstr "ブートストラップサンプルの大きさ："
+
+msgid "Number of samples must be a positive integer."
+msgstr "サンプルの大きさは整数で指定してください"
+
+msgid "Type of Confidence Intervals"
+msgstr "信頼区間の上中央"
+
+msgid "BCa (adjusted percentile)"
+msgstr "BCa(修正パーセンタイル)"
+
+msgid "Normal theory"
+msgstr "正規理論"
+
+msgid "Basic bootstrap"
+msgstr "ベーシックブートストラップ"
+
+msgid "Percentile"
+msgstr "パーセンタイル法"
+
+msgid "Resampling Method"
+msgstr "リサンプリング法"
+
+msgid "Case resampling"
+msgstr "ケース単位でのリサンプリング"
+
+msgid "Residual resampling"
+msgstr "残差のリサンプリング"
+
+# delta method dialog
+msgid "Delta method confidence interval..."
+msgstr "デルタ法による信頼区間..."
+
+msgid "Delta Method"
+msgstr "デルタ法"
+
+msgid "Confidence Interval by the Delta Method"
+msgstr "デルタ法による信頼区間"
+
+msgid "Expression to evaluate; use parameter names:"
+msgstr "評価する式；パラメータ名を利用："
+
+# view data dialog
+msgid "View data..."
+msgstr "データの表示..."
+
+msgid "View Data"
+msgstr "データの表示"
+
+msgid "Bad subset expression."
+msgstr "部分集合の表現が間違い"
+
+msgid "No data to show."
+msgstr "表示するデータがありませｎ"
+
+msgid "View data error."
+msgstr "データの誤りの表示."
+
+# sort active data set dialog
+msgid "Sort active data set..."
+msgstr "アクティブデータセットの並べ替え..."
+
+msgid "Sort Active Data Set"
+msgstr "アクティブデータセットの並べ替え"
+
+msgid "Sort Keys (select one or more)"
+msgstr "並べ替えのキー（1つ以上選択）"
+
+msgid "Sort Direction"
+msgstr "並べ替えの方向"
+
+msgid "Increasing"
+msgstr "昇順"
+
+msgid "Decreasing"
+msgstr "降順"
+
+msgid "Reorder Sort Keys"
+msgstr "並べ替えのキーの再設定"
+
+msgid "Order of keys must include all integers from 1 to"
+msgstr "キーの順序は1からtoまでのすべての整数にしてください"
+
+msgid "Sort Keys"
+msgstr "並べ替えのキー"
+
+msgid "Order"
+msgstr "順序"
+
+# added to plot means dialog
+msgid "Connect profiles of means"
+msgstr "平均のプロファイルを結合"
+
+# adding to one-way ANOVA dialog
+msgid "Welch F-test not assuming equal variances"
+msgstr "Welchの等分散を仮定しないF検定"
+
+# the new normality-tests dialog, which replaces the Shapiro-Wilk normality-test dialog
+msgid "Test of normality..."
+msgstr "正規性の検定..."
+
+msgid "Test of Normality"
+msgstr "正規性の検定"
+
+msgid "Shapiro-Wilk"
+msgstr "Shapiro-Wilk"
+
+msgid "Anderson-Darling"
+msgstr "Anderson-Darling"
+
+msgid "Cramer-von Mises"
+msgstr "Cramer-von Mises"
+
+msgid "Lilliefors (Kolmogorov-Smirnov)"
+msgstr "Lilliefors (Kolmogorov-Smirnov)"
+
+msgid "Shapiro-Francia"
+msgstr "Shapiro-Francia"
+
+msgid "Pearson chi-square"
+msgstr "ピアソンのカイ二乗"
+
+msgid "Normality Test"
+msgstr "正規性の検定"
+
+msgid "Number of bins must be a number >= 4"
+msgstr "区間の数は4以上にしてください"
+
+msgid ""
+"Number of bins\n"
+"for Pearson chi-square"
+msgstr "ピアソンのカイ2乗のための区間数"
+
+# small changes to the read text data dialog
+msgid "Commas [,]"
+msgstr "カンマ [,]"
+
+msgid "Semicolons [;]"
+msgstr "セミコロン [;]"
+
+# additional error check in load data set dialog
+msgid "There is more than one object in the file, with the following names:\n"
+msgstr "ファイルには2つ以上のオブジェクトがあります.その名前は：\n"
+
+# new messages for distribution plot dialogs produced by distributionPlot()
+msgid "Optionally specify regions under the density function by"
+msgstr "密度関数のプロットに表示する領域の指定"
+
+msgid "x-values"
+msgstr "ｘ値"
+
+msgid "quantiles"
+msgstr "分位点"
+
+msgid "is not a valid number."
+msgstr "有効な値ではありません."
+
+msgid "You must specify 'from' and 'to' for at least one range."
+msgstr "一つの範囲を指定するには，\"from\"と\"to\"を指定してください."
+
+msgid "In specifying a range, 'to' must be greater than 'from'."
+msgstr "範囲を指定するとき，\"to\"は\"from\"より大きい必要があります."
+
+msgid "Quantiles must be between 0 and 1."
+msgstr "分位点は0と1の間の数字です."
+
+msgid "Regions to Fill (specify one or two, or leave blank)"
+msgstr "色付けする領域（1つまたは2つ指定，または，ブランクのまま）"
+
+msgid "Region 1: from"
+msgstr "領域1：from"
+
+msgid "Region 2: from"
+msgstr "領域２：from"
+
+msgid "to"
+msgstr "to"
+
+msgid "color"
+msgstr "色"
+
+msgid "Top center"
+msgstr "上中央"
+
+# new compare model coefficients dialog
+msgid "Compare model coefficients..."
+msgstr "モデルの係数の比較..."
+
+msgid "Compare Model Coefficients"
+msgstr "モデルの係数の比較"
+
+msgid "Select models (pick two or more)"
+msgstr "モデルの選択（2つ以上）"
+
+msgid "You must select at least two models."
+msgstr "少なくとも2つのモデルを選択してください."
+
+# additional messages in version 2.4-0
+# enhancements to the Rcmdr script editor
+msgid "Only one instance of the R Commander script editor may be open at a time."
+msgstr "Rコマンダーのスクリプトエディタを同時に開くことができるのは1つのみです."
+
+msgid "Save current edits"
+msgstr "現在の編集内容の保存"
+
+msgid "Save edits"
+msgstr "編集結果の保存"
+
+msgid "Exit editor saving edits"
+msgstr "変種結果を保存して編集を終了"
+
+msgid "Cancel discarding edits"
+msgstr "編集結果の廃棄のとりやめ"
+
+# additions to the barplot dialog
+msgid "Percentages for Group Bars"
+msgstr "グループバーのパーセント"
+
+msgid "Conditional"
+msgstr "条件付"
+
+msgid "Total"
+msgstr "計"
+
+msgid "Color Selection"
+msgstr "色の選択"
+
+msgid "From color palette"
+msgstr "色パレットから"
+
+# correct typo
+msgid "Data set %s does not exist"
+msgstr "データセット %s はありません"
+
+# addition to plot means dialog (position of legend)
+msgid "To right of graph"
+msgstr "グラフの右に"
+
+# For two-variances F-test dialog
+msgid "Ratio:"
+msgstr "比："
+
+msgid "Ratio < 1"
+msgstr "比＜1"
+
+msgid "Ratio > 1"
+msgstr "比＞1"
+
+# For enter and analyze contingency table dialog
+msgid "Name for Row Variable (optional):"
+msgstr "行変数の名前（オプショナル）"
+
+msgid "Name for Column Variable (optional):"
+msgstr "列変数の名前（オプショナル）:"
+
+# for import Stata and SAS b7dat data set dialogs
+msgid "Convert character variables to factors"
+msgstr "文字変数を因子に変換"
+
+msgid "First column contains row names"
+msgstr "1列目に行名を含む"
+
+msgid "Import SAS b7dat Data Set"
+msgstr "SAS b7datデータセットのインポート"
+
+msgid "from SAS b7dat file..."
+msgstr "SAS b7dataデータセットから..."
+
+msgid "{\"All Files\" {\"*\"}} {\"SAS b7dat dataset\" {\".sas7bdat\" \".SAS7BDAT\"}}"
+msgstr "{\"全てのファイル\" {\"*\"}} {\"SAS b7dat データセット\" {\".sas7bdat\" \".SAS7BDAT\"}}"
+
+# addition to the Commander Options dialog
+msgid ""
+"Suppress scientific notation\n"
+"(higher = more suppression)"
+msgstr ""
+"指数表記の抑制\n"
+"（高い＝抑制を強く）"
+
+# new plot discrete numeric variable dialog
+msgid "Plot discrete numeric variable..."
+msgstr "離散数値変数のプロット..."
+
+msgid "Plot Discrete Numeric Variable"
+msgstr "離散数値変数のプロット"
+
+msgid ""
+"%s has %d unique values\n"
+"Do you want to proceed?"
+msgstr ""
+"%s は %d のユニークな値を持つ\n"
+"処理を続行しますか?"
+
+# for boostrapping dialog
+msgid "Plot bootstrap samples"
+msgstr "ブートストラップサンプルのプロット"
+
+# for numerical summaries dialog
+msgid "Binned Frequency Counts"
+msgstr "各グループの頻度"
+
+# additional messages in version 2.4-2
+# these messages were inadvertently omitted
+msgid "Sample from ChiSquared Distribution"
+msgstr "カイ二乗分布からのサンプル"
+
+msgid "Sample from Lognormal Distribution"
+msgstr "対数正規分布からのサンプル"
+
+msgid "Sample from NegativeBinomial Distribution"
+msgstr "負の2項分布からのサンプル"
+
+# additional messages in version 2.5-0
+# new predictor effect plots dialog
+msgid "Predictor Effect Plots"
+msgstr "予測因子効果プロット"
+
+msgid "Predictor effect plots..."
+msgstr "予測因子効果プロット..."
+
+msgid "Plot all predictor effects?"
+msgstr "全ての予測因子の効果をプロット？"
+
+# added to index plot dialog
+msgid "Mark by groups"
+msgstr "グループ別にマーク"
+
+msgid "Mark by:"
+msgstr "マーク by:"
+
+# new response transformation dialog
+msgid "Response Transformation"
+msgstr "応答変数の変換"
+
+msgid "Response transformation..."
+msgstr "応答変数の変換..."
+
+msgid "Box-Cox"
+msgstr "Box-Cox"
+
+msgid "Box-Cox with negatives"
+msgstr "負値があるときのBox-Cox"
+
+msgid "Yeo-Johnson"
+msgstr "Yeo-Johnson"
+
+# new transform toward normality dialog
+msgid "Transform toward normality..."
+msgstr "正規性への変換..."
+
+msgid "Transform Variables Toward Normality"
+msgstr "正規性への変換"
+
+msgid "Select variables to transform (one or more)"
+msgstr "変換する変数の選択（1つ以上）"
+
+msgid "Transformation Family"
+msgstr "変換族"
+
+# new symmetry boxplot (symbox) dialog
+msgid "Symmetry boxplot..."
+msgstr "対称箱ひげ図..."
+
+msgid "Symmetry Boxplot"
+msgstr "対称箱ひげ図"
+
+msgid "Start (optional)"
+msgstr "スタート（オプショナル）"
+
+msgid "Powers"
+msgstr "べき指数"
+
+# new influence index plot dialog
+msgid "Influence index plot..."
+msgstr "影響インデックスプロット..."
+
+msgid "Influence Index Plot"
+msgstr "影響インデックスプロット"
+
+msgid "Bonferroni p-values"
+msgstr "ボンフェローニのp値"
+
+msgid "Diagnostics case statistics to plot"
+msgstr "プロットするケース別診断統計量"
+
+# enhancements to Density Plot dialog
+msgid "Method"
+msgstr "方法"
+
+msgid "adaptive kernel"
+msgstr "適応カーネル"
+
+msgid "kernel"
+msgstr "カーネル"
+
+msgid "From"
+msgstr "から"
+
+msgid "To"
+msgstr "へ"
+
+# additional messages in version 2.5-1
+# a corrected message
+msgid "Case statistics to plot"
+msgstr "プロットするケース統計量"
+
+# additional message in version 2.6-0
+# new mixed models dialogs
+msgid "Linear Mixed Model"
+msgstr "線形混合モデル"
+
+msgid "Linear mixed model..."
+msgstr "線形混合モデル..."
+
+msgid "Estimation Criterion"
+msgstr "推定基準"
+
+msgid "Restricted maximum likelihood (REML)"
+msgstr "制限付き最尤法"
+
+msgid "Maximum likelihood (ML)"
+msgstr "最尤法"
+
+msgid "There are no random effects in the model."
+msgstr "モデルに変量効果がありません."
+
+msgid "Generalized Linear Mixed Model"
+msgstr "一般化線形混合モデル"
+
+msgid "Generalized linear mixed model..."
+msgstr "一般化線形混合モデル..."
+
+# corrected and messages for version 2.6-1
+# correction: was "Convert variable names\nto lower case"
+msgid "Convert variable names to lower case"
+msgstr "変数名を小文字に変換"
+
+# new messages about invalid variable classes
+msgid "The following variables are not valid for use in the R Commander and will be omitted:"
+msgstr "次の変数はR Commanderでの利用には適していないので削除されます:"
+
+msgid "The following variable is not valid for use in the R Commander and will be omitted:"
+msgstr "次の変数はR Commanderでの利用には適していないので削除されます:"
+
+# new messages for version 2.7-0
+# for Numerical Summaries dialog
+msgid "Frequency Counts"
+msgstr "頻度数"
+
+# For bar graph dialog
+msgid "Show counts or percentages in bars"
+msgstr "棒に度数またはパーセントを表示"
+
+# for piechart dialog
+msgid "Neither"
+msgstr "無し"
+
+# for proportion-test dialogs
+msgid "<No response selected>"
+msgstr "<応答変数が選択されていない>"
+
+msgid "Proportion"
+msgstr "比率"
+
+# for new restart Commander dialog
+msgid "Restart the Commander"
+msgstr "Commanderを再起動"
+
+msgid "Restart the Commander?"
+msgstr "Commanderを再起動？"
+
+# for new repeated-measures ANOVA/ANCOVA dialogs
+msgid "One-factor repeated-measures ANOVA/ANCOVA..."
+msgstr "1元配置反復測定ANOVA/ANCOVA"
+
+msgid "One Repeated Measures Factor ANOVA/ANCOVA"
+msgstr "1元配置反復測定ANOVA/ANCOVA"
+
+msgid "no responses specified"
+msgstr "応答変数が指定されていません"
+
+msgid ""
+"the specified responses are not contiguous\n"
+" missing responses are removed"
+msgstr ""
+"指定された応答は連続していません\n"
+"応答のないものを削除しました"
+
+msgid "<no selection>"
+msgstr "<選択されていない>"
+
+msgid "there are duplicated level names"
+msgstr "水準名が重複しています"
+
+msgid "is not a valid name"
+msgstr "有効な名前ではありません"
+
+msgid "the following responses appear more than once:"
+msgstr "次の応答は複数回表れています: "
+
+msgid "at least 2 responses must be specified"
+msgstr "少なくとも２つの応答変数を指定"
+
+msgid "Within-Subject Factor"
+msgstr "被験者内要因"
+
+msgid "Name for the within-subjects factor:"
+msgstr "被験者内要因の名前: "
+
+msgid "Specify up to 8 levels (responses) and level names for the within-subjects factor"
+msgstr "被験者内要因に対して最大８水準（応答）と園名前を指定してください"
+
+msgid "Multivariate Test Statistic"
+msgstr "多変量検定統計量"
+
+msgid "Multivariate"
+msgstr "多変量"
+
+msgid "Univariate"
+msgstr "１変量"
+
+msgid "Tests to Perform"
+msgstr "実行する検定"
+
+msgid "Repeated-Measures Means"
+msgstr "反復測定平均"
+
+msgid "Between-Subjects Factors (pick zero or more)"
+msgstr "被験者間要因（０個以上選択）"
+
+msgid "Plot response means by factors"
+msgstr "応答を因子で層別して表示"
+
+msgid "Print means and standard deviations by factors"
+msgstr "要因毎の平均と標準偏差の表示"
+
+msgid "X-axis factor:"
+msgstr "X軸の因子:"
+
+msgid "Trace factor:"
+msgstr "要因のトレース: "
+
+msgid "Response name:"
+msgstr "応答変数の名前:"
+
+msgid "Two-factor repeated-measures ANOVA/ANCOVA..."
+msgstr "2元配置反復測定ANOVA/ANCOVA..."
+
+msgid "Two Repeated Measures Factors ANOVA/ANCOVA"
+msgstr "2元配置反復測定ANOVA/ANCOVA"
+
+msgid "the specified responses are not rectangular"
+msgstr "指定された応答は長方形ではありません"
+
+msgid "at least 2 rows and 2 columns of responses must be specified"
+msgstr "応答の少なくとも２行２列を指定してください"
+
+msgid "there are duplicated row level names"
+msgstr "行の水準名が重複しています"
+
+msgid "there are duplicated column level names"
+msgstr "列の水準名が重複しています"
+
+msgid "Within-Subject Factors"
+msgstr "被験者内要因"
+
+msgid "Name for the within-subjects row factor:"
+msgstr "被験者内行要因の名前: "
+
+msgid "Name for the within-subjects column factor:"
+msgstr "被験者内列要因の名前: "
+
+msgid "Select up to 5 levels and level-names for each within-subjects factor"
+msgstr "各被験者内要因に対して最大５水準と水準名を指定してください"
+
+# new reshape data set from long to wide format dialog
+msgid "Reshape data set from long to wide format..."
+msgstr "データセットのロングからワイド形式への変換: "
+
+msgid "Reshape Data Set from Long to Wide Format"
+msgstr "データセットのロングからワイド形式への変換"
+
+msgid "Subject ID variable (pick one)"
+msgstr "被験者ID変数（一つ選択）"
+
+msgid "Within-subjects factors (pick one or more)"
+msgstr "被験者内要因（１つ以上選択）"
+
+msgid "Variables that vary by occasion (pick one or more)"
+msgstr "出来事に応じて変化する変数（１つ以上選択）"
+
+msgid "Variables to ignore (pick zero or more)"
+msgstr "無視する変数（0以上選択）"
+
+msgid "You must select an ID variable."
+msgstr "ID変数を選択してください."
+
+msgid "You must select one or more within-subjects factors."
+msgstr "一つ以上の被験者内要因を選択してください．"
+
+msgid "You must select one or more occasion-varying variables."
+msgstr "出来事に応じて変化する変数を１つ以上選択してください．"
+
+msgid "the following variables appear more than once:"
+msgstr "次の変数は２回以上表れています"
+
+msgid "Save data set aborted"
+msgstr "中断したデータセットの保存"
+
+msgid "Name for wide data set:"
+msgstr "ワイドなデータセットの名前: "
+
+msgid "Make the wide data set active"
+msgstr "ワイドデータセットをアクティブに"
+
+# new reshape data set from wide to long format dialog
+msgid "Reshape data set from wide to long format..."
+msgstr "データセットのワイドからロング形式への変換..."
+
+msgid "Reshape Data Set from Wide to Long Format"
+msgstr "データセットのワイドからロング形式への変換"
+
+msgid ""
+"both one and two repeated-measures factors were specified\n"
+"specify either a one-way or two-way design"
+msgstr ""
+
+msgid "the specified responses are not contiguous"
+msgstr "指定された応答変数は不連続です"
+
+msgid "the following ignored variables are also responses:"
+msgstr "無視された次の変数も応答変数: "
+
+msgid "Specify one within-subject factor"
+msgstr "被験者内要因の指定"
+
+msgid "Specify two within-subject factors"
+msgstr "被験者間要因の指定"
+
+msgid "Specify up to 5 levels and level names for each within-subjects factor"
+msgstr "各被験者内要因に対して最大５水準を指定してください"
+
+msgid "Name for long data set:"
+msgstr "ロングデータセットの名前: "
+
+msgid "Response variable:"
+msgstr "応答変数:"
+
+msgid "Subject ID variable:"
+msgstr "被験者のID変数: "
+
+msgid "Make the long data set active"
+msgstr "ロングデータセットをアクティブにする"
+
+# additional messages for handling character data
+msgid "Convert all character variables to factors"
+msgstr "全ての文字変数を因子に変換"
+
+msgid "Convert character variables to factors..."
+msgstr "全ての文字変数を因子に変換..."
+
+msgid "Convert Character Variables to Factors"
+msgstr "全ての文字変数を因子に変換"
+
 ############################################## for EZR #########################################
 msgid "New data set"
 msgstr "新しいデータセットを作成する(直接入力)"
@@ -4520,9 +5550,8 @@ msgstr "連続変数を因子に変換する"
 msgid "Convert factors or character variables of numeric data to numeric variables"
 msgstr "因子あるいは文字列として扱われている数値を連続変数に変換する"
 
-msgid "Convert all character variables to factors"
-msgstr "文字列として扱われている全ての変数を因子に変換する"
-
+###msgid "Convert all character variables to factors"
+###msgstr "文字列として扱われている全ての変数を因子に変換する"
 msgid "Reorder factor levels"
 msgstr "因子水準を再順序化する"
 
@@ -4637,8 +5666,8 @@ msgstr "連続変数の要約"
 msgid "Smirnov-Grubbs test for outliers"
 msgstr "外れ値の検定と除外(Smirnov-Grubbs検定)"
 
-msgid "Kolmogorov-Smimov test for normal distribution"
-msgstr "正規性の検定(Kolmogorov-Smimov検定)"
+msgid "Kolmogorov-smirnov test for normal distribution"
+msgstr "正規性の検定(Kolmogorov-smirnov検定)"
 
 msgid "Confidence interval for a mean"
 msgstr "平均値の信頼区間の計算"
@@ -5306,15 +6335,14 @@ msgstr "群別変数は標準ではアルファベット順で傾向をみる。
 msgid "Trend will be evaluated among groups in alphabetical order"
 msgstr "↑群別変数は標準ではアルファベット順で傾向をみる。変更したい場合は因子水準を再順序化する。"
 
-msgid "Increasing"
+msgid "Increasing tendency"
 msgstr "単調増加"
 
-msgid "Decreasing"
+msgid "Decreasing tendency"
 msgstr "単調減少"
 
-msgid "Method"
-msgstr "解析方法"
-
+###msgid "Method"
+###msgstr "解析方法"
 msgid "Show missing data"
 msgstr "欠損値も表示する"
 
@@ -5615,9 +6643,8 @@ msgstr "検査2陰性"
 msgid "Number      Test2   (+)         (-)"
 msgstr "サンプル数を入力    検査2陽性    検査2陰性"
 
-msgid "Save R Markdown file?"
-msgstr "Rマークダウンファイルを保存して終了？"
-
+###msgid "Save R Markdown file?"
+###msgstr "Rマークダウンファイルを保存して終了？"
 msgid "View"
 msgstr "表示"
 
@@ -5675,14 +6702,13 @@ msgstr "既知の比率 (0.0-1.0)"
 msgid "Proportion (test)"
 msgstr "想定する比率 (0.0-1.0)"
 
-msgid "Proportion"
-msgstr "想定する比率"
-
+###msgid "Proportion"
+###msgstr "想定する比率"
 msgid "Confidence interval width"
 msgstr "信頼区間の幅(上限と下限の差)"
 
-msgid "Condifence level"
-msgstr "信頼水準 (0.0-1.0)"
+msgid "Confidence level"
+msgstr "信頼水準"
 
 msgid "Standard deviation (expected)"
 msgstr "想定する標準偏差"
@@ -5846,9 +6872,8 @@ msgstr "折れ線グラフ"
 msgid "Box"
 msgstr "棒グラフ"
 
-msgid "Order"
-msgstr "整列順序"
-
+###msgid "Order"
+###msgstr "整列順序"
 msgid "Y axis lower limit"
 msgstr "Y軸下限"
 
@@ -5876,9 +6901,8 @@ msgstr "基本的診断プロットを表示する"
 msgid "Plot martingale residuals"
 msgstr "マルチンゲール残差をプロットする"
 
-msgid "Total"
-msgstr "総計"
-
+###msgid "Total"
+###msgstr "総計"
 msgid "Point estimates and"
 msgstr "点推定と"
 
@@ -6422,12 +7446,11 @@ msgstr "列を結合するために照合する変数(1番目のデータセッ�
 msgid "Column name for matching in dataset 2(pick one)"
 msgstr "列を結合するために照合する変数(2番目のデータセット)"
 
-msgid "Drop unused factor levels"
-msgstr "利用されていない因子水準の削除"
+msgid "Drop unused factor levels\n"
+msgstr "利用されていない因子水準の削除\n"
 
-msgid "Drop Unused Factor Levels"
-msgstr "利用されていない因子水準の削除"
-
+###msgid "Drop Unused Factor Levels"
+###msgstr "利用されていない因子水準の削除"
 msgid "Recode variables"
 msgstr "変数のコードを変更する"
 
@@ -6461,9 +7484,8 @@ msgstr "95%信頼区間上限"
 msgid "Make propensity score variable"
 msgstr "傾向スコア変数を自動作成する"
 
-msgid "First column contains row names"
-msgstr "1列目に行名を含む"
-
+###msgid "First column contains row names"
+###msgstr "1列目に行名を含む"
 msgid "Please cite the following article"
 msgstr "以下の論文を参考文献として引用ください"
 
@@ -6497,9 +7519,8 @@ msgstr "最近傍評価法のSpanの指定"
 msgid "Nearest neighbor estimation"
 msgstr "最近傍評価"
 
-msgid "Linear Mixed Model"
-msgstr "線形混合モデル"
-
+###msgid "Linear Mixed Model"
+###msgstr "線形混合モデル"
 msgid "Linear mixed model"
 msgstr "線形混合モデル"
 
@@ -6598,4 +7619,58 @@ msgstr "###2つ以上の独立変数が必要です。"
 
 msgid "Multinomial logistic regression"
 msgstr "多項ロジスティック回帰"
+
+msgid "Subset analysis is not allowed in making propensity score or weighting variable."
+msgstr "傾向スコア変数、IPTW変数作成の際にはサブグループ解析の指定はできません。"
+
+msgid "Time when TD covariate changes from 0 to 1(pick at least one)"
+msgstr "時間依存性変数が0から1に変わるまでの期間(1つ以上選択)"
+
+msgid "If more than 1 are picked, 1 to 0 variable is not be used."
+msgstr "↑↑↑複数選択すると1から0に戻る変数は使用されません。"
+
+msgid "Drop unused factor levels"
+msgstr "利用されていない因子水準の削除"
+
+msgid "Use value labels to create factors"
+msgstr "Stataのラベルを因子作成に用いる"
+
+msgid "Convert factors to Stata variables with labels"
+msgstr "因子をStataのラベル付き変数に変換する"
+
+msgid "Convert dates to Stata format"
+msgstr "datesをStata形式に変換"
+
+msgid "Convert non numerics or non alphabet characters to underscores"
+msgstr "数字でもアルファベットでもない文字をアンダースコアに変換する"
+
+msgid "Import Stata Data Set"
+msgstr "Stataデータセットのインポート"
+
+msgid "Calculation of variance and SD"
+msgstr "分散・標準偏差の計算方法"
+
+msgid "Corrected"
+msgstr "不偏分散・標準偏差"
+
+msgid "Uncorrected"
+msgstr "分散・標準偏差"
+
+msgid "Variance"
+msgstr "分散"
+
+msgid "u.sd"
+msgstr "不偏標準偏差"
+
+msgid "p.sd"
+msgstr "標準偏差"
+
+msgid "u.var"
+msgstr "不偏分散"
+
+msgid "p.var"
+msgstr "分散"
+
+msgid "Include in Segment Labels"
+msgstr "ラベル"
 

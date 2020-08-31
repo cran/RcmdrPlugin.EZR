@@ -8,13 +8,13 @@ Performs Mantel-Byar test for comparison of survival data with a time-dependent 
 }
 
 \usage{
-Mantel.Byar(Group = TempTD$covariate_td, Event = TempTD$endpoint_td, 
+Mantel.Byar(Group = NULL, Event = TempTD$endpoint_td, 
 StartTime = TempTD$start_td, StopTime = TempTD$stop_td, 
 method = c("SAS", "Tominaga"), plot=0, landmark=0)
 }
 
 \arguments{
-\item{Group}{Time-dependent covariate.}
+\item{Group}{the name of the time-dependent covariate. If NULL, the last column name of the TempTD dataset will be used.}
 \item{Event}{a vector for event.}
 \item{StartTime}{a vector for starting time.}
 \item{StopTime}{a vector for stopping time.}
@@ -24,7 +24,7 @@ method = c("SAS", "Tominaga"), plot=0, landmark=0)
 }
 
 \details{
-Performs Mantel-Byar test for comparison of survival data with a time-dependent covariate. This function should be performed after executing "Cox proportional hazard modeling with time-dependent covariate" from the EZR menu. If plot is set to 1, Simon and Makuch plot is drawn with a landmark as specified.
+Performs Mantel-Byar test for comparison of survival data with a time-dependent covariate. This function should be performed just after executing "Cox proportional hazard modeling with time-dependent covariate" from the EZR menu. If plot is set to 1, Simon and Makuch plot is drawn with a landmark as specified.
 }
 
 \keyword{ package }
