@@ -1,3 +1,7 @@
+Changes to Version 1.53
+
+  o Small bug fixes.
+
 Changes to Version 1.52
 
   o Enabled multiple use of time-dependent covariates in Cox and Fine-Gray proportional hazard regression models.

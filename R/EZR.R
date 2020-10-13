@@ -45,7 +45,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.52", "\n")
+cat("   Version 1.53", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -3708,96 +3708,107 @@ logrank.trend <- function(survdiff.res, W = 1:length(survdiff.res[[1]])){
 }
 
 
-stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), xlab=NULL, ylab=NULL, atrisk=1, ypercent=0, main=""){
-	num <- length(levels(factor(event)))
-	max <- max(timetoevent, na.rm=TRUE)
+stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), xlab=NULL, ylab=NULL, atrisk=1, ypercent=0, main="", xaxp=NULL){
 
-	if(min(event, na.rm=TRUE)==0){	#for censored events
-		censor <- 1
-		num <- num-1				#Type of event will be num-1
-	} else {
-		censor <- 0
-	}
+	##Enabled the use of xaxp option, Oct 8, 2020
 
-	if(num==0)stop("No event")
+        num <- length(levels(factor(event)))
+        max <- max(timetoevent, na.rm=TRUE)
 
-	if (atrisk==1){
-		doItAndPrint('mar <- par("mar")')
-		doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
-		doItAndPrint("par(mar=mar)")
-		doItAndPrint("opar <- par(mar = mar)")
-		doItAndPrint("on.exit(par(opar))")
-	}
+        if(min(event, na.rm=TRUE)==0){  #for censored events
+                censor <- 1
+                num <- num-1                            #Type of event will be num-1
+        } else {
+                censor <- 0
+        }
 
-	if (ypercent==0){
-		yscale <- 1
-	} else {
-		yscale <- 100
-#		ylim=ylim * 100		#deleted according to the change in survival 3.1-8
-	}
-	if (ypercent==1){
-		ylab <- paste(ylab, " (%)", sep="")
-	}
-	
-	if(num <= 1){	#Error occurs when there is only one event type observed
-		ci <- survfit(Surv(timetoevent, event>0)~1, na.action=na.omit)
-	}else{
-#		ci <- survfit(Surv(timetoevent, event>0)~1, na.action=na.omit, etype=event)	
+        if(num==0)stop("No event")
+
+        if (atrisk==1){
+                doItAndPrint('mar <- par("mar")')
+                doItAndPrint("mar[1] <- mar[1] + 1 + 0.5")
+                doItAndPrint("par(mar=mar)")
+                doItAndPrint("opar <- par(mar = mar)")
+                doItAndPrint("on.exit(par(opar))")
+        }
+
+        if (ypercent==0){
+                yscale <- 1
+        } else {
+                yscale <- 100
+#               ylim=ylim * 100         #deleted according to the change in survival 3.1-8
+        }
+        if (ypercent==1){
+                ylab <- paste(ylab, " (%)", sep="")
+        }
+        
+        if(num <= 1){   #Error occurs when there is only one event type observed
+                ci <- survfit(Surv(timetoevent, event>0)~1, na.action=na.omit)
+        }else{
+#               ci <- survfit(Surv(timetoevent, event>0)~1, na.action=na.omit, etype=event)     
 #If there are no censoring, an event with a smallest event number will be
 #treated as censoring in the new survival package. To avoid this, make the smallest 
 #level as "0".
-	if(censor==0){
-			event <- factor(event, levels=c("0", levels(as.factor(event))))
-		}else{
-			event <- as.factor(event)
-		}
-		ci <- survfit(Surv(timetoevent, event, type="mstate")~1, na.action=na.omit)	
-	}
+        if(censor==0){
+                        event <- factor(event, levels=c("0", levels(as.factor(event))))
+                }else{
+                        event <- as.factor(event)
+                }
+                ci <- survfit(Surv(timetoevent, event, type="mstate")~1, na.action=na.omit)     
+        }
 
-	if(is.null(ci$surv)){
-		ci$surv <- 1-ci$pstate
-	}
-	
-	time <- rep(ci$time[1], 2)
-	for (i in 2:length(ci$time)){
-		time <- c(time, rep(ci$time[i], 2))
-	}
-	time <- c(time, rep(max, 2))	
-	if (is.null(ci$surv)) ci$surv <- 1-ci$prev	#added from EZR ver 1.11 
-	ci$surv <- 1-ci$surv
-	y <- rep(0, num)
-	for (i in 1:length(ci$time)){	
-		next.y <- NULL
-		for(j in 1:num){
-			if (num==1){
-				next.y[j] <- sum(ci$surv[i])		
+        if(is.null(ci$surv)){
+                ci$surv <- 1-ci$pstate
+        }
+        
+        time <- rep(ci$time[1], 2)
+        for (i in 2:length(ci$time)){
+                time <- c(time, rep(ci$time[i], 2))
+        }
+        time <- c(time, rep(max, 2))    
+        if (is.null(ci$surv)) ci$surv <- 1-ci$prev      #added from EZR ver 1.11 
+        ci$surv <- 1-ci$surv
+        y <- rep(0, num)
+        for (i in 1:length(ci$time)){   
+                next.y <- NULL
+                for(j in 1:num){
+                        if (num==1){
+                                next.y[j] <- sum(ci$surv[i])            
+                        } else {
+                                next.y[j] <- sum(ci$surv[i, (j+1):(num+1)])             #changed accoriding to the survival ver. 3.1-8
+                        }
+                }
+                y <- rbind(y, next.y)
+                y <- rbind(y, next.y)
+        }
+        y <- rbind(y, rep(0, num))
+
+        for(i in 1:num){
+                if (i==1) {
+			if(is.null(xaxp)){
+	                        plot(ci, fun="event", col=0, bty="l", xlim=xlim, ylim=ylim, yscale=yscale, xlab=xlab, ylab=ylab, main=main)
 			} else {
-				next.y[j] <- sum(ci$surv[i, (j+1):(num+1)])		#changed accoriding to the survival ver. 3.1-8
+	                        plot(ci, fun="event", col=0, bty="l", xlim=xlim, ylim=ylim, yscale=yscale, xlab=xlab, ylab=ylab, main=main, xaxp=xaxp)
 			}
-		}
-		y <- rbind(y, next.y)
-		y <- rbind(y, next.y)
-	}
-	y <- rbind(y, rep(0, num))
-
-	for(i in 1:num){
-		if (i==1) {
-			plot(ci, fun="event", col=0, bty="l", xlim=xlim, ylim=ylim, yscale=yscale, xlab=xlab, ylab=ylab, main=main)
-			if(atrisk==1){
-				xticks <- axTicks(1)
-#				n.atrisk <- nrisk(ci, xticks)			
-				if(num==1){n.atrisk <- nrisk(ci, xticks)} else {n.atrisk <- nrisk(ci[,1], xticks)}		#changed accoriding to the survival ver. 3.1-8	
-				axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)
-				title(xlab = "Number at risk", line = 3, adj = 0)			
-			}
-		}
-		if (num==1){
-			polygon(c(0, time, max), c(0, y, 0), col=gray(1-0.1*i))
-		}else{
-			polygon(c(0, time, max), c(0, y[ ,i], 0), col=gray(1-0.1*i))
-		}
-	}
-	legend("topleft", legend=levels(factor(event))[(censor+1):(censor+num)],  col=gray(seq(0.9, 1-0.1*num, by=-0.1)), bty="n", lty=1, lwd=10)
+                        if(atrisk==1){
+				if(is.null(xaxp)){
+                                xticks <- axTicks(1)
+				} else {
+                                xticks <- axTicks(1, axp=xaxp)
+				}
+#                               n.atrisk <- nrisk(ci, xticks)                   
+                                if(num==1){n.atrisk <- nrisk(ci, xticks)} else {n.atrisk <- nrisk(ci[,1], xticks)}              #changed accoriding to the survival ver. 3.1-8  
+                                axis(1, at = xticks, labels = n.atrisk, line = 3, tick = FALSE)
+                                title(xlab = "Number at risk", line = 3, adj = 0)                       
+                        }
+                }
+                if (num==1){
+                        polygon(c(0, time, max), c(0, y, 0), col=gray(1-0.1*i))
+                }else{
+                        polygon(c(0, time, max), c(0, y[ ,i], 0), col=gray(1-0.1*i))
+                }
+        }
+        legend("topleft", legend=levels(factor(event))[(censor+1):(censor+num)],  col=gray(seq(0.9, 1-0.1*num, by=-0.1)), bty="n", lty=1, lwd=10)
 }
 
 
@@ -12598,10 +12609,12 @@ StatMedEnterTable <- function(){
         }
     rowColFrame <- tkframe(top)
     rowsValue <- tclVar("2")
+    colsValue <- tclVar("2")	
+	setUpTable()			#Added from version 1.53 dur to changes in Rcmdr ver 2.70
+	
     rowsSlider <- tkscale(rowColFrame, from=2, to=10, showvalue=FALSE, variable=rowsValue,
         resolution=1, orient="horizontal", command=setUpTable)
     rowsShow <- labelRcmdr(rowColFrame, textvariable=rowsValue, width=2, justify="right")
-    colsValue <- tclVar("2")
     colsSlider <- tkscale(rowColFrame, from=2, to=10, showvalue=FALSE, variable=colsValue,
         resolution=1, orient="horizontal", command=setUpTable)
     colsShow <- labelRcmdr(rowColFrame, textvariable=colsValue, width=2, justify="right")
@@ -13050,7 +13063,7 @@ putDialog("StatMedPropTrend", list(response=response, group=group, subset=tclval
 
 
 StatMedLogisticRegression <- function(){
-defaults <- list(lhs = "", rhs = "", wald = 0,  roc = 0, diagnosis = 0, actmodel = 0, pscore = 0, ipte = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "")
+defaults <- list(lhs = "", rhs = "", wald = 0,  roc = 0, diagnosis = 0, actmodel = 0, pscore = 0, iptw = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "")
 dialog.values <- getDialog("StatMedLogisticRegression", defaults)
 currentFields$lhs <- dialog.values$lhs			#Values in currentFields will be sent to modelFormula
 currentFields$rhs <- dialog.values$rhs
@@ -13079,7 +13092,7 @@ currentFields$subset <- dialog.values$subset
     model <- ttkentry(modelFrame, width="20", textvariable=modelName)
 	optionsFrame <- tkframe(top)
 	
-	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "pscore", "iptw", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$actmodel, dialog.values$roc, dialog.values$diagnosis, dialog.values$pscore, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Make propensity score variable", "Inverse probability of treatment weighting", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "pscore", "iptw", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$actmodel, dialog.values$roc, dialog.values$diagnosis, dialog.values$pscore, dialog.values$iptw, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Make propensity score variable", "Inverse probability of treatment weighting", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 
 #	waldVariable <- tclVar("0")
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -13107,7 +13120,7 @@ currentFields$subset <- dialog.values$subset
 		stepwise3 <- tclvalue(stepwise3Variable)
 		subset <- tclvalue(subsetVariable)
 #input values into dialog memory	
-putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), wald = wald,  actmodel = actmodel, roc = roc, diagnosis = diagnosis, pscore = pscore, iptw = iptw, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset=tclvalue(subsetVariable)))
+putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), wald = wald,  roc = roc, diagnosis = diagnosis, actmodel = actmodel, pscore = pscore, iptw = iptw, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset=tclvalue(subsetVariable)))
         check.empty <- gsub(" ", "", tclvalue(lhsVariable))
         if ("" == check.empty) {
             errorCondition(recall=StatMedLogisticRegression, model=TRUE, message=gettext(domain="R-RcmdrPlugin.EZR","Left-hand side of model empty."))
@@ -13165,7 +13178,12 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 		if (roc==1){
 			Library("pROC")
 			doItAndPrint("ROC <- NULL")
-			doItAndPrint(paste("ROC <- roc(", tclvalue(lhsVariable), " ~ ", modelValue, "$fitted.values, data=TempDF", subset, ', ci=TRUE, direction="auto")', sep=""))
+#			doItAndPrint(paste("ROC <- roc(", tclvalue(lhsVariable), " ~ ", modelValue, "$fitted.values, data=TempDF", subset, ', ci=TRUE, direction="auto")', sep=""))
+			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>") || trim.blanks(subset) == ""){
+				doItAndPrint(paste("ROC <- roc(TempDF$", tclvalue(lhsVariable), " ~ ", modelValue, '$fitted.values, ci=TRUE, direction="auto")', sep=""))
+			} else {
+				doItAndPrint(paste("ROC <- roc(subset(TempDF", subset, ")$", tclvalue(lhsVariable), " ~ ", modelValue, '$fitted.values, ci=TRUE, direction="auto")', sep=""))
+			}
 			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
 			doItAndPrint("plot(ROC)")
 			doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR","Area under the curve"), signif(ROC$auc[1], digits=3), gettext(domain="R-RcmdrPlugin.EZR","95% CI"), signif(ROC$ci[1], digits=3), "-", signif(ROC$ci[3], digits=3), "\n")')
@@ -15437,9 +15455,9 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 	command <- paste("TempDF$", tclvalue(SurvivalTimeVariable), "<- ifelse(TempDF$", tclvalue(SurvivalTimeVariable), "<=0, 0.001, TempDF$", tclvalue(SurvivalTimeVariable), ")", sep="")
 	doItAndPrint(command)
 
-	command <- paste("TempTD <- tmerge(TempDF, TempDF, tstop=", tclvalue(SurvivalTimeVariable), ", id=patientsnumber_td, endpoint_td=event(", tclvalue(SurvivalTimeVariable), ", ", tclvalue(StatusVariable), '), options=list(tstartname="start_td", tstopname="stop_td", idname="patientnumber_td"))', sep="")
+	command <- paste("TempTD <- tmerge(TempDF, TempDF, tstop=", tclvalue(SurvivalTimeVariable), ", id=patientsnumber_td, endpoint_td=event(", tclvalue(SurvivalTimeVariable), ", ", tclvalue(StatusVariable), '), options=list(tstartname="start_td", tstopname="stop_td", idname="patientsnumber_td"))', sep="")
 	doItAndPrint(command)
-	command <- "TempTD <- tmerge(TempTD, TempTD, id=patientnumber_td"
+	command <- "TempTD <- tmerge(TempTD, TempTD, id=patientsnumber_td"
 	for(i in 1:ncov){
 		command <- paste(command, ", ", timepositive[i], "_td=tdc(", timepositive[i], ")", sep="")
 	}
@@ -15450,9 +15468,9 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 		command <- paste("TempTD$", timenegative, " <- ifelse(TempTD$", timenegative, " < TempTD$", timepositive, ", TempTD$", tclvalue(SurvivalTimeVariable), ", TempTD$", timenegative, ")", sep="")
 		doItAndPrint(command)
 	
-		command <- paste("TempTD <- tmerge(TempTD, TempTD, id=patientnumber_td, ", timepositive[1], "_td=tdc(", timenegative, "))", sep="")
+		command <- paste("TempTD <- tmerge(TempTD, TempTD, id=patientsnumber_td, ", timepositive[1], "_td=tdc(", timenegative, "))", sep="")
 		doItAndPrint(command)
-		command <- paste("TempTD <- tmerge(TempTD, TempTD, id=patientnumber_td, ", timepositive[1], "_td=cumtdc(start_td))", sep="")
+		command <- paste("TempTD <- tmerge(TempTD, TempTD, id=patientsnumber_td, ", timepositive[1], "_td=cumtdc(start_td))", sep="")
 		doItAndPrint(command)
 		command <- paste("TempTD$", timepositive[1], "_td <- TempTD$", timepositive[1], "_td + 1 - ceiling(TempTD$", timepositive[1], "_td/2)*2", sep="")
 		doItAndPrint(command)	
@@ -15766,9 +15784,9 @@ putDialog("StatMedCrrTD", list(event = event, timetoevent = timetoevent, group =
 	command <- paste("TempDF$", timetoevent, "<- ifelse(TempDF$", timetoevent, "<=0, 0.001, TempDF$", timetoevent, ")", sep="")
 	doItAndPrint(command)
 
-	command <- paste("TempTD <- tmerge(TempDF, TempDF, tstop=", timetoevent, ", id=patientsnumber_td, endpoint_td=event(", timetoevent, ", ", event, '), options=list(tstartname="start_td", tstopname="stop_td", idname="patientnumber_td"))', sep="")
+	command <- paste("TempTD <- tmerge(TempDF, TempDF, tstop=", timetoevent, ", id=patientsnumber_td, endpoint_td=event(", timetoevent, ", ", event, '), options=list(tstartname="start_td", tstopname="stop_td", idname="patientsnumber_td"))', sep="")
 	doItAndPrint(command)
-	command <- "TempTD <- tmerge(TempTD, TempTD, id=patientnumber_td"
+	command <- "TempTD <- tmerge(TempTD, TempTD, id=patientsnumber_td"
 	for(i in 1:ncov){
 		command <- paste(command, ", ", timepositive[i], "_td=tdc(", timepositive[i], ")", sep="")
 	}
@@ -15779,9 +15797,9 @@ putDialog("StatMedCrrTD", list(event = event, timetoevent = timetoevent, group =
 		command <- paste("TempTD$", timenegative, " <- ifelse(TempTD$", timenegative, " < TempTD$", timepositive, ", TempTD$", timetoevent, ", TempTD$", timenegative, ")", sep="")
 		doItAndPrint(command)
 	
-		command <- paste("TempTD <- tmerge(TempTD, TempTD, id=patientnumber_td, ", timepositive[1], "_td=tdc(", timenegative, "))", sep="")
+		command <- paste("TempTD <- tmerge(TempTD, TempTD, id=patientsnumber_td, ", timepositive[1], "_td=tdc(", timenegative, "))", sep="")
 		doItAndPrint(command)
-		command <- paste("TempTD <- tmerge(TempTD, TempTD, id=patientnumber_td, ", timepositive[1], "_td=cumtdc(start_td))", sep="")
+		command <- paste("TempTD <- tmerge(TempTD, TempTD, id=patientsnumber_td, ", timepositive[1], "_td=cumtdc(start_td))", sep="")
 		doItAndPrint(command)
 		command <- paste("TempTD$", timepositive[1], "_td <- TempTD$", timepositive[1], "_td + 1 - ceiling(TempTD$", timepositive[1], "_td/2)*2", sep="")
 		doItAndPrint(command)	
@@ -18534,8 +18552,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.52", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","September 1, 2020"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.53", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","October 15, 2020"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -18649,7 +18667,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.52", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.53", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
