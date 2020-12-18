@@ -45,7 +45,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.53", "\n")
+cat("   Version 1.54", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -1345,13 +1345,13 @@ pairwise.pairedt.test <- function (response, group=NULL, data.name, p.adjust.met
 				pairwise.response <- response[, time.names==time.names[i] | time.names==time.names[j]]
 				if(!is.null(group)){
 					AnovaModel <- lm(pairwise.response ~ group, na.action=na.omit)
-					time <- colnames(pairwise.response)
+					time <- factor(colnames(pairwise.response))
 					time <- data.frame(Time = time)
 					res <- Anova(AnovaModel, idata=time, idesign=~Time, type="III")
 					res <- capture.output(summary(res, multivariate=FALSE))
 				}else{
 					AnovaModel <- lm(pairwise.response ~ 1, na.action=na.omit)
-					time <- colnames(pairwise.response)
+					time <- factor(colnames(pairwise.response))
 					time <- data.frame(Time = time)
 					res <- Anova(AnovaModel, idata=time, idesign=~Time, type="III")
 					res <- capture.output(summary(res, multivariate=FALSE))
@@ -9987,14 +9987,17 @@ currentModel <- TRUE
         response <- getSelection(responseBox)
         alternative <- as.character(tclvalue(alternativeVariable))
         level <- tclvalue(confidenceVariable)
+        .activeDataSet <- ActiveDataSet()
         subset <- tclvalue(subsetVariable)
         if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 			subset1 <- ""
 			subset2 <- ""
+			subset3 <- .activeDataSet
 			subset <- ""
 		} else {
 			subset1 <- "subset("
 			subset2 <- paste(", ", subset, ")", sep="")
+			subset3 <- paste("subset(", .activeDataSet, ", ", subset, ")", sep="")
 			subset <- paste(", subset=", subset, sep="")
 		}
 putDialog("StatMedFTest", list(group=group, response=response, confidence=level, alternative=alternative, subset = tclvalue(subsetVariable)))	
@@ -10007,7 +10010,13 @@ putDialog("StatMedFTest", list(group=group, response=response, confidence=level,
             return()
             }
             closeDialog()
-        .activeDataSet <- ActiveDataSet()
+
+		levels <- eval(parse(text=paste("with(droplevels(", subset3, "), length(levels(as.factor(", group, "))))", sep="")))
+		if(levels!=2){
+			errorCondition(recall=StatMedFTest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable with two levels."))
+			return()				
+		}
+
         doItAndPrint(paste("tapply(", subset1, .activeDataSet, subset2, "$", response, ", ", subset1,
             .activeDataSet, subset2, "$", group, ",  var, na.rm=TRUE)", sep=""))
 		doItAndPrint("res <- NULL")
@@ -10120,10 +10129,12 @@ currentModel <- TRUE
 			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 				subset1 <- ""
 				subset2 <- ""
+				subset3 <- ActiveDataSet()
 				subset <- ""
 			} else {
 				subset1 <- "subset("
 				subset2 <- paste(", ", subset, ")", sep="")
+				subset3 <- paste("subset(", ActiveDataSet(), ", ", subset, ")", sep="")
 				subset <- paste(", subset=", subset, sep="")
 			}			
 putDialog("StatMedTtest", list(group=group, response=response, confidence=tclvalue(confidenceVariable), alternative=alternative, variances=variances, graph=graph, subset = tclvalue(subsetVariable)))
@@ -10142,6 +10153,11 @@ putDialog("StatMedTtest", list(group=group, response=response, confidence=tclval
 	doItAndPrint("group.sds <- NULL")
 	doItAndPrint("group.p <- NULL")
 	for (i in 1:nvar) {
+			levels <- eval(parse(text=paste("with(droplevels(", subset3, "), length(levels(as.factor(", group[i], "))))", sep="")))
+			if(levels!=2){
+				errorCondition(recall=StatMedTtest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable with two levels."))
+				return()				
+			}
 			doItAndPrint("res <- NULL")
 	        doItAndPrint(paste("(res <- t.test(", response, "~factor(", group[i],
         	    "), alternative='", alternative, "', conf.level=", level,
@@ -11332,16 +11348,19 @@ currentModel <- TRUE
         response <- getSelection(responseBox)
         alternative <- as.character(tclvalue(alternativeVariable))
         test <- as.character(tclvalue(testVariable))
+        .activeDataSet <- ActiveDataSet()
         subset <- tclvalue(subsetVariable)
 #        subset <- if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) ""
 #            else paste(", subset=", subset, sep="")
 			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
 				subset1 <- ""
 				subset2 <- ""
+				subset3 <- .activeDataSet
 				subset <- ""
 			} else {
 				subset1 <- "subset("
 				subset2 <- paste(", ", subset, ")", sep="")
+				subset3 <- paste("subset(", .activeDataSet, ", ", subset, ")", sep="")
 				subset <- paste(", subset=", subset, sep="")
 			}			
 			
@@ -11355,7 +11374,6 @@ putDialog("StatMedMannW", list(group=group, response=response, alternative=alter
             return()
             }
 		closeDialog()
-        .activeDataSet <- ActiveDataSet()
         nvar = length(group)
 #		doItAndPrint("p.value <- NA")
 #		doItAndPrint("groups <- NA")
@@ -11371,7 +11389,12 @@ putDialog("StatMedMannW", list(group=group, response=response, alternative=alter
 		if(eval(parse(text=paste('"res" %in% objects()')))) doItAndPrint("remove(res)")
 	
 		for (i in 1:nvar) {
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			levels <- eval(parse(text=paste("with(droplevels(", subset3, "), length(levels(as.factor(", group[i], "))))", sep="")))
+			if(levels!=2){
+				errorCondition(recall=StatMedMannW, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable with two levels."))
+				return()				
+			}
+		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 			command <- (paste("boxplot(", response, "~ factor(", group[i], '), ylab="', response,
                 '", xlab="', group[i], '"',
                 ", data=", ActiveDataSet(), subset, ")", sep=""))
@@ -11380,8 +11403,12 @@ putDialog("StatMedMannW", list(group=group, response=response, alternative=alter
 			if (test == "default"){
 				doItAndPrint(paste("(res <- wilcox.test(", response, " ~ factor(", group[i], '), alternative="', 
 				alternative, '", data=', .activeDataSet, subset, "))", sep=""))
-				}
-			else {
+			} else if (test == "BM"){
+				Library("lawstat")
+				doItAndPrint(paste("(res <- with(droplevels(", subset3, "), brunner.munzel.test(", response, "[", group[i], "==levels(as.factor(", group[i], "))[1]], ", 
+						response, "[", group[i], "==levels(as.factor(", group[i], "))[2]])))", sep=""))
+
+			} else {
 				doItAndPrint(paste("(res <- wilcox.test(", response, " ~ factor(", group[i], "), alternative='", 
 				alternative, "', exact=", test=="exact", 
 				", correct=", test=="correct",", data=", .activeDataSet, subset, "))", sep=""))
@@ -11401,8 +11428,8 @@ putDialog("StatMedMannW", list(group=group, response=response, alternative=alter
 				doItAndPrint(paste("group.max <- c(group.max, with(", subset1, ActiveDataSet(), subset2, ", max(", response, "[", group[i], "=='", group.levels[j], "'], na.rm=TRUE)))", sep=""))
 				
 				if (j == 1){
-					doItAndPrint("group.p <- c(group.p, signif(res$p.value,digits=3))")
-				} else {
+						doItAndPrint("group.p <- c(group.p, signif(res$p.value,digits=3))")					
+					} else {
 					doItAndPrint('group.p <- c(group.p, "")')	
 				}
 			}
@@ -11424,8 +11451,8 @@ putDialog("StatMedMannW", list(group=group, response=response, alternative=alter
 		}
     OKCancelHelp(helpSubject="wilcox.test", apply="StatMedMannW", reset="StatMedMannW")
     radioButtons(optionsFrame, name="alternative", buttons=c("twosided", "less", "greater"), values=c("two.sided", "less", "greater"), initialValue=dialog.values$alternative, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Two-sided", "Difference < 0", "Difference > 0")), title=gettext(domain="R-RcmdrPlugin.EZR","Alternative Hypothesis"))
-    radioButtons(optionsFrame, name="test", buttons=c("default", "exact", "normal", "correct"), 
-        labels=gettext(domain="R-RcmdrPlugin.EZR",c("Default", "Exact", "Normal approximation", "Normal approximation with\ncontinuity correction")), initialValue=dialog.values$test,
+    radioButtons(optionsFrame, name="test", buttons=c("default", "exact", "normal", "correct", "BM"), 
+        labels=gettext(domain="R-RcmdrPlugin.EZR",c("Default", "Exact", "Normal approximation", "Normal approximation with\ncontinuity correction", "Brunner-Munzel test")), initialValue=dialog.values$test,
         title=gettext(domain="R-RcmdrPlugin.EZR","Type of Test"))
     tkgrid(getFrame(responseBox), labelRcmdr(variablesFrame, text="    "), getFrame(groupBox), sticky="nw")
     tkgrid(variablesFrame, sticky="nw")
@@ -18552,8 +18579,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.53", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","October 15, 2020"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.54", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","December 24, 2020"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -18667,7 +18694,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.53", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.54", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',

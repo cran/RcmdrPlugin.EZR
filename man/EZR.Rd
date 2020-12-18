@@ -85,15 +85,15 @@
 Rcmdr Plug-In Package for the EZR (Easy R especially for medical statistics)
 }
 \description{
-This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in \emph{Bone Marrow Transplantation} (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: \url{https://www.nature.com/articles/bmt2012244.pdf}). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8, URL: \url{http://www.chugaiigaku.jp/item/detail.php?id=1660} or Nankodo, ISBN: 978-4-524-26158-1, URL: \url{https://www.nankodo.co.jp/g/g9784524261581/})
+This package provides an R Commander plug-in EZR (Easy R), which adds a variety of statistical functions, including survival analyses, ROC analyses, metaanalyses, sample size calculation, and so on, to the R commander. EZR enables point-and-click easy access to a variety of statistical functions as shown below, especially for medical statistics. A report that introduced the investigation of EZR was published in \emph{Bone Marrow Transplantation} (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website (URL: \url{https://www.nature.com/articles/bmt2012244.pdf}). A complete manual of EZR is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10918-6, URL: \url{http://www.chugaiigaku.jp/item/detail.php?id=3342}, Nankodo, ISBN: 978-4-524-26158-1, URL: \url{https://www.nankodo.co.jp/g/g9784524261581/}, Ohmsha, ISBN: 978-4-274-22632-8, URL: \url{https://www.ohmsha.co.jp/book/9784274226328/})
 }
 
 \details{
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.53\cr
-Date: \tab 2020-10-15\cr
+Version: \tab 1.54\cr
+Date: \tab 2020-12-24\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
@@ -259,7 +259,7 @@ EZR comes with translations from English into Japanese.
 }
 
 \references{
-Its complete manual is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10901-8, URL: \url{http://www.chugaiigaku.jp/item/detail.php?id=1660} or Nankodo,  ISBN: 978-4-524-26158-1, URL: \url{https://www.nankodo.co.jp/g/g9784524261581/}), but a report that introduced the investigation of EZR was published in \emph{Bone Marrow Transplantation} (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below.
+Its complete manual is available only in Japanese (Chugai Igakusha, ISBN: 978-4-498-10918-6, URL: \url{http://www.chugaiigaku.jp/item/detail.php?id=3342}, Nankodo, ISBN: 978-4-524-26158-1, URL: \url{https://www.nankodo.co.jp/g/g9784524261581/}, Ohmsha, ISBN: 978-4-274-22632-8, URL: \url{https://www.ohmsha.co.jp/book/9784274226328/}), but a report that introduced the investigation of EZR was published in \emph{Bone Marrow Transplantation} (Nature Publishing Group) as an Open article. This report can be used as a simple manual. It can be freely downloaded from the journal website as shown below.
  
 Yoshinobu Kanda (2013).
 Investigation of the freely available easy-to-use software EZR for medical statistics.

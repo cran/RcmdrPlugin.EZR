@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr 2.7-0 Japanese Translation\n"
 "POT-Creation-Date: 2019-01-08 16:30:00\n"
-"PO-Revision-Date: 2020-08-29 18:24+0900\n"
+"PO-Revision-Date: 2020-12-13 11:01+0900\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -5988,10 +5988,10 @@ msgid ": Number of missing observations"
 msgstr "の欠損値の数"
 
 msgid "Click pressing Ctrl key to select multiple variables"
-msgstr "↓複数の選択はCtrlキーを押しながらクリック。"
+msgstr "↓複数の選択はCtrlキーを押しながらクリック"
 
 msgid "Click pressing Ctrl key to select multiple variables."
-msgstr "複数の選択はCtrlキーを押しながらクリック。↓"
+msgstr "複数の選択はCtrlキーを押しながらクリック↓"
 
 msgid "Variables to remove rows with missing data (pick one or more)"
 msgstr "欠損値を含む行を除外する変数を指定 (1つ以上選択)"
@@ -6045,13 +6045,13 @@ msgid "Select one variable to make dummy variables"
 msgstr "ダミー変数を作成する変数を選択"
 
 msgid "Define characters to indentify dummy variables"
-msgstr "ダミー変数であることを示す文字列を指定してください。"
+msgstr "ダミー変数であることを示す文字列を指定してください"
 
 msgid "Dummy variable"
 msgstr "ダミー変数"
 
 msgid "Input all dummy variables except for the referece group into the model."
-msgstr "###対照とする群以外のダミー変数をすべて同時にモデルに投入してください。"
+msgstr "###対照とする群以外のダミー変数をすべて同時にモデルに投入してください"
 
 msgid "Characters to identify dummy variables"
 msgstr "ダミー変数であることを示す文字列"
@@ -6264,7 +6264,7 @@ msgid "LinePlot"
 msgstr "折れ線"
 
 msgid "Pairwise comparison not performed when more than one grouping variables are picked."
-msgstr "↓2群ずつの比較(post-hoc検定)は比較する群別因子が1つの場合のみ実施される。"
+msgstr "↓2群ずつの比較(post-hoc検定)は比較する群別因子が1つの場合のみ実施される"
 
 msgid "Pairwise comparison"
 msgstr "↓2群ずつの比較(post-hoc検定)"
@@ -6294,7 +6294,7 @@ msgid "Graph not created when 3 or more grouping variables are picked."
 msgstr "群別する変数が3個以上の場合はグラフは表示されません。"
 
 msgid "Include interaction term (when less than 4 grouping variables are picked)"
-msgstr "交互作用の解析も行う(群別変数が3個以下の場合)。"
+msgstr "交互作用の解析も行う(群別変数が3個以下の場合)"
 
 msgid "Numeric variable for adjustment (pick one)"
 msgstr "補正に用いる連続変数(1つ選択)"
@@ -6309,13 +6309,13 @@ msgid "P value for interaction between grouping variable and covariate is"
 msgstr "群別変数と共変数の交互作用のP値は"
 
 msgid "Stepwise selection based on AIC"
-msgstr "AICを用いたステップワイズの変数選択を行う。"
+msgstr "AICを用いたステップワイズの変数選択を行う"
 
 msgid "Stepwise selection based on BIC"
-msgstr "BICを用いたステップワイズの変数選択を行う。"
+msgstr "BICを用いたステップワイズの変数選択を行う"
 
 msgid "Stepwise selection based on p-value"
-msgstr "P値を用いたステップワイズの変数選択(減少法)を行う。"
+msgstr "P値を用いたステップワイズの変数選択(減少法)を行う"
 
 msgid "Stepwise selection based on AIC/BIC not performed when missing data included."
 msgstr "↑欠損データが含まれているとAIC/BICに基づくステップワイズの変数選択はできません。"
@@ -6416,28 +6416,28 @@ msgid "Status indicator (censor=0, event=1) (pick one)"
 msgstr "イベント(1)、打ち切り(0)の変数(1つ選択)"
 
 msgid "Pick one status indicator (censor=0, event=1)"
-msgstr "イベント(1)、打ち切り(0)の変数を1つ選択してください。"
+msgstr "イベント(1)、打ち切り(0)の変数を1つ選択してください"
 
 msgid "Status indicator (censor=0, event=1,2,3...) (pick one)"
 msgstr "イベント(1,2,3...)、打ち切り(0)の変数(1つ選択)"
 
 msgid "Pick one status indicator (censor=0, event=1,2,3...)"
-msgstr "イベント(1,2,3...)、打ち切り(0)の変数を1つ選択してください。"
+msgstr "イベント(1,2,3...)、打ち切り(0)の変数を1つ選択してください"
 
 msgid "Pick at least one explanatory variable"
-msgstr "解析する説明変数を1つ以上選択してください。"
+msgstr "解析する説明変数を1つ以上選択してください"
 
 msgid "Time-to-event variable (pick one)"
 msgstr "観察期間の変数(1つ選択)"
 
 msgid "Pick one time-to-event variable"
-msgstr "イベントまでの時間の変数を1つ選択してください。"
+msgstr "イベントまでの時間の変数を1つ選択してください"
 
 msgid "Input code of event of interest"
-msgstr "解析対象のイベントを示す数値を入力してください。"
+msgstr "解析対象のイベントを示す数値を入力してください"
 
 msgid "Specify one event of interest"
-msgstr "解析する対象のイベントを示す数値を入力してください。"
+msgstr "解析する対象のイベントを示す数値を入力してください"
 
 msgid "Time-dependent (TD) covariate (pick one)"
 msgstr "時間依存性の変数(1つ選択)"
@@ -6521,7 +6521,7 @@ msgid "Code of event to show cumulative incidence rate"
 msgstr "累積発生率を図示するイベントの番号"
 
 msgid "Cumulative incidence rate shown only when one event specified"
-msgstr "↑累積発生率を図示するイベントを指定した場合のみ表示されます。"
+msgstr "↑累積発生率を図示するイベントを指定した場合のみ表示されます"
 
 msgid "X axis range(Min, Max) Ex: 0, 365"
 msgstr "X軸の範囲(左端,右端) 例： 0, 365"
@@ -6530,22 +6530,22 @@ msgid "Y axis range(Min, Max) Ex: 0.8, 1.0"
 msgstr "Y軸の範囲(下端,上端) 例: 0.8, 1.0"
 
 msgid "Test proportional hazards assumption"
-msgstr "比例ハザード性の分析を行う。"
+msgstr "比例ハザード性の分析を行う"
 
 msgid "Show baseline survival curve"
-msgstr "ベースラインの生存曲線を示す。"
+msgstr "ベースラインの生存曲線を示す"
 
 msgid "Variables for adjustment (pick at least one)"
 msgstr "調整に用いる変数(1個以上選択)"
 
 msgid "Pick at least one variable for adjustment."
-msgstr "調整に用いる変数を1つ以上選択してください。"
+msgstr "調整に用いる変数を1つ以上選択してください"
 
 msgid "Dummy variables required for factors of more than 2 groups"
-msgstr "↑3群以上の因子の場合はダミー変数の作成が必要。"
+msgstr "↑3群以上の因子の場合はダミー変数の作成が必要"
 
 msgid "Pick all required variables"
-msgstr "全ての必要な変数を選択してください。"
+msgstr "全ての必要な変数を選択してください"
 
 msgid "Response (encoded as 0 or 1) (pick one)"
 msgstr "結果(値が0か1の項目を1つ選択)"
@@ -6587,7 +6587,7 @@ msgid "### >= threshold is considered positive"
 msgstr "### ↑予測値が閾値「以上」を陽性と判定した場合の感度、特異度を示す。"
 
 msgid "Supply weights if false positive and false negative predictions are not equivalent"
-msgstr "偽陽性と偽陰性の重要性が等しくない場合は以下に重み付けを入力する(重要性が等しい場合は変更不要)。"
+msgstr "偽陽性と偽陰性の重要性が等しくない場合は以下に重み付けを入力する(重要性が等しい場合は変更不要)"
 
 msgid "Cost of of false negative classification"
 msgstr "偽陽性に対する偽陰性の重み付け:"
@@ -6658,7 +6658,7 @@ msgid "Matching variables (pick at least one)"
 msgstr "マッチさせる変数(1つ以上選択)"
 
 msgid "Pick at least one matching variable"
-msgstr "マッチさせる変数を選択してください。"
+msgstr "マッチさせる変数を選択してください"
 
 msgid "Add _MP at the end of original name"
 msgstr "元のデータセット名の最後に_MPをつけた名前"
@@ -6682,13 +6682,13 @@ msgid "Binary response variable (pick at least one)"
 msgstr "比率を比較する変数(1つ以上選択)"
 
 msgid "Pick at least one binary response variable."
-msgstr "比率を比較する変数を選択してください。"
+msgstr "比率を比較する変数を選択してください"
 
 msgid "Stratifying variable for matching (pairmatch)"
 msgstr "マッチさせた層を示す変数(1つ選択、通常はpairmatch)"
 
 msgid "Pick one stratifying variable for matching."
-msgstr "マッチさせた層を示す変数を選択してください。"
+msgstr "マッチさせた層を示す変数を選択してください"
 
 msgid "Alpha error"
 msgstr "αエラー (0.0-1.0)"
@@ -6714,7 +6714,7 @@ msgid "Standard deviation (expected)"
 msgstr "想定する標準偏差"
 
 msgid "Calculate two-stage model"
-msgstr "Two-stageモデルも計算する。"
+msgstr "Two-stageモデルも計算する"
 
 msgid "Desirable response rate must be higher than unacceptable response rate."
 msgstr "期待奏効率は閾値奏効率よりも高く設定してください。"
@@ -7522,7 +7522,7 @@ msgstr "最近傍評価"
 ###msgid "Linear Mixed Model"
 ###msgstr "線形混合モデル"
 msgid "Linear mixed model"
-msgstr "線形混合モデル"
+msgstr "線形混合効果モデル"
 
 msgid "Show p value"
 msgstr "P値を表示する"
@@ -7606,7 +7606,7 @@ msgid "Name of the reference treatment:"
 msgstr "参照群の名称を入力する"
 
 msgid "Inverse probability of treatment weighting"
-msgstr "逆確率重みづけ(IPTW)のデータセットを作成する"
+msgstr "逆確率重みづけ(IPTW)の変数を作成する"
 
 msgid "Ordinal logistic regression"
 msgstr "順序変数に対する多変量解析(順序ロジスティック回帰)"
@@ -7673,4 +7673,10 @@ msgstr "分散"
 
 msgid "Include in Segment Labels"
 msgstr "ラベル"
+
+msgid "Brunner-Munzel test"
+msgstr "Brunner-Munzel検定"
+
+msgid "You must select a variable with two levels."
+msgstr "2種類の値だけを持つ変数を選択して下さい。"
 
