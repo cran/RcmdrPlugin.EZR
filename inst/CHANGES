@@ -1,3 +1,11 @@
+Changes to Version 1.55
+
+  o Added swimmer plot and current survival function.
+
+  o Enabled grouping in waterfall plot (ordered chart)..
+
+  o Small bug fixes.
+
 Changes to Version 1.54
 
   o Added Brunner-Munzel test as an option in Mann-Whitney U test.

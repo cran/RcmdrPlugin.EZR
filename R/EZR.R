@@ -45,7 +45,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.54", "\n")
+cat("   Version 1.55", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -967,52 +967,132 @@ dot.plot <- function(x, y, accu=0, stp=0, log.flag=FALSE, simple=FALSE, symmetri
 
 
 OrderedPlot <- function(y, group=NULL, type="line", xlab="", ylab="Value", ylog=FALSE, lowlim=NULL, uplim=NULL, decreasing=FALSE){
-	#For waterfall plot, ordered chart
-	if (is.null(group)){		
-		cc <- complete.cases(y)
-	} else {
-		cc <- complete.cases(y, group)
-	}
-	y <- y[cc]
+        #For waterfall plot, ordered chart
+        if (is.null(group)){            
+                cc <- complete.cases(y)
+        } else {
+                cc <- complete.cases(y, group)
+        }
+        y <- y[cc]
 
-	if (is.null(lowlim)) lowlim <- min(y)
-	if (type=="box" & ylog==FALSE & lowlim>0) lowlim <- 0
-	if (is.null(uplim)) uplim=max(y)
-	ylim=c(lowlim, uplim)
+        if (is.null(lowlim)) lowlim <- min(y)
+        if (type=="box" & ylog==FALSE & lowlim>0) lowlim <- 0
+        if (is.null(uplim)) uplim=max(y)
+        ylim=c(lowlim, uplim)
 
-	ylog <- ifelse(ylog==TRUE, "y", "")
+        ylog <- ifelse(ylog==TRUE, "y", "")
 
-	if (is.null(group) | type=="box"){
-		if (type=="line"){
-			Order <- order(y, decreasing=decreasing)
-			plot(x=seq(from=0, to=1, length.out=length(y)), y=y[Order], xaxp=c(0,1,10), type="l", ylim=ylim, log=ylog, xlab=xlab, ylab=ylab)
-		} else {
-			Order <- order(y, decreasing=decreasing)
-#			names.arg <- c("0", rep("", length(y)-2), "1")
-			names.arg=NULL
-			barplot(y[Order], names.arg=names.arg, axis.lty=1, ylim=ylim, log=ylog, axisnames=TRUE)
-		}
+        group <- group[cc]
+	 if (!is.null(group)){
+	        group <- factor(group)
+       	 levels <- levels(group)
 	}
 
-	if (!is.null(group) & type=="line"){
-		group <- group[cc]
-		group <- factor(group)
-		levels <- levels(group)
-		j <- 1
-		for (i in levels){
-			Order <- order(y[group==i], decreasing=decreasing)
-			axt <- "s"
-			if (j>1) {par(new=T);axt <- "n"; xlab <- ""; ylab <- ""}
-			plot(x=seq(from=0, to=1, length.out=length(y[group==i])), y=y[group==i][Order], xaxp=c(0,1,10), type="l", ylim=ylim, log=ylog, xlab=xlab, ylab=ylab, xaxt=axt, yaxt=axt, lty=j)
-			j <- j+1
-		}
-		if (decreasing==FALSE){
-			legend("topleft", levels, col=1, lty=1:32, lwd=1,  box.lty=0)
-		} else {
-			legend("topright", levels, col=1, lty=1:32, lwd=1,  box.lty=0)			
-		}
-	}
+        if (type=="box"){
+		if(is.null(group)){
+                        Order <- order(y, decreasing=decreasing)
+                        names.arg=NULL
+                        barplot(y[Order], names.arg=names.arg, axis.lty=1, col="grey", ylim=ylim, log=ylog, axisnames=TRUE)
+                } else {
+                        Order <- order(y, decreasing=decreasing)
+                        names.arg=NULL
+                        barplot(y[Order], names.arg=names.arg, axis.lty=1, col=as.integer(group[Order])+1, ylim=ylim, log=ylog, axisnames=TRUE)
+
+	                if (decreasing==FALSE){
+       	                 legend("topleft", levels, col=1, pt.bg=2:(length(levels)+1),  pch=22, box.lty=0)
+              	  } else {
+                     	   legend("topright", levels, col=1, pt.bg=2:(length(levels)+1),  pch=22, box.lty=0)                  
+                	}
+
+                }
+        }
+
+        if (type=="line"){
+		if(is.null(group)){
+                        Order <- order(y, decreasing=decreasing)
+                        plot(x=seq(from=0, to=1, length.out=length(y)), y=y[Order], xaxp=c(0,1,10), type="l", ylim=ylim, log=ylog, xlab=xlab, ylab=ylab)
+		} else{	
+                j <- 1
+                for (i in levels){
+                        Order <- order(y[group==i], decreasing=decreasing)
+                        axt <- "s"
+                        if (j>1) {par(new=T);axt <- "n"; xlab <- ""; ylab <- ""}
+                        plot(x=seq(from=0, to=1, length.out=length(y[group==i])), y=y[group==i][Order], xaxp=c(0,1,10), type="l", ylim=ylim, log=ylog, xlab=xlab, ylab=ylab, xaxt=axt, yaxt=axt, lty=j)
+                        j <- j+1
+                }
+                if (decreasing==FALSE){
+                        legend("topleft", levels, col=1, lty=1:32, lwd=1,  box.lty=0)
+                } else {
+                        legend("topright", levels, col=1, lty=1:32, lwd=1,  box.lty=0)                  
+                }
+		}       
+	 }
 }
+
+
+SwimmerPlot <- function(State, EndState, Group=NULL, Order=NULL, Censored=NULL, Gray=0, Event=NULL, TimeEvent=NULL, Dataset) {
+
+	Library("swimplot")
+	Library("ggplot2")
+
+	SampleNumber <- length(Dataset[,1])
+	Dataset$id_temp <- 1:SampleNumber
+
+	if(is.null(Group)) Group <- FALSE
+
+	if (is.null(State) | is.null(EndState)){
+		return()
+	}
+
+	StateNumber <- length(State)
+	DataframeForSimplePlot <- reshape(Dataset, varying=State, v.names="StateChange", timevar="State", direction="long")	
+
+	DataframeForSimplePlot$EndStateChange <- NA 
+	for(i in 1:StateNumber){
+		for(j in 1:SampleNumber){
+			line <- SampleNumber*(i-1)+j
+#				command <- paste("DataframeForSimplePlot$EndStateChange[line] <- with(DataframeForSimplePlot, EndState", i, "[line])", sep="")
+				command <- paste("DataframeForSimplePlot$EndStateChange[line] <- DataframeForSimplePlot$", EndState[i], "[line]", sep="")
+				eval(parse(text=command))
+		}
+	}
+
+	MainPlot <- swimmer_plot(df=DataframeForSimplePlot, id="id", end="EndStateChange", name_fill="StateChange", stratify=Group, id_order=Order, col="black", alpha=0.75, width=.85)
+	if(Gray==1){
+		MainPlot <- MainPlot + scale_fill_grey()
+	}
+
+	EventNumber <- length(Event)
+
+	if(EventNumber>=1){
+		DataframeForEventPlot <- reshape(Dataset, varying=Event, v.names="EventName", timevar="EventNumber", direction="long")	
+		DataframeForEventPlot$TimeEvent <- NA 
+		for(i in 1:EventNumber){
+			for(j in 1:SampleNumber){
+				line <- SampleNumber*(i-1)+j
+#					command <- paste("DataframeForEventPlot$TimeForEvent[line] <- with(DataframeForEventPlot, TimeEvent", i, "[line])", sep="")
+					command <- paste("DataframeForEventPlot$TimeForEvent[line] <- DataframeForEventPlot$", TimeEvent[i], "[line]", sep="")
+					eval(parse(text=command))
+			}
+		}
+	}
+
+	if (EventNumber==0){
+		FinalPlot <- MainPlot
+	} else {
+		FinalPlot <- MainPlot + swimmer_points(df_points=DataframeForEventPlot, id="id", time="TimeForEvent", name_shape="EventName", size=2.5, fill="white", col="black")
+	}
+
+	if (!is.null(Censored)){
+		command <- paste("with(Dataset, pmax(", paste(EndState, collapse=', '), ", na.rm=TRUE))", sep="")
+		Dataset$StartArrow <- eval(parse(text=command))
+		arrow_length <- max(Dataset$StartArrow, na.rm=TRUE)/20 
+		Dataset$Censored <- ifelse(Dataset$Censored==0, NA, Dataset$Censored)
+		FinalPlot <- FinalPlot + swimmer_arrows(df_arrows=Dataset, id="id_temp", arrow_start="StartArrow", arrow_positions=c(0,arrow_length), length=0.05, cont="Censored", type="open", size=1)
+	}
+
+	FinalPlot
+}   
 
 
 BarplotFor3Factors <- function(First, Second, Third, prop=0, col=0, data){
@@ -3812,6 +3892,126 @@ stackcuminc <- function(timetoevent, event, xlim=NULL, ylim=c(0,1), xlab=NULL, y
 }
 
 
+CurrentSurvival <- function(Dataset, StartPoint, EventOnOff, follow.up, event, strat=NULL, conf.int=FALSE, com.est=FALSE, intervals=365, col=0, cci=0, pvals=FALSE) {
+
+	if (is.null(StartPoint) | is.null(EventOnOff) | is.null(follow.up) | is.null(event)){
+		return()
+	}
+	
+	CLFSdata <- data.frame(StartPoint=Dataset[,colnames(Dataset)==StartPoint])
+
+	for (i in 1:length(EventOnOff)){	
+		CLFSdata <- cbind(CLFSdata, Dataset[,colnames(Dataset)==EventOnOff[i]])
+	}
+
+	CLFSdata$follow.up <- Dataset[,colnames(Dataset)==follow.up]
+	CLFSdata$event <- Dataset[,colnames(Dataset)==event]
+
+	if (!is.null(strat)){
+		CLFSdata$strat <- Dataset[,colnames(Dataset)==strat]
+		strat <- TRUE
+	} else {
+		strat <- FALSE
+	}
+
+	ColumnsPerGroup <- ifelse(com.est==TRUE, 6, 3)
+
+	if(cci==0){
+		if (strat==TRUE){
+			res <- clfs(CLFSdata, strat=TRUE, fig=FALSE, conf.int=TRUE, com.est=com.est, pvals=pvals)
+		} else {
+			res <- clfs(CLFSdata, strat=FALSE, fig=FALSE, conf.int=TRUE, com.est=com.est)
+		}
+		###clfs function does not allow setting plot option (e.g. line colour, width and type) and thus the following scripts are required
+		maxx <- max(res$pest.day[,1]) # maximum follow-up time
+		maxx.x <- ceiling(maxx/100)*100						
+		plot(0,1,pch='.',cex=0.01,xlim=c(0,maxx),ylim=c(0,1),axes=FALSE, xlab="Time", ylab="Probability") # plot initialization
+		axis(2, at=seq(0,1,0.2)) # setting of points where tick-marks are
+#     	axis(1,at=seq(from=0, to=maxx.x, length.out=11),labels=seq(0, maxx.x, length.out=11)) 
+		axis(1,at=seq(from=0, to=maxx.x, by=intervals),labels=seq(0, maxx.x, by=intervals)) 
+		groups <- length(colnames(res$no.risk))-1
+		if(com.est==TRUE) groups <- groups/2
+		x <- 0:maxx
+		for(i in 1:groups){
+			if (col==1){
+				lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+3],type="S",col=i, lwd=2) 
+				if(conf.int==TRUE){
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+2],type="S",col=i, lty=2, lwd=2) 
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+4],type="S",col=i, lty=2, lwd=2) 
+				}
+				if(com.est==TRUE){
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+6],type="S",col=i, lwd=1) 
+				}
+			} else {
+				lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+3],type="S",lty=i,lwd=2) 
+				if(conf.int==TRUE){
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+2],type="S",lty=i, lwd=1) 
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+4],type="S",lty=i, lwd=1) 
+				}
+				if(com.est==TRUE){
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+6],type="S",lty=i, lwd=1) 
+				}
+			}
+		}
+		if (groups>1){
+			group.names <- levels(as.factor(CLFSdata$strat))
+			if (col==1){
+				legend("bottomright", legend=group.names, col=1:groups, lty=1, bty="n", cex=0.9) 			
+			} else {
+				legend("bottomright", legend=group.names, lwd=2, lty=1:groups, bty="n", cex=0.9) 
+			}
+		}
+		res
+	} else {
+		if (strat==TRUE){
+			res <- cci(CLFSdata, strat=TRUE, fig=FALSE, conf.int=TRUE, com.est=com.est, pvals=pvals)
+		} else {
+			res <- cci(CLFSdata, strat=FALSE, fig=FALSE, conf.int=TRUE, com.est=com.est)
+		}
+		###clfs function does not allow setting plot option (e.g. line colour, width and type) and thus the following scripts are required
+		maxx <- max(res$pest.day[,1]) # maximum follow-up time
+		maxx.x <- ceiling(maxx/100)*100						
+		plot(0,0,pch='.',cex=0.01,xlim=c(0,maxx),ylim=c(0,1),axes=FALSE, xlab="Time", ylab="Probability") # plot initialization
+		axis(2, at=seq(0,1,0.2)) # setting of points where tick-marks are
+#     	axis(1,at=seq(from=0, to=maxx.x, length.out=11),labels=seq(0, maxx.x, length.out=11)) 
+		axis(1,at=seq(from=0, to=maxx.x, by=intervals),labels=seq(0, maxx.x, by=intervals)) 
+		groups <- length(colnames(res$no.risk))-1
+		if(com.est==TRUE) groups <- groups/2
+		x <- 0:maxx
+		for(i in 1:groups){
+			if (col==1){
+				lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+3],type="S",col=i, lwd=2) 
+				if(conf.int==TRUE){
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+2],type="S",col=i, lty=2, lwd=2) 
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+4],type="S",col=i, lty=2, lwd=2) 
+				}
+				if(com.est==TRUE){
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+6],type="S",col=i, lwd=1) 
+				}
+			} else {
+				lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+3],type="S",lty=i,lwd=2) 
+				if(conf.int==TRUE){
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+2],type="S",lty=i, lwd=1) 
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+4],type="S",lty=i, lwd=1) 
+				}
+				if(com.est==TRUE){
+					lines(x, res$pest.day[,ColumnsPerGroup*(i-1)+6],type="S",lty=i, lwd=2) 
+				}
+			}
+		}
+		if (groups>1){
+			group.names <- levels(as.factor(CLFSdata$strat))
+			if (col==1){
+				legend("bottomright", legend=group.names, col=1:groups, lty=1, bty="n", cex=0.9) 			
+			} else {
+				legend("bottomright", legend=group.names, lwd=2, lty=1:groups, bty="n", cex=0.9) 
+			}
+		}
+		res
+	}
+}
+
+
 IPTW.ATE <- function(GLM) {
 	group <- colnames(GLM$model)[1]
 	factors <- colnames(GLM$model)[2:length(colnames(GLM$model))]
@@ -4538,7 +4738,7 @@ PowerProportionSingleArm <- function (p1, p2, alpha, n, method, continuity) {
 		N <- N - (2 / abs(p2-p1)) #from S-PLUS manual
 	} 
 	ZA <- qnorm(1-alpha2)
-	ZB <- (sqrt(N) * (p2-p1) - qnorm(1-alpha2)*sqrt(p1*(1-p1))) / sqrt(p2*(1-p2))
+	ZB <- (sqrt(N) * abs(p2-p1) - qnorm(1-alpha2)*sqrt(p1*(1-p1))) / sqrt(p2*(1-p2))
 	power <- signif(pnorm(ZB), digits=3)
 	res <- data.frame(c(p1, p2, alpha, side, n, " ", gettext(domain="R-RcmdrPlugin.EZR","Estimated"), power))
 	colnames(res) <- gettext(domain="R-RcmdrPlugin.EZR","Assumptions")
@@ -9152,7 +9352,7 @@ putDialog("StatMedOrderedChart", list(response=response, group=getSelection(grou
 	OKCancelHelp(helpSubject="plot", apply="StatMedOrderedChart", reset="StatMedOrderedChart")
 	tkgrid(getFrame(responseBox), labelRcmdr(variablesFrame, text="    "), getFrame(groupBox), sticky="nw")
     tkgrid(variablesFrame, sticky="nw")
-	tkgrid(labelRcmdr(variablesFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Grouping is valid only when line plot is selected."), fg="blue"), sticky="w")
+#	tkgrid(labelRcmdr(variablesFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Grouping is valid only when line plot is selected."), fg="blue"), sticky="w")
 	tkgrid(typeFrame, trendFrame, sticky="w")
     tkgrid(optionsFrame, sticky="w")
     tkgrid(options2Frame, sticky="w")
@@ -9162,7 +9362,120 @@ putDialog("StatMedOrderedChart", list(response=response, group=getSelection(grou
 	dialogSuffix(rows=3, columns=2)
 }
 	
-	
+
+StatMedSwimPlot <- function(){
+	defaults <- list(state=NULL, event=NULL, group=NULL, order=NULL, arrow=NULL, color=0)
+	dialog.values <- getDialog("StatMedSwimPlot", defaults)
+	env <- environment()
+
+	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Swimmer plot"))	
+	variablesFrame <- tkframe(top)
+	variables2Frame <- tkframe(top)
+
+	stateBox <- variableListBox(variablesFrame, Variables(), selectmode="multiple", initialSelection=varPosn(dialog.values$state, "all"),
+		title=gettext(domain="R-RcmdrPlugin.EZR","State variables"), listHeight=10)
+	eventBox <- variableListBox(variablesFrame, Variables(), selectmode="multiple", initialSelection=varPosn(dialog.values$event, "all"),
+		title=gettext(domain="R-RcmdrPlugin.EZR","Event variables"), listHeight=10)
+	arrowBox <- variableListBox(variables2Frame, Variables(), initialSelection=varPosn(dialog.values$arrow, "all"),
+		title=gettext(domain="R-RcmdrPlugin.EZR","Variable for arrow (pick 0 for no arrow)"), listHeight=10)
+	groupBox <- variableListBox(variables2Frame, Variables(), initialSelection=varPosn(dialog.values$group, "all"),
+		title=gettext(domain="R-RcmdrPlugin.EZR","Grouping variable(pick 0 or 1)"), listHeight=10)
+	orderBox <- variableListBox(variables2Frame, Variables(), initialSelection=varPosn(dialog.values$order, "all"),
+		title=gettext(domain="R-RcmdrPlugin.EZR","Variable for sorting (pick 0 or 1)"), listHeight=10)
+
+	checkBoxes(frame="color", boxes=c("color"),initialValues=dialog.values$color, labels=gettext(domain="R-RcmdrPlugin.EZR",c("Draw in color")))
+
+	onOK <- function(){
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Swimmer plot"), "#####", sep=""))
+		state <- getSelection(stateBox)
+		event <- getSelection(eventBox)
+		group <- getSelection(groupBox)
+		order <- getSelection(orderBox)
+		arrow <- getSelection(arrowBox)
+		color <- tclvalue(colorVariable)
+		closeDialog()
+
+		putDialog("StatMedSwimPlot", list(state=state, event=event, group=group, order=order, arrow=arrow, color=color))
+								
+		if (length(state) == 0) {
+			errorCondition(recall=StatMedSwimPlot, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
+				return()
+			}
+		.activeDataSet <- ActiveDataSet()
+
+		EndState <- NULL
+		TimeEvent <- NULL
+		for (i in 1:length(state)){
+			initializeDialog(subdialog, title=paste(gettext(domain="R-RcmdrPlugin.EZR","End of State: "), state[i], sep=""))					
+			endstateBox <- variableListBox(subdialog, Variables(),
+				title=paste(gettext(domain="R-RcmdrPlugin.EZR","End of State:"), state[i], sep=""), listHeight=10)
+			onOKsub <- function() {
+				selection <- getSelection(endstateBox)
+				closeDialog(subdialog)
+				assign("selection", selection, envir=env)	#send selection out of subdialog
+			}
+			subOKCancelHelp()
+			tkgrid(getFrame(endstateBox), sticky="nw")
+			tkgrid(subButtonsFrame, sticky="w")
+			dialogSuffix(subdialog, rows=6, columns=2, focus=subdialog, onOK=onOKsub, force.wait=TRUE)
+			EndState[i] <- selection
+		}
+		if(length(event)>0){
+			for (i in 1:length(event)){
+				initializeDialog(subdialog, title=paste(gettext(domain="R-RcmdrPlugin.EZR","Time of Event:"), event[i], sep=""))		
+				timeeventBox <- variableListBox(subdialog, Variables(),
+						title=paste(gettext(domain="R-RcmdrPlugin.EZR","Time of Event: "), event[i], sep=""), listHeight=10)
+				onOKsub <- function() {
+					selection <- getSelection(timeeventBox)
+					closeDialog(subdialog)
+					assign("selection", selection, envir=env)
+				}
+				subOKCancelHelp()
+				tkgrid(getFrame(timeeventBox), sticky="nw")
+				tkgrid(subButtonsFrame, sticky="w")
+				dialogSuffix(subdialog, rows=6, columns=2, focus=subdialog, onOK=onOKsub, force.wait=TRUE)
+				TimeEvent[i] <- selection
+			}
+		}
+
+		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		
+		command <- paste("SwimmerPlot(State=c('", paste(state, collapse="', '"), "'), EndState=c('", paste(EndState, collapse="', '"), "'), ", sep="")
+		if (length(group)>0){
+			command <- paste(command, "Group='", group, "', ", sep="")
+		}
+		if (length(order)>0){
+			command <- paste(command, "Order='", order, "', ", sep="")
+		}
+		if (length(arrow)>0){
+			command <- paste(command, "Censored='", arrow, "', ", sep="")
+		}
+		if (color==0){
+			command <- paste(command, "Gray=1, ", sep="")
+		}
+		if (length(event)>0){	
+			command <- paste(command, "Event=c('", paste(event, collapse="', '"), "'), TimeEvent=c('", paste(TimeEvent, collapse="', '"), "'), ", sep="")
+		}
+		command <- paste(command, "Dataset=", .activeDataSet, ")", sep="")
+		doItAndPrint(command)
+							
+	}
+	buttonsFrame <- tkframe(top)
+	OKCancelHelp(helpSubject="swimmer_plot")
+
+	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Select time variables after clicking OK."), fg="blue"), sticky = "nw")
+	tkgrid(getFrame(stateBox), labelRcmdr(variablesFrame, text="    "), getFrame(eventBox), sticky = "nw")
+	tkgrid(variablesFrame, sticky="nw")
+	tkgrid(getFrame(arrowBox), labelRcmdr(variables2Frame, text="    "),  getFrame(groupBox), getFrame(orderBox), sticky = "nw")
+	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Select a variable other than state or event variable for grouping and sorting."), fg="blue"), sticky = "nw")
+	tkgrid(variables2Frame, sticky="nw")
+	tkgrid(color, sticky="w")
+	tkgrid(buttonsFrame, columnspan=2, sticky="w")
+#	dialogSuffix(rows=4, columns=2, preventGrabFocus=TRUE)
+	dialogSuffix(rows=4, columns=2)
+}
+
+							
 StatMedScatterPlot <- function () {
 #	require("car")
 	defaults <- list(initial.x = NULL, initial.y = NULL, initial.jitterx = 0, initial.jittery = 0, 
@@ -15985,6 +16298,130 @@ putDialog("StatMedCrrTD", list(event = event, timetoevent = timetoevent, group =
 }
 
 
+StatMedCurrentSurvival <- function(){
+
+	Library("currentSurvival")
+    Library("survival")
+
+defaults <- list(StartPoint=NULL, follow.up=NULL, event=NULL, group=NULL, conf.int=0, com.est=0, interval=365, col=0, cci=0)
+dialog.values <- getDialog("StatMedCurrentSurvival", defaults)
+  initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Current survival and current cmulative incidence"))
+  	env <- environment()
+
+    variablesFrame <- tkframe(top)
+	variables2Frame <- tkframe(top)
+    timetoeventBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Time-to-event variable (pick one)"), listHeight=8, initialSelection=varPosn(dialog.values$follow.up, "all"))
+    eventBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Status indicator (censor=0, event=1) (pick one)"), listHeight=8, initialSelection=varPosn(dialog.values$event, "all"))
+    variables2Frame <- tkframe(top)
+    startpointBox <- variableListBox(variables2Frame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Time for first event-free status"), listHeight=8, initialSelection=varPosn(dialog.values$StartPoint, "all"))
+    groupBox <- variableListBox(variables2Frame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Grouping variable(pick 0 or 1)"), listHeight=8, initialSelection=varPosn(dialog.values$group, "all"))
+
+	optionsFrame <- tkframe(top)
+	checkBoxes(window=optionsFrame, frame="ci", boxes=c("ci"), initialValues=c(dialog.values$conf.int),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Show 95% confidence intervals")), title=gettext(domain="R-RcmdrPlugin.EZR"," "))	
+	checkBoxes(window=optionsFrame, frame="com.est", boxes=c("com.est"), initialValues=c(dialog.values$com.est),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Show common event-free survival")), title=gettext(domain="R-RcmdrPlugin.EZR"," "))		
+	checkBoxes(window=optionsFrame, frame="col", boxes=c("col"), initialValues=c(dialog.values$col),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Draw in color")), title=gettext(domain="R-RcmdrPlugin.EZR"," "))	
+	checkBoxes(window=optionsFrame, frame="cci", boxes=c("cci"), initialValues=c(dialog.values$cci),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Show current cumulative incidence")), title=gettext(domain="R-RcmdrPlugin.EZR"," "))	
+
+	axisFrame <- tkframe(top)	
+	intervalFrame <- tkframe(axisFrame)
+	intervalVariable <- tclVar(dialog.values$interval)	
+	intervalField <- ttkentry(intervalFrame, width="20", textvariable=intervalVariable)
+
+  onOK <- function(){
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Current survival and current cmulative incidence"), "#####", sep=""))
+	
+    follow.up <- getSelection(timetoeventBox)
+    event <- getSelection(eventBox)
+	StartPoint <- getSelection(startpointBox)
+    group <- getSelection(groupBox)
+
+    conf.int <- tclvalue(ciVariable)
+    com.est <- tclvalue(com.estVariable)
+    col <- tclvalue(colVariable)
+    cci <- tclvalue(cciVariable)
+	interval <- tclvalue(intervalVariable)
+	
+	dataSet <- activeDataSet()	
+	
+putDialog("StatMedCurrentSurvival", list(StartPoint=StartPoint, follow.up=follow.up, event=event, group=group, conf.int=conf.int, com.est=com.est, interval=interval, col=col, cci=cci))
+	
+	com.est <- ifelse(com.est==1, "TRUE", "FALSE")
+	group <- ifelse(length(group)==0, "NULL", paste("'", group, "'", sep=""))
+	pvals <- ifelse(length(group)==0, "FALSE", "TRUE")
+	if (length(event) != 1) {
+      errorCondition(recall=StatMedCurrentSurvival, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1)"))
+      return()
+    }
+    if (length(follow.up) != 1) {
+      errorCondition(recall=StatMedCurrentSurvival, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time-to-event variable"))
+      return()
+    }
+    if (length(StartPoint) != 1) {
+      errorCondition(recall=StatMedCurrentSurvival, 
+        message=gettext(domain="R-RcmdrPlugin.EZR","Pick one time for first event-free status variable"))
+      return()
+    }
+	
+	Selecting <- 1
+	i <- 1
+	EventOnOff <- NULL
+	while(Selecting==1){		
+			if(i!=2*floor(i/2)){
+				Next <- paste(gettext(domain="R-RcmdrPlugin.EZR","Time for No."), (i+1)/2, gettext(domain="R-RcmdrPlugin.EZR","event on"), sep=" ")
+			} else {
+				Next <- paste(gettext(domain="R-RcmdrPlugin.EZR","Time for No."), 1 + i/2, gettext(domain="R-RcmdrPlugin.EZR","event off"), sep=" ")
+			}			
+			initializeDialog(subdialog, title=Next)					
+			eventonoffBox <- variableListBox(subdialog, Variables(), title=Next, listHeight=10)
+			onOKsub <- function() {
+				selection <- getSelection(eventonoffBox)
+				closeDialog(subdialog)
+				assign("selection", selection, envir=env)	#send selection out of subdialog
+			}
+			subOKCancelHelp()
+			tkgrid(getFrame(eventonoffBox), labelRcmdr(subdialog, text=gettext(domain="R-RcmdrPlugin.EZR","If finished, just click OK."), fg="blue"), sticky="nw")
+			tkgrid(subButtonsFrame, sticky="w")
+			dialogSuffix(subdialog, rows=6, columns=2, focus=subdialog, onOK=onOKsub, force.wait=TRUE)
+			if(length(selection)==0) {
+				break
+			} else {
+				EventOnOff[i] <- selection
+			}
+			i <- i+1
+	}		
+	closeDialog()
+	
+	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
+
+	command <- paste("CurrentSurvival(Dataset=", dataSet, ", StartPoint='", StartPoint, "', EventOnOff=c('", sep="")
+	command <- paste(command, paste(EventOnOff, collapse="', '"), "'), ", sep="") 
+	command <- paste(command, "follow.up='", follow.up, "', event='", event, "', strat=", group, ", conf.int=", conf.int, ", com.est=", com.est, ", pvals=", pvals, ", intervals=", interval, ", col=", col, ", cci=", cci, ")", sep="")
+
+	doItAndPrint(command)
+	
+    tkfocus(CommanderWindow())
+  }
+  OKCancelHelp(helpSubject="survfit", model=TRUE, apply="StatMedKaplanMeier", reset="StatMedKaplanMeier")
+
+    tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Select other event on/off variable after clicking OK."), fg="blue"), sticky="nw")
+  tkgrid(getFrame(timetoeventBox), labelRcmdr(variablesFrame, text="    "), getFrame(eventBox), sticky="nw")
+    tkgrid(variablesFrame, sticky="nw")
+    tkgrid(getFrame(startpointBox), labelRcmdr(variables2Frame, text="    "), getFrame(groupBox), sticky="nw")
+    tkgrid(variables2Frame, sticky="nw")
+
+	tkgrid(ci, labelRcmdr(optionsFrame, text="   "), com.est, labelRcmdr(optionsFrame, text="   "), col, labelRcmdr(optionsFrame, text="   "), cci, sticky="w")
+	tkgrid(optionsFrame, sticky="nw")
+
+	tkgrid(labelRcmdr(intervalFrame, text=gettext(domain="R-RcmdrPlugin.EZR","X axis tick interval")), intervalField,  sticky = "w")
+  tkgrid(intervalFrame, sticky="w")
+  tkgrid(axisFrame, sticky="nw")
+  tkgrid(buttonsFrame, sticky="w")
+  dialogSuffix(rows=7, columns=1)
+}
+
+
 StatMedROC <- function(){
 defaults <- list(response=NULL, predictor=NULL, threshold=1, direction="auto", best="youden", cost="1", prevalence="0.5", subset = "")
 dialog.values <- getDialog("StatMedROC", defaults)
@@ -18579,8 +19016,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.54", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","December 24, 2020"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.55", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","December 24, 2021"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -18694,7 +19131,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.54", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.55", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -18767,4 +19204,7 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'estimTypeVariable', 'estimTypeFrame', 'numSummary', 'num', 'lev', 'smd', 
 'smdFrame', 'iptwVariable', 'connectionVariable', 'netrankVariable', 'heatVariable',
 'splitVariable', 'modelTypeFrame', 'modelTypeVariable', 'weight.ATE', 
-'estimationVariable', 'varVariable', 'estimationFrame', ''))
+'estimationVariable', 'varVariable', 'estimationFrame', 'clfs', 'lines',
+'com.estVariable', 'colVariable', 'cciVariable', 'selection', 'com.est', 
+'cci', 'swimmer_plot', 'swimmer_arrows', 'scale_fill_grey', 'swimmer_points', 
+'currentSurvival', 'swimplot', 'ggplot2', ''))

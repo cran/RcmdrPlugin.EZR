@@ -23,6 +23,7 @@
 \alias{StatMedCrr}
 \alias{StatMedCrrTD}
 \alias{StatMedCumInc}
+\alias{StatMedCurrentSurvival}
 \alias{StatMedDatediff}
 \alias{StatMedDeleteVariable}
 \alias{StatMedDropUnusedFactorLevels}
@@ -131,6 +132,7 @@
 \alias{StatMedSubsetBox}
 \alias{StatMedSubsetDataSet}
 \alias{StatMedSummaryResults}
+\alias{StatMedSwimPlot}
 \alias{StatMedTableOne}
 \alias{StatMedTest}
 \alias{StatMedTtest}

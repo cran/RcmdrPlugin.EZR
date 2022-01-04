@@ -3,6 +3,7 @@
 \alias{gassign}
 \alias{ChrToFactor}
 \alias{Cochran.Q.test}
+\alias{CurrentSurvival}
 \alias{EZRVersion}
 \alias{EZRhelp}
 \alias{OrderedPlot}
@@ -26,6 +27,7 @@
 \alias{SampleProportionSingleArm}
 \alias{Steel}
 \alias{Steel.Dwass}
+\alias{SwimmerPlot}
 \alias{currentFields}
 \alias{dot.plot}
 \alias{epi.kappa}
@@ -92,14 +94,14 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.54\cr
-Date: \tab 2020-12-24\cr
+Version: \tab 1.55\cr
+Date: \tab 2021-12-24\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
 
 \section{Installation of EZR}{
-See \url{http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html} for detailed information. Briefly, EZR is platform-independent. RcmdrPlugin.EZR should be installed with R commander (Rcmdr) and the other packages that Rcmdr or EZR depends on. Packages required by EZR can be easily installed at the same time with the installation of EZR by copying and pasting the following command to the R console window after " > ".\cr\cr
+See \url{https://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html} for detailed information. Briefly, EZR is platform-independent. RcmdrPlugin.EZR should be installed with R commander (Rcmdr) and the other packages that Rcmdr or EZR depends on. Packages required by EZR can be easily installed at the same time with the installation of EZR by copying and pasting the following command to the R console window after " > ".\cr\cr
 \code{install.packages(pkgs="RcmdrPlugin.EZR", dependencies=TRUE)}\cr\cr
 After installation, R commander can be started by the command, \code{library(Rcmdr)} from the R console. Packages required by Rcmdr are installed at the first start-up of R commander. EZR can be loaded by selecting RcmdrPlugin.EZR from the "Tools" > "Load Rcmdr plug-in(s)" menu. Answer "Yes" to "Restart now?".\cr\cr
 On Windows, EZR plugin package will be loaded when R commander is started, if the following sentence is added to the Rprofile.site file in etc folder in the R folder (C:\\Program Files\\R\\R-X.XX.X\\etc).\cr\cr
@@ -159,6 +161,7 @@ Spearman's rank correlation test\cr\cr
 \emph{For survival analysis}\cr\cr
 Kaplan-Meier survival curve and logrank test\cr
 Logrank trend test\cr
+Current survival\cr
 Cox proportional hazard regression\cr
 Cox proportional hazard regression with time-dependent covariate\cr
 Cumulative incidence of competing events and Gray test\cr
@@ -206,7 +209,8 @@ Line graph(Means)\cr
 Line graph(Repeated measures)\cr
 Boxplot\cr
 Dot chart\cr
-Ordered chart\cr
+Ordered chart (Waterfall plot)\cr
+Swimmer plot\cr
 Scatterplot\cr
 Scatterplot matrix\cr
 Adjusted survival curve\cr
@@ -266,7 +270,7 @@ Investigation of the freely available easy-to-use software EZR for medical stati
 \emph{Bone Marrow Transplantation} (Open article, URL: \url{https://www.nature.com/articles/bmt2012244.pdf}).\cr\cr
 
 EZR web site:
-Division of Hematology, Saitama Medical Center, Jichi Medical University. URL: \url{http://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html}
+Division of Hematology, Saitama Medical Center, Jichi Medical University. URL: \url{https://www.jichi.ac.jp/saitama-sct/SaitamaHP.files/statmedEN.html}
 } 
 
 \keyword{ package }

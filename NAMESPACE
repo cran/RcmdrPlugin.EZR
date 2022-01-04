@@ -5,6 +5,7 @@ exportPattern("^[^\\.]")
 importFrom("graphics", "abline", "arrows", "axTicks", "axis", "barplot", "box", "hist", "legend", "mtext", "par", "plot", "points", "polygon", "title")
 importFrom("grDevices", "col2rgb", "colorConverter", "colorspaces", "convertColor", "dev.new", "gray", "palette")
 importFrom("utils", "capture.output", "combn", "write.csv", "write.table")
+importFrom("graphics", "lines")
 
 #just for cran check
 S3method(print, ci.summary)

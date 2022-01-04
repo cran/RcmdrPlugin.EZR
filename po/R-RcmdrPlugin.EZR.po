@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr 2.7-0 Japanese Translation\n"
 "POT-Creation-Date: 2019-01-08 16:30:00\n"
-"PO-Revision-Date: 2020-12-13 11:01+0900\n"
+"PO-Revision-Date: 2021-12-20 16:07+0900\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ja_JP\n"
 "X-Generator: Poedit 2.4.1\n"
-"Last-Translator: Y. Kanda <ycanda-tky@umin.ac.jp>\n"
+"Last-Translator: \n"
 
 msgid "KMeans Clustering"
 msgstr "ｋ平均クラスタリング"
@@ -7679,4 +7679,64 @@ msgstr "Brunner-Munzel検定"
 
 msgid "You must select a variable with two levels."
 msgstr "2種類の値だけを持つ変数を選択して下さい。"
+
+msgid "Current survival and current cmulative incidence"
+msgstr "可逆性イベントの生存解析と累積発生率"
+
+msgid "Swimmer plot"
+msgstr "スイマープロット"
+
+msgid "State variables"
+msgstr "状態を示す変数"
+
+msgid "Event variables"
+msgstr "イベント名を示し変数"
+
+msgid "Variable for arrow (pick 0 for no arrow)"
+msgstr "矢印の有無を示す変数(全て矢印無しは無選択)"
+
+msgid "Variable for sorting (pick 0 or 1)"
+msgstr "並び替えの変数(0～1つ選択)"
+
+msgid "Select a variable other than state or event variable for grouping and sorting."
+msgstr "群別、並び替えの変数は状態やイベント名を示す変数以外から選択してください。)"
+
+msgid "End of State:"
+msgstr "状態の終了時点を示す変数："
+
+msgid "Time of Event:"
+msgstr "イベント発生時点を示す変数："
+
+msgid "Select time variables after clicking OK."
+msgstr "時間を示す変数はOKをクリックした後で選択します。"
+
+msgid "Time for first event-free status"
+msgstr "最初に無イベント状態になった時間の変数"
+
+msgid "Show common event-free survival"
+msgstr "通常の無イベント生存曲線も表示する"
+
+msgid "Show current cumulative incidence"
+msgstr "累積発生曲線を表示する"
+
+msgid "Pick one time for first event-free status variable"
+msgstr "最初に無イベント状態になった時間の変数を1つ選択してください"
+
+msgid "Time for No."
+msgstr "イベントが"
+
+msgid "event on"
+msgstr "回目に発生した時点を示す変数"
+
+msgid "event off"
+msgstr "回目に消失した時点をしめす変数"
+
+msgid "If finished, just click OK."
+msgstr "変数の指定が完了していたら、そのままOKをクリックしてください"
+
+msgid "Select other event on/off variable after clicking OK."
+msgstr "他のイベントの発生・消失を示す変数はOKをクリックした後で選択します。"
+
+msgid "X axis tick interval"
+msgstr "X軸の目盛の間隔"
 
