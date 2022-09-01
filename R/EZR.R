@@ -45,7 +45,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.55", "\n")
+cat("   Version 1.56", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -2685,7 +2685,7 @@ Mantel.Byar <- function(Group=NULL, Event=TempTD$endpoint_td, StartTime=TempTD$s
 		Event2 <- Event[StopTime>=landmark]
 		Group2 <- Group[StopTime>=landmark]
 		km <- survfit(Surv(StartTime2,StopTime2,Event2)~Group2, na.action = na.omit, conf.type="log-log")
-		summary(km)
+		print(summary(km))
 #		diff <- survdiff(Surv(StopTime2,Event2)~Group2)
 		n.atrisk.G1 <- NULL
 		n.atrisk.G2 <- NULL
@@ -12456,7 +12456,8 @@ StatMedFrequency <- function(){
                     res <- try(
                         entry <- eval(parse(text=eval(parse(text=paste("tclvalue(", entry.varname,")", sep="")), envir=env))),
                         silent=TRUE)
-                    if (class(res) == "try-error"){
+#                    if (class(res) == "try-error"){	
+                    if (inherits(res, "try-error")){		#Ver 1.56, change suggested by CRAN
                         errorCondition(subwin, message=gettext(domain="R-RcmdrPlugin.EZR","Invalid entry."))
                         return()
                         }
@@ -14467,10 +14468,11 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
     }
     closeDialog()
     Library("survival")
-	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "(is.na(", group, ")==F", sep="")
+	if (length(group)==0) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "is.na(", timetoevent, ")==F & is.na(", event, ")==F ", sep="")
+	if (length(group)==1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "is.na(", timetoevent, ")==F & is.na(", event, ")==F & is.na(", group, ")==F ", sep="")
 #	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "(is.na(", adjust[1], ")==F", sep="")
 	factor <- adjust[1]
-	if(length(adjust)>=1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, " & is.na(", adjust[1], ")==F", sep="")
+	if(length(adjust)>=1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "& is.na(", adjust[1], ")==F", sep="")
 	if(length(adjust)>=2){
 		for (i in 2:length(adjust)){
 			factor <- paste(factor, " + ", adjust[i], sep="")
@@ -14478,7 +14480,7 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
 			}
 	}
 	factor2 <- factor
-	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "))", sep="")
+	naexcludeSubdataSet <- paste(naexcludeSubdataSet, ")", sep="")
 	if (length(group)==1) factor2 <- paste(factor, " + strata(", group, ")", sep="")	
 #	command <- paste("coxmodel <- coxph(Surv((", timetoevent, "/", xscale, "), ", event, "==1)~ ", factor2, ", data=", subdataSet, ', method="breslow")', sep="")
 #	use naexcludeSubdataset for rmean.table.adjusted() function. Can be replaced with complete.case() function.
@@ -15503,11 +15505,12 @@ putDialog("StatMedAdjustedCumInc", list(event = event, timetoevent = timetoevent
       return()
     }    	
     closeDialog()
-    Library("survival")
-	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "(is.na(", timetoevent, ")==F & is.na(", event, ")==F & is.na(", group, ")==F", sep="")
+    Library("survival")	
+	if (length(group)==0) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "is.na(", timetoevent, ")==F & is.na(", event, ")==F ", sep="")
+	if (length(group)==1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "is.na(", timetoevent, ")==F & is.na(", event, ")==F & is.na(", group, ")==F ", sep="")
 #	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "(is.na(", adjust[1], ")==F", sep="")
 	factor <- adjust[1]
-	if(length(adjust)>=1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, " & is.na(", adjust[1], ")==F", sep="")
+	if(length(adjust)>=1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "& is.na(", adjust[1], ")==F", sep="")
 	if(length(adjust)>=2){
 		for (i in 2:length(adjust)){
 			factor <- paste(factor, " + ", adjust[i], sep="")
@@ -15515,7 +15518,7 @@ putDialog("StatMedAdjustedCumInc", list(event = event, timetoevent = timetoevent
 			}
 	}
 	factor2 <- factor
-	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "))", sep="")
+	naexcludeSubdataSet <- paste(naexcludeSubdataSet, ")", sep="")
 	if (length(group)==1) factor2 <- paste(factor, " + strata(", group, ")", sep="")	
 #	command <- paste("coxmodel <- coxph(Surv((", timetoevent, "/", xscale, "), ", event, "==1)~ ", factor2, ", data=", subdataSet, ', method="breslow")', sep="")
 #	use naexcludeSubdataset for rmean.table.adjusted() function. Can be replaced with complete.case() function.
@@ -15540,7 +15543,9 @@ putDialog("StatMedAdjustedCumInc", list(event = event, timetoevent = timetoevent
 	}
 	if(atrisk==1){
 		Library("cmprsk")
-		command <- paste("ci <- survfit(Surv((", timetoevent, " / ", xscale, "), as.factor(", event, '), type="mstate") ~ ', group, ", data=", naexcludeSubdataSet, ', conf.type="log-log")', sep="")
+		command <- paste("ci <- survfit(Surv((", timetoevent, " / ", xscale, "), as.factor(", event, '), type="mstate") ~ 1, data=', naexcludeSubdataSet, ', conf.type="log-log")', sep="")
+#		if (length(group==0)) command <- paste("ci <- survfit(Surv((", timetoevent, " / ", xscale, "), as.factor(", event, '), type="mstate") ~ 1, data=', naexcludeSubdataSet, ', conf.type="log-log")', sep="")
+		if (length(group==1)) command <- paste("ci <- survfit(Surv((", timetoevent, " / ", xscale, "), as.factor(", event, '), type="mstate") ~ ', group, ", data=", naexcludeSubdataSet, ', conf.type="log-log")', sep="")
 		doItAndPrint(command)
 		if(length(group)==0){
 			doItAndPrint('mar <- par("mar")')
@@ -19016,8 +19021,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.55", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","December 24, 2021"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.56", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","August 1, 2022"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -19131,7 +19136,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.55", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.56", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',

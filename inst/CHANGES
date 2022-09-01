@@ -1,3 +1,10 @@
+Changes to Version 1.56
+
+  o R version 4.2.0 has dropped support for 32-bit builds. Also, UTF-8 locales become default for Windows.
+
+  o Added function to show survival rate tables for Simon-Makuch plot.
+  o Bug fix for adjusted survival and cumulative incidence curves.
+
 Changes to Version 1.55
 
   o Added swimmer plot and current survival function.
