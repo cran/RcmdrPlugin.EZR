@@ -54,8 +54,10 @@
 \alias{StatMedLinearRegression}
 \alias{StatMedLinearMixedModel}
 \alias{StatMedLoadDataSet}
+\alias{StatMedLoadCP932DataSet}
 \alias{StatMedLoadWorkspace}
 \alias{StatMedLog}
+\alias{StatMedLoadLogCP932}
 \alias{StatMedLogisticRegression}
 \alias{StatMedLogrankTrend}
 \alias{StatMedMH}

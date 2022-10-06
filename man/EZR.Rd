@@ -3,6 +3,7 @@
 \alias{gassign}
 \alias{ChrToFactor}
 \alias{Cochran.Q.test}
+\alias{CP932toUTF8}
 \alias{CurrentSurvival}
 \alias{EZRVersion}
 \alias{EZRhelp}
@@ -59,6 +60,7 @@
 \alias{propensity.plot}
 \alias{readStataEZR}
 \alias{roc.best}
+\alias{saveLog}
 \alias{sd2}
 \alias{skewness.kurtosis}
 \alias{stackcuminc}
@@ -94,8 +96,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.56\cr
-Date: \tab 2022-08-31\cr
+Version: \tab 1.60\cr
+Date: \tab 2022-09-30\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }

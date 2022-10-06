@@ -1,3 +1,9 @@
+Changes to Version 1.60
+
+  o Added function to load dataset build on CP932 (Shift-JIS).
+
+  o Added selection of file encoding (UTF-8 or CP932) in function to import text files.
+
 Changes to Version 1.56
 
   o R version 4.2.0 has dropped support for 32-bit builds. Also, UTF-8 locales become default for Windows.

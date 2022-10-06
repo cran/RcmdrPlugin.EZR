@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr 2.7-0 Japanese Translation\n"
 "POT-Creation-Date: 2019-01-08 16:30:00\n"
-"PO-Revision-Date: 2021-12-20 16:07+0900\n"
+"PO-Revision-Date: 2022-09-09 12:03+0900\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -7739,4 +7739,16 @@ msgstr "他のイベントの発生・消失を示す変数はOKをクリック�
 
 msgid "X axis tick interval"
 msgstr "X軸の目盛の間隔"
+
+msgid "Load CP932 data set"
+msgstr "既存のデータセット(CP932:旧Windows形式)を読み込む"
+
+msgid "CP932 (old Windows)"
+msgstr "CP932:旧Windows形式"
+
+msgid "Load CP932 script file"
+msgstr "スクリプトファイル(CP932:旧Windows形式)を開く"
+
+msgid "File encode"
+msgstr "ファイルエンコード形式"
 

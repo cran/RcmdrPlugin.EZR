@@ -45,7 +45,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.56", "\n")
+cat("   Version 1.60", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -5684,13 +5684,53 @@ StatMedLoadDataSet <- function() {
 }
 	
 	
+CP932toUTF8 <- function(df){
+	colnames(df) <- iconv(colnames(df), from="CP932", to="UTF-8")
+	numCols <- ncol(df)
+	df <- data.frame(df)
+	for (col in 1:numCols)
+	{
+      	if(inherits(df[, col], "character")){
+            	df[, col] <- iconv(df[, col], from="CP932", to="UTF-8")
+        	}
+        	if(inherits(df[, col], "factor")){
+            	levels(df[, col]) <- iconv(levels(df[, col]), from="CP932", to="UTF-8")
+		}
+	}
+	return(as.data.frame(df))
+}
+
+
+StatMedLoadCP932DataSet <- function() {
+	logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Load CP932 data set"), "#####", sep=""))
+	file <- tclvalue(tkgetOpenFile(filetypes=
+							gettext(domain="R-RcmdrPlugin.EZR",'{"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}} {"All Files" {"*"}}')))	
+#	file <- tclvalue(tkgetOpenFile(filetypes=
+#							gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"R Data Files" {".RData" ".rda" ".Rda" ".RDA"}}')))
+	if (file == "") return()
+	setBusyCursor()
+	on.exit(setIdleCursor())
+	command <- paste('load("', file,'")', sep="")
+	dsname <- justDoIt(command)
+	logger(command)
+	if (class(dsname)[1] !=  "try-error") {
+	    if (length(dsname) > 1) {
+	        Message(message=paste(gettext(domain="R-RcmdrPlugin.EZR","There is more than one object in the file, with the following names:\n"),
+	                                     paste(dsname, collapse=", ")), type="error")
+	        return()
+	    }
+		doItAndPrint(paste(dsname, " <- CP932toUTF8(", dsname, ")", sep=""))
+	    activeDataSet(dsname)
+	}
+	tkfocus(CommanderWindow())
+}
+	
+	
 StatMedReadDataSet <- function() {
 	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Read Text Data From File, Clipboard, or URL"))
 	optionsFrame <- tkframe(top)
 	dsname <- tclVar(gettext(domain="R-RcmdrPlugin.EZR","Dataset"))
 	entryDsname <- ttkentry(optionsFrame, width="20", textvariable=dsname)
-	radioButtons(optionsFrame, "location", buttons=c("local", "clipboard", "url"), 
-		labels=gettext(domain="R-RcmdrPlugin.EZR",c("Local file system", "Clipboard", "Internet URL")), title=gettext(domain="R-RcmdrPlugin.EZR","Location of Data File"))
 	headerVariable <- tclVar("1")
 	headerCheckBox <- tkcheckbutton(optionsFrame, variable=headerVariable)
 	fillVariable <- tclVar("1")
@@ -5699,6 +5739,10 @@ StatMedReadDataSet <- function() {
 	blankCheckBox <- tkcheckbutton(optionsFrame, variable=blankVariable)
 	##   clipboardVariable <- tclVar("0")
 	##   clipboardCheckBox <- tkcheckbutton(optionsFrame, variable=clipboardVariable)
+	radioButtons(optionsFrame, "encode", buttons=c("UTF8", "CP932"), 
+		labels=gettext(domain="R-RcmdrPlugin.EZR",c("UTF-8", "CP932 (old Windows)")), title=gettext(domain="R-RcmdrPlugin.EZR","File encode"))
+	radioButtons(optionsFrame, "location", buttons=c("local", "clipboard", "url"), 
+		labels=gettext(domain="R-RcmdrPlugin.EZR",c("Local file system", "Clipboard", "Internet URL")), title=gettext(domain="R-RcmdrPlugin.EZR","Location of Data File"))
 	radioButtons(optionsFrame, "delimiter", buttons=c("whitespace", "commas", "tabs"), initialValue="commas",
 		labels=gettext(domain="R-RcmdrPlugin.EZR",c("White space", "Commas", "Tabs")), title=gettext(domain="R-RcmdrPlugin.EZR","Field Separator"))
 	otherButton <- ttkradiobutton(delimiterFrame, variable=delimiterVariable, value="other")
@@ -5729,6 +5773,8 @@ StatMedReadDataSet <- function() {
 			}
 		}
 		##        clip <- tclvalue(clipboardVariable) == "1"
+		encode <- tclvalue(encodeVariable)
+		if(encode=="UTF8") encode <- "UTF-8"
 		location <- tclvalue(locationVariable)
 		file <- if (location == "clipboard") "clipboard" 
 			else if (location == "local") tclvalue(tkgetOpenFile(filetypes=
@@ -5781,17 +5827,18 @@ StatMedReadDataSet <- function() {
 
 		if (file == "clipboard" & MacOSXP()==TRUE) {
 		command <- paste('read.table(pipe("pbpaste"), header=', head,
-			', sep="', del, '", na.strings=', miss, ', dec="', dec, '"', fill, ', quote="\\"", comment.char="", strip.white=TRUE)', sep="")
+			', sep="', del, '", na.strings=', miss, ', dec="', dec, '"', fill, ', quote="\\"", comment.char="", strip.white=TRUE, fileEncoding="', encode, '")', sep="")
 		} else{ 
 		command <- paste('read.table("', file,'", header=', head,
-			', sep="', del, '", na.strings=', miss, ', dec="', dec, '"', fill, ', quote="\\"", comment.char="", strip.white=TRUE)', sep="")
+			', sep="', del, '", na.strings=', miss, ', dec="', dec, '"', fill, ', quote="\\"", comment.char="", strip.white=TRUE, fileEncoding="', encode, '")', sep="")
 		}
 		logger(paste(dsnameValue, " <- ", command, sep=""))
 		result <- justDoIt(command)
 		if (class(result)[1] !=  "try-error"){
 # 			assign(dsnameValue, result, envir=.GlobalEnv)
 # 			logger(paste(dsnameValue, "<-", command))
-		    doItAndPrint(paste(dsnameValue, "<-", command))
+#		    doItAndPrint(paste(dsnameValue, "<-", command))
+		    justDoIt(paste(dsnameValue, "<-", command))
 			activeDataSet(dsnameValue)
 		}
 		tkfocus(CommanderWindow())
@@ -5803,6 +5850,7 @@ StatMedReadDataSet <- function() {
 	##    tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Read data from clipboard:")), clipboardCheckBox, sticky="w")
 	tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Apply NA for blank cells in character variables:")), blankCheckBox, sticky="w")
 	tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Characters indicating NA cells:")), missingEntry, sticky="w")
+	tkgrid(encodeFrame, sticky="w")
 	tkgrid(locationFrame, sticky="w")
 	tkgrid(labelRcmdr(delimiterFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Other")), otherButton,
 		labelRcmdr(delimiterFrame, text=gettext(domain="R-RcmdrPlugin.EZR","  Specify:")), otherEntry, sticky="w")
@@ -6061,6 +6109,44 @@ StatMedLoadWorkspace <- function() {
 	tkfocus(CommanderWindow())
 }
 	
+	
+saveLog <- function(logfilename) {
+  .logFileName <- if (missing(logfilename) || (logfilename == "%logfilename") || (logfilename == "logfilename")) 
+    getRcmdr("logFileName") else logfilename
+  if (is.null(.logFileName)) {
+    saveLogAs()
+    return()
+  }
+  log <- tclvalue(tkget(LogWindow(), "1.0", "end"))
+  fileCon <- file(.logFileName, "w")
+  cat(log, file = fileCon)
+  close(fileCon)
+  Message(paste(gettext(domain="R-RcmdrPlugin.EZR","Script saved to"), .logFileName), type="note")
+}
+
+
+StatMedLoadLogCP932 <- function(){
+	logFile <- tclvalue(tkgetOpenFile(filetypes=gettext(domain="R-RcmdrPlugin.EZR",'{"All Files" {"*"}} {"Script Files" {".R"}}'),
+	defaultextension="R", parent=CommanderWindow()))
+	if (logFile == "") return()
+	fileCon <- file(logFile, "r")
+	contents <- readLines(fileCon)
+	contents <- iconv(contents, from="CP932", to="UTF-8")
+	close(fileCon)
+
+	Library("tcltk")	### <- Library("tcltk") required in EZR to avoid "tkget" error
+	currentLogFileName <- gettext(domain="R-RcmdrPlugin.EZR", "logFileName")
+	putRcmdr("logFileName", logFile)
+	.log <- LogWindow()
+	if (tclvalue(tkget(.log, "1.0", "end")) != "\n"){
+		response2 <- RcmdrTkmessageBox(message=gettext(domain="R-RcmdrPlugin.EZR","Save current log file?"),
+		icon="question", type="yesno", default="yes")
+		if ("yes" == tclvalue(response2)) saveLog(currentLogFileName)
+	}
+	tkdelete(.log, "1.0", "end")
+	tkinsert(.log, "end", paste(contents, collapse="\n"))
+}	
+
 	
 trim.col.na <- function(dat){
 # Remove variables with only missing values (occurs sometimes with modified Excel file)
@@ -19021,8 +19107,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.56", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","August 1, 2022"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.60", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","September 1, 2022"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -19136,7 +19222,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.56", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.60", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -19212,4 +19298,5 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'estimationVariable', 'varVariable', 'estimationFrame', 'clfs', 'lines',
 'com.estVariable', 'colVariable', 'cciVariable', 'selection', 'com.est', 
 'cci', 'swimmer_plot', 'swimmer_arrows', 'scale_fill_grey', 'swimmer_points', 
-'currentSurvival', 'swimplot', 'ggplot2', ''))
+'currentSurvival', 'swimplot', 'ggplot2', 'encodeVariable', 'encodeFrame', 'saveLog',
+'saveLogAs', ''))
