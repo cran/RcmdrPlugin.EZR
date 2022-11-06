@@ -1,3 +1,7 @@
+Changes to Version 1.61
+
+  o Added require("tcltk") for "tkbutton" error for Windows wasy install version. 
+
 Changes to Version 1.60
 
   o Added function to load dataset build on CP932 (Shift-JIS).
