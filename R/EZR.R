@@ -47,7 +47,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.61", "\n")
+cat("   Version 1.62", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -79,6 +79,15 @@ ifelse2 <- function (test, yes, no) 	#Treat the condition of NA as FALSE.
       ans[test] <- rep(yes, length.out = length(ans))[test]
       ans[!test] <- rep(no, length.out = length(ans))[!test]
     	ans
+}
+
+NewWindow <- function(){
+if (.Platform$OS.type == 'windows')
+	doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
+else if (MacOSXP()==TRUE) 
+	doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
+else 
+	doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
 }
 
 ###modified from hist(), add one group below the lowest group, change default from "Sturges" to "Scott"
@@ -2697,13 +2706,14 @@ Mantel.Byar <- function(Group=NULL, Event=TempTD$endpoint_td, StartTime=TempTD$s
 		legend <- substring(names(km$strata), len+2)
 #		windows(width=7, height=7); par(lwd=1, las=1, family="sans", cex=1)
 #		dev.new()
-		if (.Platform$OS.type == 'windows'){
-			justDoIt(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
-		} else if (MacOSXP()==TRUE) {
-			justDoIt(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
-		} else {
-			justDoIt(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
-		}
+#		if (.Platform$OS.type == 'windows'){
+#			justDoIt(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
+#		} else if (MacOSXP()==TRUE) {
+#			justDoIt(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
+#		} else {
+#			justDoIt(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))
+#		}
+		NewWindow()
 		mar <- par("mar")
 		mar[1] <- mar[1] + length(km$strata) + 0.5
 		mar[2] <- mar[2] + 2
@@ -2951,6 +2961,245 @@ step.p.glm <- function (glm, dataframe.name, waldtest=0, subset=NULL){
 		print(odds)
 		if(waldtest==1) {waldtest(glm)}
 	}
+}
+
+
+glm.subgroup.forest <- function(Dataset, formula, Covariates){
+
+	#Dataset should be complete cases.
+
+	Library("meta")
+	env <- environment()
+
+	#Choose main effect factor
+	initializeDialog(subdialog, title=gettext(domain="R-RcmdrPlugin.EZR","Main effect"))					
+	maineffectBox <- variableListBox(subdialog, Covariates,
+		title=gettext(domain="R-RcmdrPlugin.EZR","Main effect"), listHeight=10)
+	onOKsub <- function() {
+		selection <- getSelection(maineffectBox)
+		closeDialog(subdialog)
+		assign("maineffect", selection, envir=env)	#send selection out of subdialog
+	}
+	subOKCancelHelp()
+	tkgrid(getFrame(maineffectBox), sticky="nw")
+	tkgrid(subButtonsFrame, sticky="w")
+	dialogSuffix(subdialog, rows=6, columns=2, focus=subdialog, onOK=onOKsub, onCancel=onOKsub, force.wait=TRUE)
+
+	#Choose subgroup factors
+	initializeDialog(subdialog, title=gettext(domain="R-RcmdrPlugin.EZR","Subgroup factors"))					
+	subgroupBox <- variableListBox(subdialog, Variables(), selectmode="multiple",
+		title=gettext(domain="R-RcmdrPlugin.EZR","Subgroup factors"), listHeight=10)
+	onOKsub <- function() {
+		selection <- getSelection(subgroupBox)
+		closeDialog(subdialog)
+		assign("subgroup", selection, envir=env)	#send selection out of subdialog
+	}
+	subOKCancelHelp()
+	tkgrid(getFrame(subgroupBox), sticky="nw")
+	tkgrid(subButtonsFrame, sticky="w")
+	dialogSuffix(subdialog, rows=6, columns=2, focus=subdialog, onOK=onOKsub, onCancel=onOKsub, force.wait=TRUE)
+
+	if (length(maineffect)==0) {
+      	errorCondition(recall=cox.subgroup.forest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a main effect variable."))
+            return()
+      }
+	if (length(subgroup)==0) {
+      	errorCondition(recall=cox.subgroup.forest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select at least one subgroup variable."))
+            return()
+      }
+
+	est.se.table <- NULL
+	n.subg <- length(subgroup)
+	for(i in 1:n.subg){
+		sub.levels <- levels(as.factor(Dataset[,which(colnames(Dataset)==subgroup[i])]))
+		n.lev <- length(sub.levels)
+		for(j in 1:n.lev){
+			SubTD <- Dataset[Dataset[,which(colnames(Dataset)==subgroup[i])]==sub.levels[j],]
+			command <- paste("try(res <- ", formula, ", data=SubTD), silent=TRUE)", sep="")
+			test <- eval(parse(text=command))
+			if (class(test)[1] != "try-error"){
+				res <- summary(res)
+				if(length(res$coef[,1])==1){
+					est.se <- res$coef[c(1,2)]
+				} else {
+					table <- res$coef[,c(1,2)]			
+					est.se <- table[rownames(table)==maineffect]
+				}
+				est.se <- c(subgroup[i], sub.levels[j], est.se) 
+				est.se.table <- rbind(est.se.table, est.se)
+			}
+		}
+	}
+#	print(est.se.table)
+
+	EST <- as.numeric(est.se.table[,3])
+	SE <- as.numeric(est.se.table[,4])
+
+	meta.table <- metagen(EST, SE, sm="OR", studlab=est.se.table[,2], comb.fixed=F, comb.random=F, subgroup=est.se.table[,1]) 
+ 	forest.meta(meta.table, comb.fixed=F, comb.random=F, hetstat=F, leftcols=c("studlab"), leftlabs=c("Subgroups"), print.subgroup.name=F)
+
+}
+
+
+cox.subgroup.forest <- function(Dataset, formula, Covariates){
+
+	#Dataset should be complete cases.
+
+	Library("meta")
+	env <- environment()
+
+	#Choose main effect factor
+	initializeDialog(subdialog, title=gettext(domain="R-RcmdrPlugin.EZR","Main effect"))					
+	maineffectBox <- variableListBox(subdialog, Covariates,
+		title=gettext(domain="R-RcmdrPlugin.EZR","Main effect"), listHeight=10)
+	onOKsub <- function() {
+		selection <- getSelection(maineffectBox)
+		closeDialog(subdialog)
+		assign("maineffect", selection, envir=env)	#send selection out of subdialog
+	}
+	subOKCancelHelp()
+	tkgrid(getFrame(maineffectBox), sticky="nw")
+	tkgrid(subButtonsFrame, sticky="w")
+	dialogSuffix(subdialog, rows=6, columns=2, focus=subdialog, onOK=onOKsub, onCancel=onOKsub, force.wait=TRUE)
+
+	#Choose subgroup factors
+	initializeDialog(subdialog, title=gettext(domain="R-RcmdrPlugin.EZR","Subgroup factors"))					
+	subgroupBox <- variableListBox(subdialog, Variables(), selectmode="multiple",
+		title=gettext(domain="R-RcmdrPlugin.EZR","Subgroup factors"), listHeight=10)
+	onOKsub <- function() {
+		selection <- getSelection(subgroupBox)
+		closeDialog(subdialog)
+		assign("subgroup", selection, envir=env)	#send selection out of subdialog
+	}
+	subOKCancelHelp()
+	tkgrid(getFrame(subgroupBox), sticky="nw")
+	tkgrid(subButtonsFrame, sticky="w")
+	dialogSuffix(subdialog, rows=6, columns=2, focus=subdialog, onOK=onOKsub, onCancel=onOKsub, force.wait=TRUE)
+
+	if (length(maineffect)==0) {
+      	errorCondition(recall=cox.subgroup.forest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a main effect variable."))
+            return()
+      }
+	if (length(subgroup)==0) {
+      	errorCondition(recall=cox.subgroup.forest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select at least one subgroup variable."))
+            return()
+      }
+
+	hr.table <- NULL
+	n.subg <- length(subgroup)
+	for(i in 1:n.subg){
+		sub.levels <- levels(as.factor(Dataset[,which(colnames(Dataset)==subgroup[i])]))
+		n.lev <- length(sub.levels)
+		for(j in 1:n.lev){
+			SubTD <- Dataset[Dataset[,which(colnames(Dataset)==subgroup[i])]==sub.levels[j],]
+			command <- paste("try(res <- coxph(formula=", formula, ', data=SubTD, method="breslow"), silent=TRUE)', sep="")
+			test <- eval(parse(text=command))
+			if (class(test)[1] != "try-error"){
+				res <- summary(res)
+				if(length(res$conf.int[,1])==1){
+					hr.ci <- res$conf.int[c(1,3,4)]
+				} else {
+					table <- res$conf.int[,c(1,3,4)]			
+					hr.ci <- table[rownames(table)==maineffect]
+				}
+				hr.ci <- c(subgroup[i], sub.levels[j], hr.ci) 
+				hr.table <- rbind(hr.table, hr.ci)
+			}
+		}
+	}
+#	print(hr.table)
+
+	logHR <- log(as.numeric(hr.table[,3]))
+	logSE <- (log(as.numeric(hr.table[,5]))-logHR) / qnorm(0.975)
+	meta.table <- metagen(logHR, logSE, sm="HR", studlab=hr.table[,2], comb.fixed=F, comb.random=F, subgroup=hr.table[,1]) 
+ 	forest.meta(meta.table, comb.fixed=F, comb.random=F, hetstat=F, leftcols=c("studlab"), leftlabs=c("Subgroups"), print.subgroup.name=F)
+
+}
+
+
+crr.subgroup.forest <- function(Dataset, time, event, fcode, group){
+
+	#Dataset should be complete cases.
+
+	Library("meta")
+	env <- environment()
+
+	#Choose main effect factor
+	initializeDialog(subdialog, title=gettext(domain="R-RcmdrPlugin.EZR","Main effect"))					
+	maineffectBox <- variableListBox(subdialog, group,
+		title=gettext(domain="R-RcmdrPlugin.EZR","Main effect"), listHeight=10)
+	onOKsub <- function() {
+		selection <- getSelection(maineffectBox)
+		closeDialog(subdialog)
+		assign("maineffect", selection, envir=env)	#send selection out of subdialog
+	}
+	subOKCancelHelp()
+	tkgrid(getFrame(maineffectBox), sticky="nw")
+	tkgrid(subButtonsFrame, sticky="w")
+	dialogSuffix(subdialog, rows=6, columns=2, focus=subdialog, onOK=onOKsub, onCancel=onOKsub, force.wait=TRUE)
+
+	#Choose subgroup factors
+	initializeDialog(subdialog, title=gettext(domain="R-RcmdrPlugin.EZR","Subgroup factors"))					
+	subgroupBox <- variableListBox(subdialog, Variables(), selectmode="multiple",
+		title=gettext(domain="R-RcmdrPlugin.EZR","Subgroup factors"), listHeight=10)
+	onOKsub <- function() {
+		selection <- getSelection(subgroupBox)
+		closeDialog(subdialog)
+		assign("subgroup", selection, envir=env)	#send selection out of subdialog
+	}
+	subOKCancelHelp()
+	tkgrid(getFrame(subgroupBox), sticky="nw")
+	tkgrid(subButtonsFrame, sticky="w")
+	dialogSuffix(subdialog, rows=6, columns=2, focus=subdialog, onOK=onOKsub, onCancel=onOKsub, force.wait=TRUE)
+
+	if (length(maineffect)==0) {
+      	errorCondition(recall=cox.subgroup.forest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a main effect variable."))
+            return()
+      }
+	if (length(subgroup)==0) {
+      	errorCondition(recall=cox.subgroup.forest, message=gettext(domain="R-RcmdrPlugin.EZR","You must select at least one subgroup variable."))
+            return()
+      }
+
+	hr.table <- NULL
+	n.subg <- length(subgroup)
+	nvar <- length(group)
+	command.cov.matrix <- paste("cov.matrix <- cbind(", group[1], "=SubTD$", group[1], sep="")
+	if (nvar >= 2){
+		for (i in 2:nvar) {
+			command.cov.matrix <- paste(command.cov.matrix, ", ", group[i], "=SubTD$", group[i], sep="")
+		}
+    	}
+    	command.cov.matrix <- paste(command.cov.matrix, ")", sep="")
+
+	for(i in 1:n.subg){
+		sub.levels <- levels(as.factor(Dataset[,which(colnames(Dataset)==subgroup[i])]))
+		n.lev <- length(sub.levels)
+		for(j in 1:n.lev){			
+			SubTD <- Dataset[Dataset[,which(colnames(Dataset)==subgroup[i])]==sub.levels[j],]
+			eval(parse(text=command.cov.matrix))
+			command <- paste("try(res <- with(SubTD, crr(", time, ", ", event, ", cov.matrix, failcode=", fcode, ", cencode=0, na.action=na.omit)), silent=TRUE)", sep="")
+			test <- eval(parse(text=command))
+			if (class(test)[1] != "try-error"){
+				res <- summary(res)
+				if(length(res$conf.int[,1])==1){
+					hr.ci <- res$conf.int[c(1,3,4)]
+				} else {
+					table <- res$conf.int[,c(1,3,4)]			
+					hr.ci <- table[rownames(table)==maineffect]
+				}
+				hr.ci <- c(subgroup[i], sub.levels[j], hr.ci) 
+				hr.table <- rbind(hr.table, hr.ci)
+			}
+		}
+	}
+#	print(hr.table)
+
+	logHR <- log(as.numeric(hr.table[,3]))
+	logSE <- (log(as.numeric(hr.table[,5]))-logHR) / qnorm(0.975)
+	meta.table <- metagen(logHR, logSE, sm="HR", studlab=hr.table[,2], comb.fixed=F, comb.random=F, subgroup=hr.table[,1]) 
+ 	forest.meta(meta.table, comb.fixed=F, comb.random=F, hetstat=F, leftcols=c("studlab"), leftlabs=c("Subgroups"), print.subgroup.name=F)
+
 }
 
 
@@ -6461,6 +6710,53 @@ StatMedRenameDataset <- function(){
 }
 
 
+StatMedTrainTestSplit <- function(){
+	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR", "Training-Test data split"))
+	.activeDataSet <- ActiveDataSet()
+    	dataSets <- listDataSets()
+    	dataSet1Box <- variableListBox(top, dataSets, title=gettext(domain="R-RcmdrPlugin.EZR", "Original Data Set"),
+                                   initialSelection=if (is.null(.activeDataSet)) NULL else which(.activeDataSet == dataSets) - 1)
+
+	percentFrame <- tkframe(top)
+	percentVariable <- tclVar("70")	
+	percentField <- ttkentry(percentFrame, width="20", textvariable=percentVariable)
+
+  	onOK <- function(){
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Training-Test data split"), "#####", sep=""))
+	    dsname <- getSelection(dataSet1Box)
+		percent <- tclvalue(percentVariable)
+		percent <- as.numeric(percent)
+
+		if (percent < 1 | percent > 99) {
+      			errorCondition(recall=StatMedTrainTestSplit, 
+        		message=gettext(domain="R-RcmdrPlugin.EZR", "Percent shoud be between 1 and 99."))
+      			return()
+    		}
+
+		command <- paste("nsample <- nrow(", dsname, ")", sep="")
+		doItAndPrint(command)
+		doItAndPrint(paste("ntrain <- round(nsample * ", percent, "/ 100)", sep=""))
+		doItAndPrint("temp <- runif(nsample, min=0, max=1)")	
+		doItAndPrint("templist <- order(temp, decreasing=FALSE)")
+		doItAndPrint("trainlist <- templist[1:ntrain]")
+		doItAndPrint("testlist <- templist[(ntrain+1):nsample]")
+
+		command <- paste(dsname, "_train <- ", dsname, "[trainlist, ] #Created training dataset", sep="")
+		doItAndPrint(command)
+		command <- paste(dsname, "_test <- ", dsname, "[testlist, ] #Created test dataset", sep="")
+		doItAndPrint(command)
+        closeDialog()
+    	tkfocus(CommanderWindow())
+	}
+  	OKCancelHelp()
+	tkgrid(getFrame(dataSet1Box), sticky="nw")
+	tkgrid(labelRcmdr(percentFrame, text=gettext(domain="R-RcmdrPlugin.EZR", "Proportion of training set (%)")), percentField,  sticky = "w")
+	tkgrid(percentFrame, sticky="w")
+    	tkgrid(buttonsFrame, sticky="w", columnspan=2)
+  	dialogSuffix(rows=7, columns=1)
+}
+
+
 StatMedMergeDatasets <- function(){
     dataSets <- listDataSets()
     .activeDataSet <- ActiveDataSet()
@@ -8398,8 +8694,8 @@ dialog.values <- getDialog("StatMedGraphOptions", defaults)
 		}		
 		window.type <- get("window.type", envir=.GlobalEnv)
 		#		doItAndPrint(paste("windows(", window.type, ")", sep=""))
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", window.type, ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", window.type, ")", sep=""))} else {doItAndPrint(paste("x11(", window.type, ")", sep=""))}
-		
+		#if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", window.type, ")", sep=""))} else if (MacOSXP()==TRUE) #{doItAndPrint(paste("quartz(", window.type, ")", sep=""))} else {doItAndPrint(paste("x11(", window.type, ")", sep=""))}
+		NewWindow()
 #		par.option <<- paste("lwd=", lwd, ", las=", las, ', family="', font, '", cex=', cex, sep="")
 #		assign("par.option", paste("lwd=", lwd, ", las=", las, ', family="', font, '", cex=', cex, sep=""), envir=.GlobalEnv)
 		par.option <- paste("lwd=", lwd, ", las=", las, ', family="', font, '", cex=', cex, ", mgp=c(3.0,1,0)", sep="")
@@ -8444,7 +8740,8 @@ putDialog("StatMedChangePalette", list(palette=palette.type))
 		
 		if(getRversion() < '3.0.0') {
 #        doItAndPrint(paste("windows(", window.type, "); par(", par.option, ")", sep=""))
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		#if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		}
 		doItAndPrint('plot(0,1, type="n", yaxt="n", ylab="", xlim=c(0,9), ylim=c(0,1), xlab="Color number")')
 		doItAndPrint("for (i in 1:8) {rect(i-0.5, 0.05, i+0.5, 0.95, col = i)}")
@@ -8567,7 +8864,8 @@ StatMedSetPalette <- function() {
         closeDialog(top)
 		if(getRversion() < '3.0.0') {
 #        doItAndPrint(paste("windows(", window.type, "); par(", par.option, ")", sep=""))
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		}
         palette(c(hex.1, hex.2, hex.3, hex.4, hex.5, hex.6, hex.7, hex.8))
 		logger(paste('palette(c("', hex.1, '", "', hex.2, '", "', hex.3, '", "', hex.4, '", "', hex.5, '", "', hex.6, '", "', hex.7, '", "', hex.8, '"))', sep=""))
@@ -8641,7 +8939,8 @@ StatMedNumericalSummaries <- function(){
 		doItAndPrint('colnames(res$table) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(res$table))')
 		if (graph==1){
 			for (i in 1:length(x)){			
-				if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#				if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+				NewWindow()
 				if (.groups == FALSE){
 					doItAndPrint(paste("dummyX <- rep(0, length(", .activeDataSet, "$", x[i], "))"))		
 					doItAndPrint(paste("dot.plot(dummyX, ", .activeDataSet, "$", x[i], ', xlab="", ylab="', x[i], '")', sep=""))			
@@ -8751,7 +9050,8 @@ StatMedQQPlot <- function () {
 					"), id.method=\"identify\"", sep = "")
 		}
 		else idtext <- ""
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("qqPlot", "(", .activeDataSet, "$", 
 				x, ", ", args, idtext, ")", sep = "")
 		doItAndPrint(command)
@@ -8860,7 +9160,8 @@ putDialog("StatMedHistogram", list(x=x, group=group, color=color, bins=tclvalue(
 #        bins <- if (bins == gettext(domain="R-RcmdrPlugin.EZR","<auto>")) '"Sturges"' else as.numeric(bins)
         bins <- if (bins == gettext(domain="R-RcmdrPlugin.EZR","<auto>")) '"scott"' else as.numeric(bins)-1	#chabge default to Scott, bins <- bins - 1
         options(opts)
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		if (length(group)==0) {
 			command <- paste("HistEZR(", subset1, ActiveDataSet(), subset2, "$", x, ', scale="',
             scale, '", breaks=', bins, ', xlab="', x, '", col="darkgray")', sep="")
@@ -9075,7 +9376,8 @@ putDialog("StatMedBoxPlot", list(x=x, group=group, logy=logy, whisker=whisker, s
 #        var <- paste(subset1, .activeDataSet, subset2, "[complete.cases(", subset1, .activeDataSet, subset2, "$", x, "),]$", x, sep="")
         var <- paste(subset1, .activeDataSet, subset2, "$", x, "[complete.cases(", subset1, .activeDataSet, subset2, "$", x, ")]", sep="")
         compgroup <- paste(subset1, .activeDataSet, subset2, "[complete.cases(", subset1, .activeDataSet, subset2, "$", x, "),]$", group, sep="")
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
         if (length(group) == 0) {
 			if(whisker=="default"){
 				command <- (paste("boxplot(", var, ', ylab="', x, '"', logy, ')', sep=""))
@@ -9211,7 +9513,8 @@ putDialog("StatMedBarMeans", list(group1=group1, group2=group2, response=respons
           }
         dataSet <- ActiveDataSet()
 		if (length(group1) == 0){
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			NewWindow()
 			doItAndPrint(paste("bar.sums <- sum(", subset1, dataSet, subset2, "$", response, ", na.rm=TRUE)", sep=""))
 			doItAndPrint(paste("bar.means <- mean(", subset1, dataSet, subset2, "$", response, ", na.rm=TRUE)", sep=""))
 			doItAndPrint(paste("bar.sds <- sd(", subset1, dataSet, subset2, "$", response, ", na.rm=TRUE)", sep=""))
@@ -9229,7 +9532,8 @@ putDialog("StatMedBarMeans", list(group1=group1, group2=group2, response=respons
 			}
 		}
 		if (length(group1) == 1 && length(group2) == 0){
-		    if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		    if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			NewWindow()
 			doItAndPrint(paste("bar.sums <- tapply(", subset1, dataSet, subset2, "$", response, ", factor(", subset1, dataSet, subset2, "$", group1, "), sum, na.rm=TRUE)", sep=""))
 			doItAndPrint(paste("bar.means <- tapply(", subset1, dataSet, subset2, "$", response, ", factor(", subset1, dataSet, subset2, "$", group1, "), mean, na.rm=TRUE)", sep=""))
 			doItAndPrint(paste("bar.sds <- tapply(", subset1, dataSet, subset2, "$", response, ", factor(", subset1, dataSet, subset2, "$", group1, "), sd, na.rm=TRUE)", sep=""))
@@ -9250,7 +9554,8 @@ putDialog("StatMedBarMeans", list(group1=group1, group2=group2, response=respons
 				logger(gettext(domain="R-RcmdrPlugin.EZR","Graph not created when a group with 0 sample exists"))
 			} else {			
 			eval.bar.var <- eval(parse(text=paste("length(levels(factor(", subset1, dataSet, subset2, "$", group2, ")))", sep="")))
-		    if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		    if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			NewWindow()
 			doItAndPrint(paste("bar.var <- length(levels(factor(", subset1, dataSet, subset2, "$", group2, ")))", sep=""))
 			doItAndPrint(paste("bar.sums <- tapply(subset(", subset1, dataSet, subset2, ", ", group2, "==levels(factor(", group2, "))[1])$", response, ", subset(", subset1, dataSet, subset2, ", ", group2, "==levels(factor(", group2, "))[1])$", group1, ", sum, na.rm=TRUE)", sep=""))
 			doItAndPrint(paste("bar.means <- tapply(subset(", subset1, dataSet, subset2, ", ", group2, "==levels(factor(", group2, "))[1])$", response, ", subset(", subset1, dataSet, subset2, ", ", group2, "==levels(factor(", group2, "))[1])$", group1, ", mean, na.rm=TRUE)", sep=""))
@@ -9344,7 +9649,8 @@ putDialog("StatMedStripChart", list(group=groups, response=response, logy=logy, 
 			logy <- ', log="y"'
 			logflag <- ", log.flag=TRUE"
 		}
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		if (length(groups) == 0){
 			doItAndPrint(paste("dummyX <- rep(0, length(", .subDataSet, "$", response, "))"))		
 			doItAndPrint(paste("dot.plot(dummyX, ", .subDataSet, "$", response, logflag, ', xlab="", ylab="', response, '")', sep=""))			
@@ -9429,7 +9735,8 @@ putDialog("StatMedOrderedChart", list(response=response, group=getSelection(grou
       	   	} else {
 			ylog <- TRUE
 		}
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		
 		command <- paste("OrderedPlot(y=", .subDataSet, "$", response, ", group=", groups, ', type="', type, '", ylab="', response, '", ylog=', ylog, ", lowlim=", lowlim, ", uplim=", uplim, ', decreasing="', trend, '")', sep="") 
 		doItAndPrint(command)
@@ -9526,7 +9833,8 @@ StatMedSwimPlot <- function(){
 			}
 		}
 
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		
 		command <- paste("SwimmerPlot(State=c('", paste(state, collapse="', '"), "'), EndState=c('", paste(EndState, collapse="', '"), "'), ", sep="")
 		if (length(group)>0){
@@ -9735,7 +10043,8 @@ currentModel <- TRUE
 		cex.lab <- if (cex.lab == 1) 
 					""
 				else paste(", cex.lab=", cex.lab, sep = "")
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		if (.groups == FALSE) {
 #			doItAndPrint(paste("scatterplot(", y, "~", x, log, 
 #							", reg.line=", line, ", smooth=", smooth, ", spread=", 
@@ -9848,7 +10157,8 @@ StatMedScatterPlotMatrix <- function () {
 			errorCondition(recall = StatMedScatterPlotMatrix, message = gettext(domain="R-RcmdrPlugin.EZR","Fewer than 3 variable selected."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		if (.groups == FALSE) {
 #			command <- paste("scatterplotMatrix(~", paste(variables, 
 #							collapse = "+"), ", reg.line=", line, ", smooth=", 
@@ -9858,7 +10168,7 @@ StatMedScatterPlotMatrix <- function () {
 			command <- paste("scatterplotMatrix(~", paste(variables, 
 							collapse = "+"), ", regLine=", line, 
 							if (smooth == "TRUE") paste0(", smooth=list(span=", span/100, ", spread=", spread, ")") else ", smooth=FALSE",							
-					", diagonal = '", diag, "', data=", .activeDataSet, 
+					", diagonal=list(method='", diag, "'), data=", .activeDataSet, 
 					subset, ")", sep = "")											# Changted according to the updated car package					
 			logger(command)
 			justDoIt(command)
@@ -9873,7 +10183,7 @@ StatMedScatterPlotMatrix <- function () {
 			command <- paste("scatterplotMatrix(~", paste(variables, 
 							collapse = "+"), " | ", .groups, ", regLine=", line,
 							if (smooth == "TRUE") paste0(", smooth=list(span=", span/100, ", spread=", spread, ")") else ", smooth=FALSE",	
-							", diagonal= '", diag, "', by.groups=", 
+							", diagonal=list(method='", diag, ")', by.groups=", 
 					.linesByGroup, ", data=", .activeDataSet, subset, 
 					")", sep = "")													# Changted according to the updated car package	
 			logger(command)
@@ -9943,7 +10253,8 @@ putDialog("StatMedPlotMeans", list(group=groups, response=response, errorBars=er
             }
         .activeDataSet <- ActiveDataSet()
         level <- if (error.bars == "conf.int") paste(", level=", tclvalue(levelVariable), sep="") else ""
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		if (length(groups) == 1) doItAndPrint(paste("StatMedplotMeans(", subset1, .activeDataSet, subset2, "$", response,
             ", factor(", subset1, .activeDataSet, subset2, "$", groups[1],
             '), error.bars="', error.bars, '"', level, ', xlab="', groups[1], '", ylab="', response, '")', sep=""))
@@ -10049,7 +10360,8 @@ putDialog("StatMedLinePlot", list(data=data, group=group, axisLabel=axisLabel, l
 		command2 <- paste(command2, ")", sep="")
 		doItAndPrint(command)
 		doItAndPrint(command2)
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		if (logy==0){
 			logy <- ""
 			doItAndPrint("ylimu <- max(alldata, na.rm=TRUE)")
@@ -10117,7 +10429,8 @@ putDialog("StatMedLinePlot", list(data=data, group=group, axisLabel=axisLabel, l
 					command <- paste(command, ")", sep="")
 					doItAndPrint(command)
 					if (multi == 1){
-						if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#						if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+						NewWindow()
 						command <- paste('matplot(y, type="o", lty=1, pch=1, col=1, ylab="', axisLabel, '", ylim=c(yliml, ylimu), axes=FALSE', logy, ")", sep="")
 						doItAndPrint(command)
 						doItAndPrint("box()")
@@ -10347,7 +10660,8 @@ StatMedKS <- function(){
 			subset <- paste("subset(", .activeDataSet, ", ", subset, ")", sep="")
 		}
         closeDialog()
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("hist2(", subset, "$", response, ', freq=F, main="", xlab="', response, '", ylab="", col="darkgray")', sep="")
 		doItAndPrint(command)
 		command <- paste("curve(dnorm(x, mean=mean(", subset, "$", response, "[!is.na(", subset, "$", response, ")]), sd=sd(", subset, "$", response, "[!is.na(", subset, "$", response, ")])), add=T)", sep="") 
@@ -10564,7 +10878,8 @@ putDialog("StatMedTtest", list(group=group, response=response, confidence=tclval
         	    "), alternative='", alternative, "', conf.level=", level,
           	  ", var.equal=", variances,
             	", data=", ActiveDataSet(), subset, "))", sep=""))
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			NewWindow()
 			if (graph == "box"){
 			    command <- (paste("boxplot(", response, "~ factor(", group[i], '), ylab="', response,
                 '", xlab="', group[i], '"',
@@ -10711,7 +11026,8 @@ putDialog("StatMedPairedTtest", list(xBox=x, yBox=y, confidence=level, alternati
 StatMedANOVA <- function(){
 		Library("multcomp")
 		Library("abind")
-defaults <- list(group=NULL, response=NULL, variances="TRUE", pairwise=0, dunnett=0, bonferroni=0, holm=0, actmodel=0, graph="bar", subset = "")
+		Library("rstatix")
+defaults <- list(group=NULL, response=NULL, variances="TRUE", pairwise=0, dunnett=0, bonferroni=0, holm=0, gh=0, actmodel=0, graph="bar", subset = "")
 dialog.values <- getDialog("StatMedANOVA", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -10727,7 +11043,7 @@ currentModel <- TRUE
 
 #tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison not performed when more than one grouping variables are picked."), fg="blue"), sticky="w")
 		optionsFrame <- tkframe(top)
-checkBoxes(frame="optionsFrame", boxes=c("bonferroni", "holm", "pairwise", "dunnett"), initialValues=c(dialog.values$bonferroni, dialog.values$holm, dialog.values$pairwise, dialog.values$dunnett),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Pairwise comparison (Bonferroni)", "Pairwise comparison (Holm)","Pairwise comparison (Tukey)", "Pairwise comparison (Dunnett)")))
+checkBoxes(frame="optionsFrame", boxes=c("bonferroni", "holm", "pairwise", "gh", "dunnett"), initialValues=c(dialog.values$bonferroni, dialog.values$holm, dialog.values$pairwise, dialog.values$gh, dialog.values$dunnett),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Pairwise comparison (Bonferroni)", "Pairwise comparison (Holm)","Pairwise comparison (Tukey)", "Pairwise comparison (Games-Howell)", "Pairwise comparison (Dunnett)")))
 #tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","The first group in alphabetical will be treated as the reference group."), fg="blue"), sticky="w")
 		options2Frame <- tkframe(top)
 checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$actmodel,labels=gettext(domain="R-RcmdrPlugin.EZR","Keep results as active model for further analyses"))
@@ -10755,6 +11071,7 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
 			dunnett <- tclvalue(dunnettVariable)
 			bonferroni <- tclvalue(bonferroniVariable)
 			holm <- tclvalue(holmVariable)
+			gh <- tclvalue(ghVariable)
 			actmodel <- tclvalue(actmodelVariable)
 		    subset <- tclvalue(subsetVariable)
 			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
@@ -10766,7 +11083,7 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
 				subset2 <- paste(", ", subset, ")", sep="")
 				subset <- paste(", subset=", subset, sep="")
 			}
-putDialog("StatMedANOVA", list(group=group, response=response, variances=variances, pairwise=pairwise, dunnett=dunnett, bonferroni=bonferroni, holm=holm, actmodel=actmodel, graph=graph, subset=tclvalue(subsetVariable)))
+putDialog("StatMedANOVA", list(group=group, response=response, variances=variances, pairwise=pairwise, dunnett=dunnett, bonferroni=bonferroni, holm=holm, gh=gh, actmodel=actmodel, graph=graph, subset=tclvalue(subsetVariable)))
 			if (!is.valid.name(modelValue)){
 				UpdateModelNumber(-1)
 				errorCondition(recall=StatMedANOVA, message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue))
@@ -10804,7 +11121,8 @@ putDialog("StatMedANOVA", list(group=group, response=response, variances=varianc
 				}
 #		    	assign(modelValue, justDoIt(command), envir=.GlobalEnv)			
 #				doItAndPrint(paste("numSummary(", subset1, .activeDataSet, subset2, "$", response, " , groups=", subset1, .activeDataSet, subset2, "$", group[i], ', statistics=c("mean", "sd"))', sep=""))					
-				if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#				if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+				NewWindow()
 
 				#bar.means and bar.sds are required to show summary.anova even for "box" or "point"	
 				doItAndPrint(paste("bar.means <- tapply(", subset1, ActiveDataSet(), subset2, "$", response, ", factor(", subset1, ActiveDataSet(), subset2, "$", group[i], "), mean, na.rm=TRUE)", sep=""))
@@ -10859,13 +11177,13 @@ if(length(x) != length(y) | length(y) !=length(lower) | length(lower) != length(
 			doItAndPrint('colnames(summary.anova) <- gettext(domain="R-RcmdrPlugin.EZR",colnames(summary.anova))')
 			doItAndPrint("summary.anova")	
 #			doItAndPrint("remove(summary.anova)")				
-			if (bonferroni == 1 && nvar == 1 && variances=="TRUE"){
+			if (bonferroni == 1 && nvar == 1){
 					dataSet=ActiveDataSet()
-					doItAndPrint(paste("pairwise.t.test(", subset1, dataSet, subset2, "$", response, ", ", subset1, dataSet, subset2, "$", group, ", var.equal=", variances, ', p.adj="bonferroni")', sep=""))
+					doItAndPrint(paste("pairwise.t.test(", subset1, dataSet, subset2, "$", response, ", ", subset1, dataSet, subset2, "$", group, ", var.equal=", variances, ', pool.sd="', variances, '", p.adj="bonferroni")', sep=""))
 			}
-			if (holm == 1 && nvar == 1 && variances=="TRUE"){
+			if (holm == 1 && nvar == 1){
 					dataSet=ActiveDataSet()
-					doItAndPrint(paste("pairwise.t.test(", subset1, dataSet, subset2, "$", response, ", ", subset1, dataSet, subset2, "$", group, ", var.equal=", variances, ', p.adj="holm")', sep=""))
+					doItAndPrint(paste("pairwise.t.test(", subset1, dataSet, subset2, "$", response, ", ", subset1, dataSet, subset2, "$", group, ", var.equal=", variances, ', pool.sd="', variances, '", p.adj="holm")', sep=""))
 			}
 			if (pairwise == 1 && nvar == 1 && variances=="TRUE") {
 				if (eval(parse(text=paste("length(levels(factor(", subset1, .activeDataSet, subset2, "$", group, "))) < 3"))))
@@ -10876,7 +11194,8 @@ if(length(x) != length(y) | length(y) !=length(lower) | length(lower) != length(
 #					command <- paste(".Pairs <- glht(", modelValue, ", linfct = mcp(", group, ' = "Tukey"))', sep="")
 					command <- paste("TukeyHSD(", modelValue, ', "factor(', group, ')")', sep="")
 					doItAndPrint(command)
-					if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#					if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+					NewWindow()
 					command <- paste("plot(TukeyHSD(", modelValue, ', "factor(', group, ')"))', sep="")
 					doItAndPrint(command)
 #					doItAndPrint("confint(.Pairs) # confidence intervals")
@@ -10898,6 +11217,13 @@ if(length(x) != length(y) | length(y) !=length(lower) | length(lower) != length(
 					command <- 'summary(glht(res, linfct=mcp(group.factor="Dunnett")))'
 					doItAndPrint(command)
 			}
+
+			if (gh == 1 && nvar == 1 && variances=="FALSE"){
+#					print("#	Pairwise comparisons using Games-Howell test")
+					command <- paste("games_howell_test(data=", .activeDataSet, subset, ", ", response, " ~ ",  group, ")", sep="")
+					doItAndPrint(command)
+			}
+
 			if (actmodel==1) activeModel(modelValue)
 			tkfocus(CommanderWindow())
 		}
@@ -10923,8 +11249,9 @@ if(length(x) != length(y) | length(y) !=length(lower) | length(lower) != length(
 #		tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","The first group in alphabetical will be treated as the reference group."), fg="blue"), sticky="w")
 #		tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Keep results as active model for further analyses")), actmodelCheckBox, sticky="w")
 
-tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison and active model keeping not performed for Welch test."), fg="blue"), sticky="w")
+#tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison and active model keeping not performed for Welch test."), fg="blue"), sticky="w")
 tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Pairwise comparison not performed when more than one grouping variables are picked."), fg="blue"), sticky="w")
+tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Tukey and Dunnet are for ANOVA anf Games-Howell is for Welch test."), fg="blue"), sticky="w")
 		tkgrid(optionsFrame, sticky="w", columnspan=2)
 tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","The first group in alphabetical will be treated as the reference group."), fg="blue"), sticky="w")
 		tkgrid(options2Frame, sticky="w", columnspan=2)
@@ -11055,11 +11382,13 @@ putDialog("StatMedRepANOVA", list(group=group, data=data, line=tclvalue(lineVari
 		doItAndPrint("nvar <- length(TempDF3$time)")
 		doItAndPrint("for (i in 1:nvar){TempDF3$time2[i] <- RepeatNumber[TempDF3$time[i]]}")
 		if (length(group) == 0){
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			NewWindow()
 			doItAndPrint('StatMedplotMeans(TempDF3$data, factor(TempDF3$time2), error.bars="sd", xlab="", ylab="")')
 		}
 		if (length(group) == 1){
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}	
+#			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}	
+			NewWindow()
 			doItAndPrint(paste("StatMedplotMeans(TempDF3$data, factor(TempDF3$time2), factor(TempDF3$", group[1], '), error.bars="sd", xlab="", ylab="", legend.lab="', group[1], '", ', line, ")", sep=""))
 		}
 		if (length(group) == 2){
@@ -11205,7 +11534,8 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
 
 		
 		if (nvar == 1){
-		    if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		    if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			NewWindow()
 			doItAndPrint(paste("bar.means <- tapply(TempDF$", data, ", TempDF$", group[1], ", mean, na.rm=TRUE)", sep=""))
 			doItAndPrint(paste("bar.sds <- tapply(TempDF$", data, ", TempDF$", group[1], ", sd, na.rm=TRUE)", sep=""))
 			doItAndPrint("bar.sds <- ifelse(is.na(bar.sds), 0, bar.sds)")
@@ -11217,7 +11547,8 @@ checkBoxes(frame="options2Frame", boxes="actmodel", initialValues=dialog.values$
 				logger(gettext(domain="R-RcmdrPlugin.EZR","Graph not created when a group with 0 sample exists"))
 			} else {			
 			eval.bar.var <- eval(parse(text=paste("length(levels(factor(TempDF$", group[2], ")))", sep="")))
-		    if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		    if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			NewWindow()
 			doItAndPrint(paste("bar.var <- length(levels(factor(TempDF$", group[2], ")))", sep=""))
 			doItAndPrint(paste("bar.sums <- tapply(subset(TempDF, ", group[2], "==levels(factor(", group[2], "))[1])$", data, ", subset(TempDF, ", group[2], "==levels(factor(", group[2], "))[1])$", group[1], ", sum, na.rm=TRUE)", sep=""))
 			doItAndPrint(paste("bar.means <- tapply(subset(TempDF, ", group[2], "==levels(factor(", group[2], "))[1])$", data, ", subset(TempDF, ", group[2], "==levels(factor(", group[2], "))[1])$", group[1], ", mean, na.rm=TRUE)", sep=""))
@@ -11337,7 +11668,8 @@ putDialog("StatMedANCOVA", list(group=group, data=data, covariate=covariate, act
             return()
             }
 		closeDialog()
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}		
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}		
+		NewWindow()
 #		command <- paste("scatterplot(", data, " ~ ", covariate, " | factor(", group, "), reg.line=lm, smooth=FALSE, spread=FALSE, by.groups=TRUE, data=TempDF)", sep="")
 		command <- paste("scatterplot(", data, " ~ ", covariate, " | factor(", group, "), regLine=list(method=lm, lty=1), smooth=FALSE, by.groups=TRUE, data=TempDF)", sep="")				# Changted according to the updated car package
 		doItAndPrint(command)
@@ -11409,7 +11741,8 @@ putDialog("StatMedCorrelation", list(x=x, alternative=alternative, subset = tclv
     }			
     closeDialog()
     .activeDataSet <- ActiveDataSet()
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	NewWindow()
 #    command2 <- paste("scatterplot(", x[1], "~", x[2],
 #        ", reg.line=lm, smooth=FALSE, spread=FALSE, boxplots='xy', span=0.5, data=", .activeDataSet, subset, ")", sep="")
     command2 <- paste("scatterplot(", x[1], "~", x[2],
@@ -11537,7 +11870,8 @@ putDialog("StatMedLinearRegression", list(x=x, y=y, wald=wald, actmodel=actmodel
 #		doItAndPrint("remove(res)")
 		if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
 		if (diagnosis==1){
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+			NewWindow()
 			doItAndPrint("oldpar <- par(oma=c(0,0,3,0), mfrow=c(2,2))")
 			doItAndPrint(paste("plot(", modelValue, ")", sep=""))
 			doItAndPrint("par(oldpar)")			
@@ -11795,7 +12129,8 @@ putDialog("StatMedMannW", list(group=group, response=response, alternative=alter
 				errorCondition(recall=StatMedMannW, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable with two levels."))
 				return()				
 			}
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			NewWindow()
 			command <- (paste("boxplot(", response, "~ factor(", group[i], '), ylab="', response,
                 '", xlab="', group[i], '"',
                 ", data=", ActiveDataSet(), subset, ")", sep=""))
@@ -11993,7 +12328,8 @@ putDialog("StatMedKruWalli", list(group=group, response=response, steeldwass=ste
             return()
             }
         .activeDataSet <- ActiveDataSet()
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- (paste("boxplot(", response, "~ factor(", group, '), ylab="', response,
                 '", xlab="', group, '"',
                 ", data=", ActiveDataSet(), subset, ")", sep=""))
@@ -12141,7 +12477,8 @@ putDialog("StatMedJT", list(response=response, group=group, alternative=alternat
             	errorCondition(recall=StatMedJT, message=gettext(domain="R-RcmdrPlugin.EZR","Objective variable and grouping variable must be different."))
  	           return()
         } 
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- (paste("boxplot(", response, "~ factor(", group, '), ylab="', response,
                 '", xlab="', group, '"',
                 ", data=", .subDataSet, ")", sep=""))
@@ -12438,7 +12775,8 @@ putDialog("StatMedSpearman", list(x=x, alternative=alternative, method=method, s
     }
     closeDialog()
     .activeDataSet <- ActiveDataSet()
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	NewWindow()
 #    command2 <- paste("scatterplot(", x[1], "~", x[2],
 #        ", reg.line=lm, smooth=FALSE, spread=FALSE, boxplots='xy', span=0.5, data=", .activeDataSet, subset, ")", sep="")
     command2 <- paste("scatterplot(", x[1], "~", x[2],
@@ -12513,7 +12851,8 @@ StatMedFrequency <- function(){
 #            doItAndPrint(paste(".Table  # counts for", variable))
             if (percent==1) doItAndPrint(paste("round(100*.Table/sum(.Table), 2)  # percentages for", " ", variable))
 			if (graph==1) {
-					if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#					if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+					NewWindow()
 					command <- paste('barplot(.Table, xlab="', variable, '", ylab="Frequency", axis.lty=1)', sep="")
 					doItAndPrint(command)
 					}
@@ -12895,7 +13234,8 @@ putDialog("StatMedBarGraph", list(variable=variable, group=group, group2=group2,
             errorCondition(recall=StatMedBarGraph, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
             return()
             }
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		if (length(group) == 0){
 				command <- paste("barplot(table(", subset1, ActiveDataSet(), subset2, "$", variable, '), xlab="',
 				variable, '", ylab="Frequency"', color, ", axis.lty=1)", sep="")
@@ -12978,7 +13318,8 @@ putDialog("StatMedPieChart", list(variable=variable, color=color, scale=tclvalue
 #			color <- paste(", col=c(2:", variablemembers+1, ")", sep="")
 			color <- paste(", col=rainbow_hcl(", variablemembers, ")", sep="")
 		}	
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 #		command <- (paste("pie(table(", subset1, .activeDataSet, subset2, "$", variable, "), labels=levels(factor(",
 #            .activeDataSet, "$", variable, ')), main="', variable, '"', color, scale, ", clockwise=TRUE)", sep=""))
 		command <- (paste("piechart(", subset1, .activeDataSet, subset2, "$", variable, ', main="', variable, '"', color, scale, ", clockwise=TRUE)", sep=""))
@@ -13492,7 +13833,7 @@ putDialog("StatMedPropTrend", list(response=response, group=group, subset=tclval
 
 
 StatMedLogisticRegression <- function(){
-defaults <- list(lhs = "", rhs = "", wald = 0,  roc = 0, diagnosis = 0, actmodel = 0, pscore = 0, iptw = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "")
+defaults <- list(lhs = "", rhs = "", wald = 0,  roc = 0, diagnosis = 0, actmodel = 0, forest = 0, pscore = 0, iptw = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "")
 dialog.values <- getDialog("StatMedLogisticRegression", defaults)
 currentFields$lhs <- dialog.values$lhs			#Values in currentFields will be sent to modelFormula
 currentFields$rhs <- dialog.values$rhs
@@ -13521,7 +13862,7 @@ currentFields$subset <- dialog.values$subset
     model <- ttkentry(modelFrame, width="20", textvariable=modelName)
 	optionsFrame <- tkframe(top)
 	
-	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "pscore", "iptw", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$actmodel, dialog.values$roc, dialog.values$diagnosis, dialog.values$pscore, dialog.values$iptw, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Make propensity score variable", "Inverse probability of treatment weighting", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "forest", "pscore", "iptw", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$actmodel, dialog.values$roc, dialog.values$diagnosis, dialog.values$forest, dialog.values$pscore, dialog.values$iptw, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Forest plot of subgroup analyses", "Make propensity score variable", "Inverse probability of treatment weighting", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 
 #	waldVariable <- tclVar("0")
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -13542,6 +13883,7 @@ currentFields$subset <- dialog.values$subset
 		actmodel <- tclvalue(actmodelVariable)
 		roc <- tclvalue(rocVariable)
 		diagnosis <- tclvalue(diagnosisVariable)
+		forest <- tclvalue(forestVariable)
 		pscore <- tclvalue(pscoreVariable)
 		iptw <- tclvalue(iptwVariable)
 		stepwise1 <- tclvalue(stepwise1Variable)
@@ -13549,7 +13891,7 @@ currentFields$subset <- dialog.values$subset
 		stepwise3 <- tclvalue(stepwise3Variable)
 		subset <- tclvalue(subsetVariable)
 #input values into dialog memory	
-putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), wald = wald,  roc = roc, diagnosis = diagnosis, actmodel = actmodel, pscore = pscore, iptw = iptw, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset=tclvalue(subsetVariable)))
+putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), wald = wald,  roc = roc, diagnosis = diagnosis, forest = forest, actmodel = actmodel, pscore = pscore, iptw = iptw, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset=tclvalue(subsetVariable)))
         check.empty <- gsub(" ", "", tclvalue(lhsVariable))
         if ("" == check.empty) {
             errorCondition(recall=StatMedLogisticRegression, model=TRUE, message=gettext(domain="R-RcmdrPlugin.EZR","Left-hand side of model empty."))
@@ -13575,10 +13917,12 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 			closeDialog()
         if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>") || trim.blanks(subset) == ""){
             subset <- ""
+			subset2 <- ""
             putRcmdr("modelWithSubset", FALSE)
             }
         else{
-            subset <- paste(", subset=", subset, sep="")
+			subset2 <- subset
+			subset <- paste(", subset=", subset, sep="")
             putRcmdr("modelWithSubset", TRUE)
             }
 		Library("aod")
@@ -13613,24 +13957,47 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 			} else {
 				doItAndPrint(paste("ROC <- roc(subset(TempDF", subset, ")$", tclvalue(lhsVariable), " ~ ", modelValue, '$fitted.values, ci=TRUE, direction="auto")', sep=""))
 			}
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+			NewWindow()
 			doItAndPrint("plot(ROC)")
 			doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR","Area under the curve"), signif(ROC$auc[1], digits=3), gettext(domain="R-RcmdrPlugin.EZR","95% CI"), signif(ROC$ci[1], digits=3), "-", signif(ROC$ci[3], digits=3), "\n")')
 #			doItAndPrint("remove(ROC)")
 		}
 		if (diagnosis==1){
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+			NewWindow()
 			doItAndPrint("oldpar <- par(oma=c(0,0,3,0), mfrow=c(2,2))")
 			doItAndPrint(paste("plot(", modelValue, ")", sep=""))
 			doItAndPrint("par(oldpar)")			
 		}
+
+	if (forest == 1){
+		if(subset2 == ""){
+			command <- "TempTD <- TempDF"		
+		} else {
+			command <- paste("TempTD <- subset(TempDF, ", subset2, ")", sep="")
+		}
+		doItAndPrint(command)
+		if(length(x[[1]])==1){
+			covs <- paste('"', x, '"', sep="")
+		} else {
+			covs <- paste(x, collapse=", ")
+		}
+		covs <- gsub(" ", "", covs)
+		NewWindow()
+		formula2 <- paste("glm(", formula, ", family=binomial(logit)", sep="")
+		command <- paste("glm.subgroup.forest(TempTD, formula='", formula2, "', Covariates=", covs, ")", sep="")		
+		doItAndPrint(command)
+	}
+
 		if (pscore==1 | iptw==1){
 			if(subset != ""){
 				logger(paste("#", gettext(domain="R-RcmdrPlugin.EZR","Subset analysis is not allowed in making propensity score or weighting variable."), sep=""))
 			} else {
 				command <-  paste(ActiveDataSet(),"$PropensityScore.", modelValue, " <- fitted(", modelValue, ")", sep="")
 				doItAndPrint(command)
-				if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#				if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+				NewWindow()
 				command <- paste("propensity.plot(group=", ActiveDataSet(), "$", tclvalue(lhsVariable), ", p.score=", ActiveDataSet(), "$PropensityScore.", modelValue, ")", sep="")
 				doItAndPrint(command)						
 				logger(paste("#", gettext(domain="R-RcmdrPlugin.EZR","New variable"), " PropensityScore.", modelValue, " ", gettext(domain="R-RcmdrPlugin.EZR","was made."), sep="") )
@@ -13642,7 +14009,8 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 			} else {
 				command <-  paste(ActiveDataSet(),"$weight.ATE.", modelValue, " <- IPTW.ATE(", modelValue, ")", sep="")
 				doItAndPrint(command)
-				if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#				if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+				NewWindow()
 				command <- paste("propensity.plot(group=", ActiveDataSet(), "$", tclvalue(lhsVariable), ", p.score=", ActiveDataSet(), "$PropensityScore.", modelValue, ", weights=", ActiveDataSet(), "$weight.ATE.", modelValue, ")", sep="")
 				doItAndPrint(command)						
 				logger(paste("#", gettext(domain="R-RcmdrPlugin.EZR","New variable"), " weight.ATE.", modelValue, " ", gettext(domain="R-RcmdrPlugin.EZR","was made."), sep="") )
@@ -13650,7 +14018,7 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 		}
 		if (pscore==1 | iptw==1){
 			activeDataSet(ActiveDataSet(), flushModel=FALSE)
-		}
+		}		
 		if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
 			command <- paste("glm(", formula, ", family=binomial(logit), data=TempDF", subset, ")", sep="")
 			doItAndPrint(paste(modelValue, " <- ", command, sep=""))
@@ -14162,7 +14530,7 @@ StatMedCoxRegression  <- function(){
     bolCoxphExists = FALSE
     for(ii in 1:length(xx)){if (xx[ii] == "coxph") bolCoxphExists = TRUE}
     if (bolCoxphExists == FALSE) putRcmdr("modelClasses", c(getRcmdr("modelClasses"), "coxph"))
-defaults <- list(SurvivalTimeVariable = "", StatusVariable = "", rhs = "", waldVariable = 0,  prophazVariable = 0, martinVariable = 0, basecurveVariable = 0, actmodelVariable = 0, stepwise1Variable = 0, stepwise2Variable = 0, stepwise3Variable = 0, subset = "")
+defaults <- list(SurvivalTimeVariable = "", StatusVariable = "", rhs = "", waldVariable = 0,  prophazVariable = 0, martinVariable = 0, basecurveVariable = 0, actmodelVariable = 0, forestVariable = 0, stepwise1Variable = 0, stepwise2Variable = 0, stepwise3Variable = 0, subset = "")
 dialog.values <- getDialog("StatMedCoxRegression", defaults)
 currentFields$SurvivalTimeVariable <- dialog.values$SurvivalTimeVariable	
 currentFields$StatusVariable <- dialog.values$StatusVariable
@@ -14190,7 +14558,7 @@ currentFields$subset <- dialog.values$subset
   model <- ttkentry(modelFrame, width="30", textvariable=modelName)
   	optionsFrame <- tkframe(top)
 	
-	checkBoxes(frame="checkboxFrame", boxes=c("wald", "prophaz", "martin", "basecurve", "actmodel", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$prophazVariable, dialog.values$martinVariable, dialog.values$basecurveVariable, dialog.values$actmodelVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Test proportional hazards assumption","Plot martingale residuals", "Show baseline survival curve", "Keep results as active model for further analyses", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="checkboxFrame", boxes=c("wald", "prophaz", "martin", "basecurve", "actmodel", "forest", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$prophazVariable, dialog.values$martinVariable, dialog.values$basecurveVariable, dialog.values$actmodelVariable, dialog.values$forestVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Test proportional hazards assumption","Plot martingale residuals", "Show baseline survival curve", "Keep results as active model for further analyses", "Forest plot of subgroup analyses", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 
 #	waldVariable <- dialog.values$waldVariable
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -14216,6 +14584,7 @@ currentFields$subset <- dialog.values$subset
 		martin <- tclvalue(martinVariable)
 		basecurve <- tclvalue(basecurveVariable)
 		actmodel <- tclvalue(actmodelVariable)
+		forest <- tclvalue(forestVariable)
 		stepwise1 <- tclvalue(stepwise1Variable)
 		stepwise2 <- tclvalue(stepwise2Variable)
 		stepwise3 <- tclvalue(stepwise3Variable)
@@ -14223,13 +14592,15 @@ currentFields$subset <- dialog.values$subset
     if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
         || trim.blanks(subset) == ""){
       subset <- ""
+	  subset2 <- ""
       putRcmdr("modelWithSubset", FALSE)
     }
     else{
+	  subset2 <- subset
       subset <- paste(", subset=", subset, sep="")
       putRcmdr("modelWithSubset", TRUE)
     }
-putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, martinVariable = martin, basecurveVariable = basecurve, actmodelVariable = actmodel, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
+putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, martinVariable = martin, basecurveVariable = basecurve, actmodelVariable = actmodel, forestVariable = forest, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable)))
     if (!is.valid.name(modelValue)){
       errorCondition(recall=StatMedCoxRegression, 
         message=sprintf(gettext(domain="R-RcmdrPlugin.EZR",'"%s" is not a valid name.'), modelValue), model=TRUE)
@@ -14295,12 +14666,14 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 	doItAndPrint("cox.table")
 	if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
 	if (martin==1){
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+		NewWindow()
 		doItAndPrint(paste("scatter.smooth(residuals(", modelValue, ', type="martingale"))', sep=""))	
 		doItAndPrint("abline(h=0, lty=3)")	
 		}
 	if (prophaz == 1){
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+		NewWindow()
 		nvar <- (eval(parse(text="length(cox.table[,1])")))
 		mfrow <- paste("c(4,", ceiling(nvar/4), ")", sep="")
 		switch(as.character(nvar),
@@ -14323,10 +14696,38 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
 		doItAndPrint(paste("print(cox.zph(", modelValue, "))", sep=""))			
 	}
 	if (basecurve ==1){
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+		NewWindow()
 		doItAndPrint(paste("plot(survfit(", modelValue, "))", sep=""))
 	}
-	
+
+	if (forest == 1){
+		if(subset2 == ""){
+			command <- paste("TempTD <- ", ActiveDataSet(), sep="")		
+		} else {
+			command <- paste("TempTD <- subset(", ActiveDataSet(), ", ", subset2, ")", sep="")
+		}
+		doItAndPrint(command)
+		x <- strsplit(tclvalue(rhsVariable), split="\\+")
+		if(length(x[[1]])==1){
+			covs <- paste('"', x, '"', sep="")
+		} else {
+			covs <- paste(x, collapse=", ")
+		}
+		covs <- gsub(" ", "", covs)
+		covs2 <- gsub('"', "", covs)
+
+		if(substr(covs, 1, 1)=="c"){
+			command <- paste("TempTD <- with(TempTD, TempTD[complete.cases(", substr(covs2, 3, nchar(covs2)-1), "),])", sep="")
+		} else {
+			command <- paste("TempTD <- with(TempTD, TempTD[complete.cases(", covs2, "),])", sep="")
+		}
+		doItAndPrint(command)
+		NewWindow()
+		command <- paste("cox.subgroup.forest(TempTD, formula='", formula, "', Covariates=", covs, ")", sep="")		
+		doItAndPrint(command)
+	}
+
 	if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
 		x <- strsplit(tclvalue(rhsVariable), split="\\+")
 		command <- paste("TempDF <- with(", ActiveDataSet(), ", ", ActiveDataSet(), "[complete.cases(", paste(x[[1]], collapse=","), "),])", sep="")
@@ -15287,7 +15688,7 @@ putDialog("StatMedStackCumInc", list(event = event, timetoevent = timetoevent, g
 
 
 StatMedCrr  <- function(){
-defaults <- list(event = "", timetoevent = "", group = "", fcode = 1, wald = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "")
+defaults <- list(event = "", timetoevent = "", group = "", fcode = 1, wald = 0, forest = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "")
 dialog.values <- getDialog("StatMedCrr", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -15307,7 +15708,7 @@ currentModel <- TRUE
 #	fcodeEntry <- ttkentry(fcodeFrame, width="10", textvariable=fcode)
 
   	optionsFrame <- tkframe(top)	
-	checkBoxes(frame="optionsFrame", boxes=c("wald", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="optionsFrame", boxes=c("wald", "forest", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$forest, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Forest plot of subgroup analyses", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 
 #	waldVariable <- tclVar("0")
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -15320,6 +15721,7 @@ currentModel <- TRUE
     group <- getSelection(groupBox)
     fcode <- tclvalue(fcodeVariable)
 	wald <- tclvalue(waldVariable)
+	forest <- tclvalue(forestVariable)
 	stepwise1 <- tclvalue(stepwise1Variable)
 	stepwise2 <- tclvalue(stepwise2Variable)
 	stepwise3 <- tclvalue(stepwise3Variable)
@@ -15327,11 +15729,13 @@ currentModel <- TRUE
     if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
         || trim.blanks(subset) == ""){
       subset <- ""
-    }
+	  subset2 <-""
+	  }
     else{
-      subset <- paste(", subset=", subset, sep="")
+		subset2 <- subset
+		subset <- paste(", subset=", subset, sep="")
     }	
-putDialog("StatMedCrr", list(event = event, timetoevent = timetoevent, group = group, fcode = fcode, wald = wald, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset = tclvalue(subsetVariable)))
+putDialog("StatMedCrr", list(event = event, timetoevent = timetoevent, group = group, fcode = fcode, wald = wald, forest = forest, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset = tclvalue(subsetVariable)))
     if (length(event) != 1) {
       errorCondition(recall=StatMedCrr, )
         message=gettext(domain="R-RcmdrPlugin.EZR","Pick one status indicator (censor=0, event=1,2,3...)")
@@ -15384,7 +15788,45 @@ putDialog("StatMedCrr", list(event = event, timetoevent = timetoevent, group = g
 	}
 #	doItAndPrint("crr.table <- signif(crr.table, digits=3)")
 	doItAndPrint("crr.table")
+	
 	if (wald==1) doItAndPrint("waldtest.crr(crr, rownames(crr.table))")
+
+	if (forest == 1){
+		if(subset2 == ""){
+			command <- paste("TempTD <- ", ActiveDataSet(), sep="")		
+		} else {
+			command <- paste("TempTD <- subset(", ActiveDataSet(), ", ", subset2, ")", sep="")
+		}
+		doItAndPrint(command)
+		x <- group
+
+		if(length(x)==1){
+			covs <- paste('"', x, '"', sep="")
+		} else {
+			covs <- paste('"', x[1] , '"', sep="")
+			for (i in 2:length(x)){
+				covs <- paste(covs, ', "', x[i] , '"', sep="")
+			}
+		}
+		covs <- gsub(" ", "", covs)
+
+		if(length(x)==1){
+			covs2 <- paste('"', x, '"', sep="")
+		} else {
+			covs2 <- paste(x, collapse=", ")
+		}
+		covs2 <- gsub('"', "", covs)
+
+		if(substr(covs, 1, 1)=="c"){
+			command <- paste("TempTD <- with(TempTD, TempTD[complete.cases(", substr(covs2, 3, nchar(covs2)-1), "),])", sep="")
+		} else {
+			command <- paste("TempTD <- with(TempTD, TempTD[complete.cases(", covs2, "),])", sep="")
+		}
+		doItAndPrint(command)
+		NewWindow()
+		command <- paste("crr.subgroup.forest(TempTD, time='", timetoevent, "', event='", event, "', fcode='", fcode, "', group=c(", covs, "))", sep="")		
+		doItAndPrint(command)
+	}
 
 	if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
 		command <- paste("TempDF <- with(", ActiveDataSet(), ", ", ActiveDataSet(), "[complete.cases(", paste(group, collapse=", "), "),])", sep="")
@@ -15731,7 +16173,7 @@ StatMedCoxTD  <- function(){
     for(ii in 1:length(xx)){if (xx[ii] == "coxph") bolCoxphExists = TRUE}
     if (bolCoxphExists == FALSE) putRcmdr("modelClasses", c(getRcmdr("modelClasses"), "coxph"))
 
-defaults <- list(SurvivalTimeVariable = "", StatusVariable = "", rhs = "", waldVariable = 0,  prophazVariable = 0, basecurveVariable = 0, actmodelVariable = 0, stepwise1Variable = 0, stepwise2Variable = 0, stepwise3Variable = 0, subset = "", timepositive = NULL, timenegative = NULL)
+defaults <- list(SurvivalTimeVariable = "", StatusVariable = "", rhs = "", waldVariable = 0,  prophazVariable = 0, basecurveVariable = 0, actmodelVariable = 0, forestVariable = 0, stepwise1Variable = 0, stepwise2Variable = 0, stepwise3Variable = 0, subset = "", timepositive = NULL, timenegative = NULL)
 dialog.values <- getDialog("StatMedCoxTD", defaults)
 currentFields$SurvivalTimeVariable <- dialog.values$SurvivalTimeVariable	
 currentFields$StatusVariable <- dialog.values$StatusVariable
@@ -15765,7 +16207,7 @@ currentFields$subset <- dialog.values$subset
 	text2Frame <- tkframe(top)
   	optionsFrame <- tkframe(top)
 	
-	checkBoxes(frame="checkboxFrame", boxes=c("wald", "prophaz", "basecurve", "actmodel", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$prophazVariable, dialog.values$basecurveVariable, dialog.values$actmodelVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Test proportional hazards assumption","Show baseline survival curve", "Keep results as active model for further analyses", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="checkboxFrame", boxes=c("wald", "prophaz", "basecurve", "actmodel", "forest", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$prophazVariable, dialog.values$basecurveVariable, dialog.values$actmodelVariable, dialog.values$forestVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Test proportional hazards assumption","Show baseline survival curve", "Keep results as active model for further analyses", "Forest plot of subgroup analyses", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 	
 #	waldVariable <- tclVar("0")
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -15792,6 +16234,7 @@ currentFields$subset <- dialog.values$subset
 		prophaz <- tclvalue(prophazVariable)
 		basecurve <- tclvalue(basecurveVariable)
 		actmodel <- tclvalue(actmodelVariable)
+		forest <- tclvalue(forestVariable)
 		stepwise1 <- tclvalue(stepwise1Variable)
 		stepwise2 <- tclvalue(stepwise2Variable)
 		stepwise3 <- tclvalue(stepwise3Variable)
@@ -15805,7 +16248,7 @@ currentFields$subset <- dialog.values$subset
 #      subset <- paste(", subset=", subset, sep="")
 #      putRcmdr("modelWithSubset", TRUE)
 #    }	
-putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, basecurveVariable = basecurve, actmodelVariable = actmodel, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable), timepositive = timepositive, timenegative = timenegative))
+putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVariable), StatusVariable = tclvalue(StatusVariable), rhs = tclvalue(rhsVariable), waldVariable = wald,  prophazVariable = prophaz, basecurveVariable = basecurve, actmodelVariable = actmodel, forestVariable = forest, stepwise1Variable = stepwise1, stepwise2Variable = stepwise2, stepwise3Variable = stepwise3, subset=tclvalue(subsetVariable), timepositive = timepositive, timenegative = timenegative))
 #		if (length(timedependentcovariate) == 0 || length(timepositive) == 0){
 		if (length(timepositive) == 0){
   	        errorCondition(recall=StatMedCoxTD, message=gettext(domain="R-RcmdrPlugin.EZR","Pick all required variables"))
@@ -15958,7 +16401,8 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 	doItAndPrint("cox.table")
 	if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
 	if (prophaz == 1){	
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+		NewWindow()
 		nvar <- (eval(parse(text="length(cox.table[,1])")))
 		mfrow <- paste("c(4,", ceiling(nvar/4), ")", sep="")
 		switch(as.character(nvar),
@@ -15981,9 +16425,23 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 		doItAndPrint(paste("print(cox.zph(", modelValue, "))", sep=""))			
 	}
 	if (basecurve ==1){
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+		NewWindow()
 		doItAndPrint(paste("plot(survfit(", modelValue, "))", sep=""))
 	}
+	
+		if (forest == 1){
+			x <- strsplit(covariates, split="\\+")
+			if(length(x[[1]])==1){
+				covs <- paste('"', x, '"', sep="")
+			} else {
+				covs <- paste(x, collapse=", ")
+			}
+			covs <- gsub(" ", "", covs)
+			NewWindow()
+			command <- paste("cox.subgroup.forest(TempTD, formula='", formula, "', Covariates=", covs, ")", sep="")		
+			doItAndPrint(command)
+		}
 
 	if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
 		x <- strsplit(tclvalue(rhsVariable), split="\\+")
@@ -16080,7 +16538,7 @@ putDialog("StatMedCoxTD", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 
 
 StatMedCrrTD  <- function(){
-defaults <- list(event = "", timetoevent = "", group = "", fcode = 1, wald = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "", timepositive = NULL, timenegative = NULL)
+defaults <- list(event = "", timetoevent = "", group = "", fcode = 1, wald = 0, forest = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "", timepositive = NULL, timenegative = NULL)
 dialog.values <- getDialog("StatMedCrrTD", defaults)
 currentFields$subset <- dialog.values$subset	
 currentModel <- TRUE
@@ -16107,7 +16565,7 @@ currentModel <- TRUE
 
 	textFrame <- tkframe(top)
   	optionsFrame <- tkframe(top)	
-	checkBoxes(frame="optionsFrame", boxes=c("wald", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="optionsFrame", boxes=c("wald", "forest", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$forest, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Forest plot of subgroup analyses", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 
 #	waldVariable <- tclVar("0")
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -16123,6 +16581,7 @@ currentModel <- TRUE
 	timenegative <- getSelection(timenegativeBox)
     fcode <- tclvalue(fcodeVariable)
 	wald <- tclvalue(waldVariable)
+	forest <- tclvalue(forestVariable)
 	stepwise1 <- tclvalue(stepwise1Variable)
 	stepwise2 <- tclvalue(stepwise2Variable)
 	stepwise3 <- tclvalue(stepwise3Variable)
@@ -16134,7 +16593,7 @@ currentModel <- TRUE
 #    else{
 #      subset <- paste(", subset=", subset, sep="")
 #    }	
-putDialog("StatMedCrrTD", list(event = event, timetoevent = timetoevent, group = group, fcode = fcode, wald = wald, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset = tclvalue(subsetVariable), timepositive = timepositive, timenegative = timenegative))
+putDialog("StatMedCrrTD", list(event = event, timetoevent = timetoevent, group = group, fcode = fcode, wald = wald, forest = forest, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset = tclvalue(subsetVariable), timepositive = timepositive, timenegative = timenegative))
 #		if (length(timedependentcovariate) == 0 || length(timepositive) == 0){
 		if (length(timepositive) == 0){
   	        errorCondition(recall=StatMedCrrTD, message=gettext(domain="R-RcmdrPlugin.EZR","Pick all required variables"))
@@ -16293,6 +16752,24 @@ putDialog("StatMedCrrTD", list(event = event, timetoevent = timetoevent, group =
 	doItAndPrint("cox.table")
 
 	if (wald==1) doItAndPrint("waldtest(CrrTD)")
+
+	if (forest == 1){
+		x <- paste(timepositive, "_td", sep="")
+		x <- c(x, group)
+		if(length(x)==1){
+			covs <- paste('"', x, '"', sep="")
+		} else {
+			covs <- paste('"', x[1] , '"', sep="")
+			for (i in 2:length(x)){
+				covs <- paste(covs, ', "', x[i] , '"', sep="")
+			}
+		}
+		covs <- gsub(" ", "", covs)
+		NewWindow()
+		formula <- paste("Surv(fgstart, fgstop, fgstatus) ~ ", cov, ", cluster=patientsnumber_td, weight=fgwt", sep="")
+		command <- paste("cox.subgroup.forest(TempTD.CI, formula='", formula, "', Covariates=c(", covs, "))", sep="")		
+		doItAndPrint(command)
+	}
 
 	if (stepwise1 == 1 | stepwise2 == 1 | stepwise3 == 1){
 		if (nvar >= 1){
@@ -16591,14 +17068,16 @@ putDialog("StatMedROC", list(response=response, predictor=predictor, threshold=t
 	doItAndPrint("if(ROC$thresholds[1]==-Inf){thre <- c(unique(sort(ROC$predictor)), Inf)}")
 	doItAndPrint("if(ROC$thresholds[1]==Inf){thre <- c(unique(sort(ROC$predictor, decreasing=TRUE)), -Inf)}")
 
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	NewWindow()
 #	doItAndPrint('plot(ROC$thresholds, ROC$sensitivities, ylim=c(0,1), type="l", ylab="Sensitivity/Specificity", xlab="Threshold")')
 	doItAndPrint('plot(thre, ROC$sensitivities, ylim=c(0,1), type="l", ylab="Sensitivity/Specificity", xlab="Threshold")')
 	doItAndPrint("par(new=T)")
 #	doItAndPrint('plot(ROC$thresholds,ROC$specificities, ylim=c(0,1), type="l", lty=2, ylab="", xlab="")')
 	doItAndPrint('plot(thre, ROC$specificities, ylim=c(0,1), type="l", lty=2, ylab="", xlab="", col.axis=0)')
 	doItAndPrint('legend("bottom", horiz=TRUE, c("Sensitivity", "Specificity"), lty=1:2, box.lty=0)')			
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	NewWindow()
 
 	###conflicts with colorspace package:coords and therefore use pROC::coords in ROC function
 	doItAndPrint(paste("co <- pROC::coords(ROC", cpt, ", transpose = FALSE)", sep=""))					###", transpose = FALSE" added from pROC 1.15
@@ -16705,7 +17184,8 @@ putDialog("StatMedROCtest", list(response=response, predictor1=predictor1, predi
 		command <- paste("ROC2 <- roc(", response, "~", predictor2, ", data=", subset1, ActiveDataSet(), subset2, 
             	", ci=TRUE)", sep="")
         doItAndPrint(command)
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		doItAndPrint("plot(ROC1, lty=1)")
 		doItAndPrint("plot(ROC2, lty=2, add=TRUE)")
 		doItAndPrint(paste('legend("bottomright", c("', predictor1, '", "', predictor2, '"), lty=1:2, box.lty=0)', sep=""))
@@ -16916,7 +17396,8 @@ StatMedPredictiveValue <- function(){
 must select a variable."))
 			return()
 		}
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		doItAndPrint("x <- seq(0, 1, 0.01)")
 		doItAndPrint(paste("plot(x, x*", sens, "/(x*", sens, "+(1-x)*(1-", spec, ')), ylim=c(0,1), type="l", ylab="Predictive value", xlab="Pretest probability")', sep=""))
 		doItAndPrint("par(new=T)")
@@ -17522,7 +18003,8 @@ putDialog("StatMedStCox", list(SurvivalTimeVariable = tclvalue(SurvivalTimeVaria
 	doItAndPrint("cox.table")
 	if (wald==1) doItAndPrint(paste("waldtest(", modelValue, ")", sep=""))
 	if (prophaz == 1){
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+		NewWindow()
 		nvar <- (eval(parse(text="length(cox.table[,1])")))
 		mfrow <- paste("c(4,", ceiling(nvar/4), ")", sep="")
 		switch(as.character(nvar),
@@ -17649,7 +18131,8 @@ message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("SampleProportionSingleArm(", group1, ", ", group2,
 ", ", alpha, ", ", power, ", ", method, ", ", continuity, ")", sep="")
 		doItAndPrint(command)
@@ -17704,7 +18187,8 @@ StatMedPowerProportionsSingle <- function(){
 			errorCondition(recall=StatMedPowerProportionsSingle, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("PowerProportionSingleArm(", group1, ", ", group2, ", ", alpha, ", ", sample, ", ", method, ", ", continuity, ")", sep="")
 		doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -17743,7 +18227,8 @@ StatMedSampleProportionsCI <- function(){
 			errorCondition(recall=StatMedSampleProportionsCI, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("SampleProportionCI(", p1, ", ", delta, ", ", ci, ")", sep="")
 		doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -17778,7 +18263,8 @@ StatMedSampleMeansCI <- function(){
 			errorCondition(recall=StatMedSampleMeansCI, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("SampleMeanCI(", sd, ", ", delta, ", ", ci, ")", sep="")
 		doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -17888,7 +18374,8 @@ must select a variable."))
 must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("SampleMean(", difference, ", ", stddevi, ", ",
 alpha, ", ", power, ", ", method, ", ", ratio, ")", sep="")
 		result <- doItAndPrint(command)
@@ -17953,7 +18440,8 @@ StatMedPowerMeans <- function(){
 			errorCondition(recall=StatMedPowerMeans, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("PowerMean(", difference, ", ", stddevi, ", ", alpha, ", ", sample, ", ", method, ", ", ratio, ")", sep="")
 		result <- doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -18011,7 +18499,8 @@ must select a variable."))
 must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("SampleMeanNonInf(", difference, ", ", delta, ", ", stddevi, ", ",
 alpha, ", ", power, ", ", method, ")", sep="")
 		result <- doItAndPrint(command)
@@ -18066,7 +18555,8 @@ must select a variable."))
 must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("SampleMeanPaired(", difference, ", ", stddevi, ", ",
 alpha, ", ", power, ", ", method, ")", sep="")
 		result <- doItAndPrint(command)
@@ -18118,7 +18608,8 @@ StatMedPowerMeansPaired <- function(){
 			errorCondition(recall=StatMedPowerMeansPaired, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("PowerMeanPaired(", difference, ", ", stddevi, ", ", alpha, ", ", sample, ", ", method, ")", sep="")
 		result <- doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -18170,7 +18661,8 @@ StatMedSampleProportions <- function(){
 			errorCondition(recall=StatMedSampleProportions, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("SampleProportion(", group1, ", ", group2, ", ", alpha, ", ", power, ", ", method, ", ", ratio, ", ", continuity, ")", sep="")
 		doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -18233,7 +18725,8 @@ StatMedPowerProportions <- function(){
 			return()
 		}
 #		library(statmod)
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("PowerProportion(", group1, ", ", group2, ", ", alpha, ", ", sample, ", ", method, ", ",  ratio, ", ", continuity, ")", sep="")
 		doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -18286,7 +18779,8 @@ StatMedSampleProportionsNonInf <- function(){
 			errorCondition(recall=StatMedSampleProportionsNonInf, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("SampleProportionNonInf(", group1, ", ", group2, ", ", delta, ", ", alpha, ", ", power, ", ", method, ")", sep="")
 		doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -18390,7 +18884,8 @@ StatMedSampleHazard <- function(){
 			errorCondition(recall=StatMedSampleHazard, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("SampleHazard(", enrol, ", ", studyperiod, ", ", followup, ", ", group1, ", ", group2, ", ", alpha, ", ", power, ", ", method, ", ", ratio, ")", sep="")
 		result <- doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -18468,7 +18963,8 @@ StatMedPowerHazard <- function(){
 			errorCondition(recall=StatMedPowerHazard, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("PowerHazard(", enrol, ", ", studyperiod, ", ", followup, ", ", group1, ", ", group2, ", ", alpha, ", ", sample, ", ", method, ", ", ratio, ")", sep="")
 		result <- doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -18542,7 +19038,8 @@ StatMedSampleHazardNonInf <- function(){
 			errorCondition(recall=StatMedSampleHazard, message=gettext(domain="R-RcmdrPlugin.EZR","You must select a variable."))
 			return()
 		}
-        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		command <- paste("SampleHazardNonInf(", enrol, ", ", studyperiod, ", ", followup, ", ", group1, ", ", group2, ", ", lowerlimit, ", ", alpha, ", ", power, ", ", method, ", ", ratio, ")", sep="")
 		result <- doItAndPrint(command)
 		tkfocus(CommanderWindow())
@@ -18648,14 +19145,16 @@ putDialog("StatMedMeta", list(studyname=studyname, testpositive=testpositive, te
 	}
 	doItAndPrint(command)
 	doItAndPrint("res")
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	NewWindow()
 	if (detail == 0){
 		doItAndPrint("plot(res)")
 	} else{
 		doItAndPrint(paste("forest.meta(res", group2, ")", sep=""))
 	}
 	if (funnel == 1) {
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		doItAndPrint("funnel(res)")
 		doItAndPrint("metabias(res)")
 	}
@@ -18666,7 +19165,8 @@ putDialog("StatMedMeta", list(studyname=studyname, testpositive=testpositive, te
 			doItAndPrint("y <- exp(res$TE)")
 			doItAndPrint(paste("(metareg <- metatest(res$TE~TempDF$", reg[i], ", Var))", sep=""))
 			doItAndPrint(paste("x <- TempDF$", reg[i], sep=""))
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+#			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}			
+			NewWindow()
 			doItAndPrint("y.L <- exp(res$TE-qnorm(0.975)*res$seTE)")
 			doItAndPrint("y.H <- exp(res$TE+qnorm(0.975)*res$seTE)")
 			doItAndPrint("max.weight <- sqrt(max(res$w.fixed))")
@@ -18784,7 +19284,8 @@ putDialog("StatMedMetaHazard",list(input=input, studyname=studyname, hazard=haza
 	}
 	doItAndPrint(command)
 	doItAndPrint("res")
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	NewWindow()
 	if (detail == 0){
 		doItAndPrint("plot(res)")
 	}
@@ -18792,7 +19293,8 @@ putDialog("StatMedMetaHazard",list(input=input, studyname=studyname, hazard=haza
 		doItAndPrint(paste("forest.meta(res", group2, ")", sep=""))
 	}
 	if (funnel == 1) {
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		doItAndPrint("funnel(res)")
 		doItAndPrint("metabias(res)")
 	}
@@ -18803,7 +19305,8 @@ putDialog("StatMedMetaHazard",list(input=input, studyname=studyname, hazard=haza
 			doItAndPrint("y <- exp(res$TE)")
 			doItAndPrint(paste("(metareg <- metatest(res$TE~TempDF$", reg[i], ", Var))", sep=""))
 			doItAndPrint(paste("x <- TempDF$", reg[i], sep=""))
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			NewWindow()
 			doItAndPrint("y.L <- exp(res$TE-qnorm(0.975)*res$seTE)")
 			doItAndPrint("y.H <- exp(res$TE+qnorm(0.975)*res$seTE)")
 			doItAndPrint("max.weight <- sqrt(max(res$w.fixed))")
@@ -18916,7 +19419,8 @@ putDialog("StatMedMetaCont", list(studyname=studyname, testmean=testmean, testnu
 	}
 	doItAndPrint(command)
 	doItAndPrint("res")
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	NewWindow()
 	if (detail == 0){
 		doItAndPrint("plot(res)")
 	}
@@ -18924,7 +19428,8 @@ putDialog("StatMedMetaCont", list(studyname=studyname, testmean=testmean, testnu
 		doItAndPrint(paste("forest.meta(res", group2, ")", sep=""))
 	}
 	if (funnel == 1) {
-		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		doItAndPrint("funnel(res)")
 		doItAndPrint("metabias(res)")
 	}
@@ -18935,7 +19440,8 @@ putDialog("StatMedMetaCont", list(studyname=studyname, testmean=testmean, testnu
 			doItAndPrint("y <- res$TE")
 			doItAndPrint(paste("(metareg <- metatest(res$TE~TempDF$", reg[i], ", Var))", sep=""))
 			doItAndPrint(paste("x <- TempDF$", reg[i], sep=""))
-			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#			if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+			NewWindow()
 			doItAndPrint("y.L <- res$TE-qnorm(0.975)*res$seTE")
 			doItAndPrint("y.H <- res$TE+qnorm(0.975)*res$seTE")
 			doItAndPrint("max.weight <- sqrt(max(res$w.fixed))")
@@ -19049,15 +19555,18 @@ putDialog("StatMedNetworkMeta", list(studyname=studyname, treatment1=treatment1,
 	}
 
 	doItAndPrint(paste("res <- netmeta(", effect, ", ", se, ", ", treatment1, ", ", treatment2, ", ", studyname, ', data=TempDF, sm="', endpoint, '", reference.group="', reference, '", tol.multiarm=0.05, tol.multiarm.se=0.05)', sep=""))
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	NewWindow()
 	doItAndPrint("netgraph(res)")
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	NewWindow()
 	doItAndPrint('forest(res, sortvar=TE, pooled="random")')
 	doItAndPrint("summary(res)")
 	
 	if(netrank==1){
 		doItAndPrint("(rank <- netrank(res))")
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
 		doItAndPrint('par(lwd=1, las=2, family="sans", cex=1)')
 		doItAndPrint('mar <- par("mar")')
 		doItAndPrint("mar[1] <- mar[1] + 2")
@@ -19067,7 +19576,8 @@ putDialog("StatMedNetworkMeta", list(studyname=studyname, treatment1=treatment1,
 		doItAndPrint(paste('OrderedPlot(rank$Pscore.fixed, group=NULL, type="box", ylab="', endpoint, '", ylog=FALSE, decreasing="TRUE")', sep=""))
 	}
 	if(heat==1){
-	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+#	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+	NewWindow()
 	doItAndPrint("netheat(res, random=T, showall=T)")	
 	}
 
@@ -19109,8 +19619,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.61", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","November 11, 2022"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.62", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","February 28, 2023"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -19224,7 +19734,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.61", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.62", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -19301,4 +19811,5 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'com.estVariable', 'colVariable', 'cciVariable', 'selection', 'com.est', 
 'cci', 'swimmer_plot', 'swimmer_arrows', 'scale_fill_grey', 'swimmer_points', 
 'currentSurvival', 'swimplot', 'ggplot2', 'encodeVariable', 'encodeFrame', 'saveLog',
-'saveLogAs', ''))
+'saveLogAs', 'ghVariable', 'forestVariable', 'maineffect', 'metagen', 
+'forest.meta', 'subgroup', ''))

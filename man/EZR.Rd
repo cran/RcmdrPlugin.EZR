@@ -3,10 +3,13 @@
 \alias{gassign}
 \alias{ChrToFactor}
 \alias{Cochran.Q.test}
+\alias{cox.subgroup.forest}
 \alias{CP932toUTF8}
+\alias{crr.subgroup.forest}
 \alias{CurrentSurvival}
 \alias{EZRVersion}
 \alias{EZRhelp}
+\alias{glm.subgroup.forest}
 \alias{OrderedPlot}
 \alias{PowerHazard}
 \alias{PowerMean}
@@ -40,6 +43,7 @@
 \alias{listLMMs}
 \alias{logrank.trend}
 \alias{modelFormulaCox}
+\alias{NewWindow}
 \alias{nrisk}
 \alias{numSummary2}
 \alias{objectCheck}
@@ -96,8 +100,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.61\cr
-Date: \tab 2022-11-11\cr
+Version: \tab 1.62\cr
+Date: \tab 2023-11-11\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }

@@ -1,3 +1,13 @@
+Changes to Version 1.62
+
+  o Added functions to draw forest plot for subgroup analyses in logistic regression, proportional hazard regression, and Fine-Gray regression.
+
+  o Added pairwise comparison functions with Bonferroni, Holm, and Games-Howell for Welch test.
+
+  o Added function to randomly split dataset into training and validation datasets. 
+
+  o Small bug fixes. 
+
 Changes to Version 1.61
 
   o Added require("tcltk") for "tkbutton" error for Windows wasy install version. 

@@ -139,6 +139,7 @@
 \alias{StatMedTest}
 \alias{StatMedTtest}
 \alias{StatMedTwoWayTable}
+\alias{StatMedTrainTestSplit}
 \alias{StatMedVariableCheck}
 \alias{StatMedWilSign}
 \alias{StatMedcloseCommander}

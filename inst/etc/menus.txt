@@ -14,6 +14,7 @@ item	FileMenu	command	"Read data set from an attached package"	readDataFromPacka
 item	FileMenu	command	"Copy data set"	StatMedCopyDataset	"dataSetsP()"	""
 item	FileMenu	command	"Rename data set"	StatMedRenameDataset	"dataSetsP()"	""
 item	FileMenu	command	"Merge data sets"	StatMedMergeDatasets	"dataSetsP(2)"	""
+item	FileMenu	command "Training-Test data split"	StatMedTrainTestSplit	"dataSetsP()"	""
 item	FileMenu	command	"Save active data set"	StatMedSaveDataSet	"activeDataSetP()"	""
 item	FileMenu	separator	""	""	""	""
 item	FileMenu	command	"Load script file"	loadLog	""	""
