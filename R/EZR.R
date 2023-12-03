@@ -47,7 +47,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.62", "\n")
+cat("   Version 1.63", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -1840,6 +1840,8 @@ summary.ci <- function (object, ..., ci, res, event=1, time=0){
 	} else {
 		groups <- levels(ci.table$strata)
 		ngroups <- length(groups)
+        groups2 <- names(ci$strata)
+		ngroups2 <- length(groups2)
 		p.value <- signif(res$Tests[event, 2],digits=3)	
 	}
 	
@@ -1880,7 +1882,7 @@ summary.ci <- function (object, ..., ci, res, event=1, time=0){
 			surv.ci[i] <- paste("(", formatC(lower, format="f", digits=3), "-", formatC(upper, format="f", digits=3), ")", sep="")
 		}
 	}
-	if(ngroups==1){
+	if(ngroups2==1){
 		if(!is.null(surv)){	
 			surv.table <- data.frame(n=samples, incidence=surv, CI=surv.ci, median=medians)
 			colnames(surv.table)[3] <- "95% CI"
@@ -1889,7 +1891,7 @@ summary.ci <- function (object, ..., ci, res, event=1, time=0){
 			colnames(surv.table)[2] <- "median time"
 		}
 	}else{
-		p.value[2:ngroups] <- ""
+		p.value[2:ngroups2] <- ""
 		if(!is.null(surv)){	
 			surv.table <- data.frame(n=samples, incidence=surv, CI=surv.ci, median=medians, p.value)
 			colnames(surv.table)[3] <- "95% CI"
@@ -2109,8 +2111,14 @@ rmean.table.adjusted <- function(x=coxmodel, tau=NULL){
 
 
 print.ci.summary <- function (x, ..., ci) {
-    ngroups <- length(ci$n)
-    group.names <- names(ci$strata)
+#    ngroups <- length(ci$n)
+#    group.names <- names(ci$strata)
+
+# changed to show correctly when there were no events in a group
+	ci.table <- summary(ci)
+	group.names <- levels(ci.table$strata)
+	ngroups <- length(group.names)
+
     nevents <- length(ci$states) - 1
 
     start <- 1
@@ -2120,10 +2128,14 @@ print.ci.summary <- function (x, ..., ci) {
         } else {
             stop <- start + ci$strata[i] - 1
         }
-        ci.summary.table <- data.frame(time = ci$time[start:stop], 
+		if (stop > start){
+			ci.summary.table <- data.frame(time = ci$time[start:stop], 
             n.risk = ci$n.risk[start:stop], n.event = rowSums(ci$n.event[start:stop,]))
-
-
+		} else {
+			ci.summary.table <- data.frame(time = ci$time[start:stop], 
+            n.risk = ci$n.risk[start:stop], n.event = sum(ci$n.event[start:stop,]))			
+		}	
+			
 	for (j in 1:nevents){
                 ci95 <- paste("(", formatC(ci$lower[start:stop, j+1], 
                   format = "f", digits = 3), "-", formatC(ci$upper[start:stop, j+1], 
@@ -2133,7 +2145,8 @@ print.ci.summary <- function (x, ..., ci) {
             colnames(ci.summary.table)[2 + j * 2] <- paste("incidence-", j, sep = "")
             colnames(ci.summary.table)[3 + j * 2] <- paste("95% CI-", j, sep = "")
         }
-        cat("\t\t", names(ci$strata[i]), "\n")
+#        cat("\t\t", names(ci$strata[i]), "\n")
+        cat("\t\t", group.names[i], "\n")
         print(ci.summary.table[ci.summary.table$n.event>0,])
         cat("\n")
         start <- stop + 1
@@ -14862,11 +14875,11 @@ onOK <- function(){
     if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")
         || trim.blanks(subset) == ""){
 		subdataSet <- dataSet
-		naexcludeSubdataSet <- paste("subset(", dataSet, ", ", sep="")
+#		naexcludeSubdataSet <- paste("subset(", dataSet, ", ", sep="")
 		}
     else{
 		subdataSet <- paste("subset(", dataSet, ", ", subset, ")", sep="")
-		naexcludeSubdataSet <- paste("subset(", dataSet, ", (", subset, ") & ", sep="")	
+#		naexcludeSubdataSet <- paste("subset(", dataSet, ", (", subset, ") & ", sep="")	
 		}
 	line <- tclvalue(lineVariable)	
 	par.lwd <- get("par.lwd", envir=.GlobalEnv)
@@ -14957,25 +14970,63 @@ putDialog("StatMedAdjustedSurvival", list(event = event, timetoevent = timetoeve
     }
     closeDialog()
     Library("survival")
-	if (length(group)==0) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "is.na(", timetoevent, ")==F & is.na(", event, ")==F ", sep="")
-	if (length(group)==1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "is.na(", timetoevent, ")==F & is.na(", event, ")==F & is.na(", group, ")==F ", sep="")
-#	naexcludeSubdataSet <- paste(naexcludeSubdataSet, "(is.na(", adjust[1], ")==F", sep="")
+
+	doItAndPrint(paste("TempDF <- ", subdataSet, sep=""))
+	
+#	if (length(group)==0) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "is.na(", timetoevent, ")==F & is.na(", event, ")==F ", sep="")
+#	if (length(group)==1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "is.na(", timetoevent, ")==F & is.na(", event, ")==F & is.na(", group, ")==F ", sep="")
+#	if(length(adjust)>=1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "& is.na(", adjust[1], ")==F", sep="")
+#	if(length(adjust)>=2){
+#		for (i in 2:length(adjust)){
+#			factor <- paste(factor, " + ", adjust[i], sep="")
+#			naexcludeSubdataSet <- paste(naexcludeSubdataSet, " & is.na(", adjust[i], ")==F", sep="")
+#			}
+#	}
+
 	factor <- adjust[1]
-	if(length(adjust)>=1) naexcludeSubdataSet <- paste(naexcludeSubdataSet, "& is.na(", adjust[1], ")==F", sep="")
+	comp <- paste("TempDF$", timetoevent, sep="")
+	if (length(group)==1) comp <- paste(comp, ", TempDF$", group, sep="")
+	if(length(adjust)>=1) comp <- paste(comp, ", TempDF$", adjust[1], sep="")
 	if(length(adjust)>=2){
 		for (i in 2:length(adjust)){
 			factor <- paste(factor, " + ", adjust[i], sep="")
-			naexcludeSubdataSet <- paste(naexcludeSubdataSet, " & is.na(", adjust[i], ")==F", sep="")
-			}
+			comp <- paste(comp, ", TempDF$", adjust[i], sep="")
+		}
 	}
+	
 	factor2 <- factor
-	naexcludeSubdataSet <- paste(naexcludeSubdataSet, ")", sep="")
+#	naexcludeSubdataSet <- paste(naexcludeSubdataSet, ")", sep="")
+
+	command <- paste("TempDF <- TempDF[complete.cases(", comp, "),]", sep="")
+	doItAndPrint(command)
+
 	if (length(group)==1) factor2 <- paste(factor, " + strata(", group, ")", sep="")	
-#	command <- paste("coxmodel <- coxph(Surv((", timetoevent, "/", xscale, "), ", event, "==1)~ ", factor2, ", data=", subdataSet, ', method="breslow")', sep="")
-#	use naexcludeSubdataset for rmean.table.adjusted() function. Can be replaced with complete.case() function.
-	command <- paste("coxmodel <- coxph(Surv((", timetoevent, "/", xscale, "), ", event, "==1)~ ", factor2, ", data=", naexcludeSubdataSet, ', method="breslow")', sep="")
+	#command <- paste("coxmodel <- coxph(Surv((", timetoevent, "/", xscale, "), ", event, "==1)~ ", factor2, ", data=", naexcludeSubdataSet, ', method="breslow")', sep="")
+	command <- paste("coxmodel <- coxph(Surv((", timetoevent, "/", xscale, "), ", event, "==1)~ ", factor2, ', data=TempDF, method="breslow")', sep="")
+	
 	doItAndPrint("coxmodel <- NULL")
 	doItAndPrint(command)
+	
+#survival package has changed the coxmodels$means value from average value to 0 for factors and integers of two levels of 0 and 1
+#to draw adjusted survival curves, the coxmodel$means should be average value
+
+	doItAndPrint("sample.n <- length(TempDF[,1])")
+	for (i in 1:length(coxmodel$means)){
+		command <- paste("coxmodel$means[", i, "] <- ", sep="")
+		means.name <- eval(parse(text=paste("names(coxmodel$means[", i, "])", sep="")))
+		T <- regexpr("[T", means.name, fixed=TRUE)
+		if (T > 0){
+			variable.name <- substr(means.name, 1, T-1)
+			T2 <- regexpr("]", means.name, fixed=TRUE)
+			value <- substr(means.name, T+3, T2-1)
+			command <- paste(command, "length(which(TempDF$", variable.name, '=="', value, '")) / sample.n', sep="")
+		} else {
+			variable.name <- means.name
+			command <- paste(command, "mean(TempDF$", variable.name, ")", sep="")
+		}
+		doItAndPrint(command)
+	}
+	
 	doItAndPrint("cox <- NULL")
 	doItAndPrint('cox <- survfit(coxmodel, Conf.type="log-log")')
 	if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", paste(substring(get("par.option", envir=.GlobalEnv), 1, nchar(get("par.option", envir=.GlobalEnv))-8), "2.5,1,0)", sep=""), ")", sep=""))}
@@ -16057,6 +16108,27 @@ putDialog("StatMedAdjustedCumInc", list(event = event, timetoevent = timetoevent
 	command <- paste("coxmodel <- coxph(Surv((fgstart / ", xscale, "), fgstop, fgstatus) ~ ", factor2, ', data=Temp.CI, weight=fgwt, method="breslow")', sep="")
 	doItAndPrint("coxmodel <- NULL")
 	doItAndPrint(command)
+	
+#survival package has changed the coxmodels$means value from average value to 0 for factors and integers of two levels of 0 and 1
+#to draw adjusted survival curves, the coxmodel$means should be average value
+
+	doItAndPrint("sample.n <- length(Temp.CI[,1])")
+	for (i in 1:length(coxmodel$means)){
+		command <- paste("coxmodel$means[", i, "] <- ", sep="")
+		means.name <- eval(parse(text=paste("names(coxmodel$means[", i, "])", sep="")))
+		T <- regexpr("[T", means.name, fixed=TRUE)
+		if (T > 0){
+			variable.name <- substr(means.name, 1, T-1)
+			T2 <- regexpr("]", means.name, fixed=TRUE)
+			value <- substr(means.name, T+3, T2-1)
+			command <- paste(command, "length(which(Temp.CI$", variable.name, '=="', value, '")) / sample.n', sep="")
+		} else {
+			variable.name <- means.name
+			command <- paste(command, "mean(Temp.CI$", variable.name, ")", sep="")
+		}
+		doItAndPrint(command)
+	}
+	
 	doItAndPrint("cox <- NULL")
 	doItAndPrint('cox <- survfit(coxmodel, conf.type="log-log")')
 
@@ -19619,8 +19691,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.62", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","February 28, 2023"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.63", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","December 24, 2023"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -19734,7 +19806,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.62", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.63", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
