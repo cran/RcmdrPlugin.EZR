@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr 2.7-0 Japanese Translation\n"
 "POT-Creation-Date: 2019-01-08 16:30:00\n"
-"PO-Revision-Date: 2023-10-11 16:01+0900\n"
+"PO-Revision-Date: 2024-01-24 11:53+0900\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -7781,4 +7781,7 @@ msgstr "少なくとも１つのサブグループ解析因子を選んでくだ
 
 msgid "Forest plot of subgroup analyses"
 msgstr "サブグループ解析のForest plotを示す"
+
+msgid "Previous standard color"
+msgstr "以前の標準"
 

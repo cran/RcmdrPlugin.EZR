@@ -47,7 +47,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.63", "\n")
+cat("   Version 1.64", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -1836,6 +1836,7 @@ summary.ci <- function (object, ..., ci, res, event=1, time=0){
 	ci.table <- summary(ci)
 	if(is.null(ci$strata)){
 		ngroups <- 1
+		ngroups2 <- 1
 		p.value <- NULL
 	} else {
 		groups <- levels(ci.table$strata)
@@ -2117,7 +2118,9 @@ print.ci.summary <- function (x, ..., ci) {
 # changed to show correctly when there were no events in a group
 	ci.table <- summary(ci)
 	group.names <- levels(ci.table$strata)
-	ngroups <- length(group.names)
+#	ngroups <- length(group.names)
+
+	ngroups <- length(ci$n)	# changed from ver 1.64
 
     nevents <- length(ci$states) - 1
 
@@ -8736,8 +8739,8 @@ defaults <- list(palette="Standard")
 dialog.values <- getDialog("StatMedChangePalette", defaults)
     initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Graph colors"))
     optionsFrame <- tkframe(top)	
-    radioButtons(optionsFrame, name="palette", buttons=c("Standard", "Gray4", "Gray8", "Heat", "Cold"), values=c("Standard", "Gray4", "Gray8", "Heat", "Cold"), initialValue=dialog.values$palette,
-       labels=gettext(domain="R-RcmdrPlugin.EZR",c("Standard color", "Gray (4 levels)", "Gray (8 levels)", "Heat", "Cold")), title=gettext(domain="R-RcmdrPlugin.EZR","Colors"))
+    radioButtons(optionsFrame, name="palette", buttons=c("Standard", "PreviousStandard", "Gray4", "Gray8", "Heat", "Cold"), values=c("Standard", "PreviousStandard", "Gray4", "Gray8", "Heat", "Cold"), initialValue=dialog.values$palette,
+       labels=gettext(domain="R-RcmdrPlugin.EZR",c("Standard color", "Previous standard color", "Gray (4 levels)", "Gray (8 levels)", "Heat", "Cold")), title=gettext(domain="R-RcmdrPlugin.EZR","Colors"))
     onOK <- function(){
 		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Graph colors"), "#####", sep=""))	
         palette.type <- tclvalue(paletteVariable)
@@ -8745,6 +8748,7 @@ putDialog("StatMedChangePalette", list(palette=palette.type))
         closeDialog()
 		switch (palette.type,
 			"Standard"=doItAndPrint('palette("default")'),
+			"PreviousStandard"=doItAndPrint('palette("R3")'),
 			"Gray4"=doItAndPrint("palette(gray(rep(c(0, 0.3, 0.6, 0.9),2)))"),
 			"Gray8"=doItAndPrint("palette(gray(seq(0, 1, length=8)))"),
 			"Heat"=doItAndPrint("palette(heat.colors(8))"),
@@ -13062,6 +13066,8 @@ putDialog("StatMedProbSingle", list(x=x, chisq=chisq, exact=exact, continuity=co
 				doItAndPrint(command)
 			}
 		}
+		
+		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "Proportion"), " ", signif(res$estimate, digits=3), ", ", gettext(domain="R-RcmdrPlugin.EZR", "95% CI"), " ", signif(res$conf.int[1], digits=3), "-", signif(res$conf.int[2], digits=3), "\n", sep="")')		
 		doItAndPrint('cat(gettext(domain="R-RcmdrPlugin.EZR", "Single-Sample Proportion Test"), " ", gettext(domain="R-RcmdrPlugin.EZR", "p.value"), " = ", signif(res$p.value, digits=3), "\n", sep="")')
 #		doItAndPrint("remove(res)")	
 
@@ -13328,8 +13334,8 @@ putDialog("StatMedPieChart", list(variable=variable, color=color, scale=tclvalue
 			}
 			color <- paste(color, ")))", sep="")
 		} else {
-#			color <- paste(", col=c(2:", variablemembers+1, ")", sep="")
-			color <- paste(", col=rainbow_hcl(", variablemembers, ")", sep="")
+			color <- paste(", col=c(2:", variablemembers+1, ")", sep="")
+#			color <- paste(", col=rainbow_hcl(", variablemembers, ")", sep="")
 		}	
 #        if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
 		NewWindow()
@@ -19691,8 +19697,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.63", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","December 24, 2023"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.64", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","January 31, 2024"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -19806,7 +19812,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.63", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.64", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
