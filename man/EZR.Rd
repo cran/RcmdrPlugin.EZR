@@ -82,6 +82,7 @@
 \alias{summary.km}
 \alias{summary.table.twoway}
 \alias{summary.table.MH}
+\alias{swimmer_arrows}
 \alias{trim.col.na}
 \alias{var2}
 \alias{waldtest}
@@ -100,8 +101,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.64\cr
-Date: \tab 2024-1-31\cr
+Version: \tab 1.65\cr
+Date: \tab 2024-2-28\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
@@ -217,6 +218,7 @@ Boxplot\cr
 Dot chart\cr
 Ordered chart (Waterfall plot)\cr
 Swimmer plot\cr
+Sankey diagram\cr
 Scatterplot\cr
 Scatterplot matrix\cr
 Adjusted survival curve\cr

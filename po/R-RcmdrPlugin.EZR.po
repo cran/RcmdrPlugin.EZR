@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr 2.7-0 Japanese Translation\n"
 "POT-Creation-Date: 2019-01-08 16:30:00\n"
-"PO-Revision-Date: 2024-01-24 11:53+0900\n"
+"PO-Revision-Date: 2024-03-25 00:37+0900\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ja_JP\n"
 "X-Generator: Poedit 2.4.1\n"
-"Last-Translator: \n"
+"Last-Translator: Y. Kanda <ycanda-tky@umin.ac.jp>\n"
 
 msgid "KMeans Clustering"
 msgstr "ｋ平均クラスタリング"
@@ -7784,4 +7784,73 @@ msgstr "サブグループ解析のForest plotを示す"
 
 msgid "Previous standard color"
 msgstr "以前の標準"
+
+msgid "Sankey diagram"
+msgstr "サンキーダイアグラム"
+
+msgid "First node (pick one)"
+msgstr "最初の節(１つ選択)"
+
+msgid "Second node (pick one)"
+msgstr "二番目の節(１つ選択)"
+
+msgid "Additional nodes"
+msgstr "三番目以降の節"
+
+msgid "Exclude samples with missing values"
+msgstr "欠損のあるサンプルを除外する"
+
+msgid "Show no-transition lines"
+msgstr "該当サンプルがない移行も表示する"
+
+msgid "Pick one first node variable"
+msgstr "最初の節の変数を選んで下さい"
+
+msgid "Pick one second node variable"
+msgstr "二番目の節の変数を選んで下さい"
+
+msgid "Node No."
+msgstr "節番号:"
+
+msgid "Adjust layout"
+msgstr "並び替えを行う"
+
+msgid "First node to left border"
+msgstr "最初の節を左端にそろえる"
+
+msgid "Last node to right border"
+msgstr "最後の節を右端にそろえる"
+
+msgid "Alignment"
+msgstr "節の水平位置"
+
+msgid "CONSORT diagram"
+msgstr "CONSORTダイアグラム"
+
+msgid "Population"
+msgstr "全コホート"
+
+msgid "Allocation"
+msgstr "割り付け"
+
+msgid "Exclusion"
+msgstr "除外節(あるいは最終結果)"
+
+msgid "Current population"
+msgstr "現コホート"
+
+msgid "Name of this node:"
+msgstr "節の名称："
+
+msgid "Node type"
+msgstr "節の種類"
+
+msgid "Allocation: only once allowed"
+msgstr "割付は1回のみ可能です"
+
+msgid "Pick at least one event-on/off variable"
+msgstr "イベント発生・消失変数を少なくとも1つ選択して下さい。"
+
+msgid "Pick at least two event-on/off variables"
+msgstr "イベント発生・消失変数を少なくとも2つ選択して下さい。"
 

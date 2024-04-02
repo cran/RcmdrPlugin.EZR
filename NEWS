@@ -1,3 +1,7 @@
+Changes to Version 1.65
+
+  o Added function to draw sankey diagram and CONSORT diagram.
+
 Changes to Version 1.64
 
   o Bug fix for cumulative incidence analysis when the number of group is only 1.

@@ -47,7 +47,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.64", "\n")
+cat("   Version 1.65", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -1041,6 +1041,24 @@ OrderedPlot <- function(y, group=NULL, type="line", xlab="", ylab="Value", ylog=
 }
 
 
+swimmer_arrows <- function (df_arrows, id = "id", arrow_start = "end", cont = NULL, adj.y = 0, name_col = NULL, arrow_positions = c(0.1, 1), angle = 30, length = 0.1, type = "closed", ...) {
+#	from 'swimplot' package
+#   df_arrows[, name_col] <- factor(df_arrows[, name_col])	This line was deleted to avoid "cannot xtfrm data frames" error
+	if (!is.null(cont)) {
+		df_arrows <- df_arrows[!is.na(df_arrows[, cont]), ]
+	}
+	df_arrows[, id] <- as.character(df_arrows[, id])
+	df_arrows$start <- df_arrows[, arrow_start] + arrow_positions[1]
+	df_arrows$end <- df_arrows[, arrow_start] + arrow_positions[2]
+	plot.arrow <- ggplot2::geom_segment(data = df_arrows, ggplot2::aes_string(x = id, 
+    xend = id, y = "start", yend = "end", col = name_col), 
+    arrow = ggplot2::arrow(angle = angle, length = ggplot2::unit(length, 
+      "inches"), type = type), position = ggplot2::position_nudge(x = adj.y, 
+      y = 0), ...)
+	return(plot.arrow)
+}
+
+
 SwimmerPlot <- function(State, EndState, Group=NULL, Order=NULL, Censored=NULL, Gray=0, Event=NULL, TimeEvent=NULL, Dataset) {
 
 	Library("swimplot")
@@ -1056,19 +1074,18 @@ SwimmerPlot <- function(State, EndState, Group=NULL, Order=NULL, Censored=NULL, 
 	}
 
 	StateNumber <- length(State)
-	DataframeForSimplePlot <- reshape(Dataset, varying=State, v.names="StateChange", timevar="State", direction="long")	
+	DataframeForSimplePlot <- reshape(Dataset, varying=State, v.names="State_names", timevar="State", direction="long")	
 
-	DataframeForSimplePlot$EndStateChange <- NA 
+	DataframeForSimplePlot$Duration <- NA 
 	for(i in 1:StateNumber){
 		for(j in 1:SampleNumber){
 			line <- SampleNumber*(i-1)+j
-#				command <- paste("DataframeForSimplePlot$EndStateChange[line] <- with(DataframeForSimplePlot, EndState", i, "[line])", sep="")
-				command <- paste("DataframeForSimplePlot$EndStateChange[line] <- DataframeForSimplePlot$", EndState[i], "[line]", sep="")
+				command <- paste("DataframeForSimplePlot$Duration[line] <- DataframeForSimplePlot$", EndState[i], "[line]", sep="")
 				eval(parse(text=command))
 		}
 	}
 
-	MainPlot <- swimmer_plot(df=DataframeForSimplePlot, id="id", end="EndStateChange", name_fill="StateChange", stratify=Group, id_order=Order, col="black", alpha=0.75, width=.85)
+	MainPlot <- swimmer_plot(df=DataframeForSimplePlot, id="id", end="Duration", name_fill="State_names", stratify=Group, id_order=Order, col="black", alpha=0.75, width=.85)
 	if(Gray==1){
 		MainPlot <- MainPlot + scale_fill_grey()
 	}
@@ -1076,12 +1093,11 @@ SwimmerPlot <- function(State, EndState, Group=NULL, Order=NULL, Censored=NULL, 
 	EventNumber <- length(Event)
 
 	if(EventNumber>=1){
-		DataframeForEventPlot <- reshape(Dataset, varying=Event, v.names="EventName", timevar="EventNumber", direction="long")	
+		DataframeForEventPlot <- reshape(Dataset, varying=Event, v.names="Event_names", timevar="EventNumber", direction="long")	
 		DataframeForEventPlot$TimeEvent <- NA 
 		for(i in 1:EventNumber){
 			for(j in 1:SampleNumber){
 				line <- SampleNumber*(i-1)+j
-#					command <- paste("DataframeForEventPlot$TimeForEvent[line] <- with(DataframeForEventPlot, TimeEvent", i, "[line])", sep="")
 					command <- paste("DataframeForEventPlot$TimeForEvent[line] <- DataframeForEventPlot$", TimeEvent[i], "[line]", sep="")
 					eval(parse(text=command))
 			}
@@ -1091,15 +1107,17 @@ SwimmerPlot <- function(State, EndState, Group=NULL, Order=NULL, Censored=NULL, 
 	if (EventNumber==0){
 		FinalPlot <- MainPlot
 	} else {
-		FinalPlot <- MainPlot + swimmer_points(df_points=DataframeForEventPlot, id="id", time="TimeForEvent", name_shape="EventName", size=2.5, fill="white", col="black")
+		FinalPlot <- MainPlot + swimmer_points(df_points=DataframeForEventPlot, id="id", time="TimeForEvent", name_shape="Event_names", size=2.5, fill="white", col="black")
 	}
 
 	if (!is.null(Censored)){
 		command <- paste("with(Dataset, pmax(", paste(EndState, collapse=', '), ", na.rm=TRUE))", sep="")
 		Dataset$StartArrow <- eval(parse(text=command))
 		arrow_length <- max(Dataset$StartArrow, na.rm=TRUE)/20 
-		Dataset$Censored <- ifelse(Dataset$Censored==0, NA, Dataset$Censored)
-		FinalPlot <- FinalPlot + swimmer_arrows(df_arrows=Dataset, id="id_temp", arrow_start="StartArrow", arrow_positions=c(0,arrow_length), length=0.05, cont="Censored", type="open", size=1)
+		command <- paste("Dataset$", Censored, " <- ifelse(Dataset$", Censored, "==0, NA, Dataset$", Censored, ")", sep="")
+		eval(parse(text=command))
+		command <- paste("FinalPlot <- FinalPlot + swimmer_arrows(df_arrows=Dataset, id='id_temp', arrow_start='StartArrow', arrow_positions=c(0,arrow_length), length=0.05, cont='", Censored, "', type='open', size=1)", sep="")
+		eval(parse(text=command))
 	}
 
 	FinalPlot
@@ -3031,7 +3049,14 @@ glm.subgroup.forest <- function(Dataset, formula, Covariates){
 		n.lev <- length(sub.levels)
 		for(j in 1:n.lev){
 			SubTD <- Dataset[Dataset[,which(colnames(Dataset)==subgroup[i])]==sub.levels[j],]
-			command <- paste("try(res <- ", formula, ", data=SubTD), silent=TRUE)", sep="")
+#			command <- paste("try(res <- ", formula, ", data=SubTD), silent=TRUE)", sep="")
+			command <- paste("try(res <- ", formula, maineffect, sep="")
+			for (k in 1:n.subg){
+				if(subgroup[k]!=subgroup[i]){
+					command <- paste(command, " + ", subgroup[k], sep="")
+				}
+			}
+			command <- paste(command, ", family=binomial(logit), data=SubTD), silent=TRUE)", sep="")
 			test <- eval(parse(text=command))
 			if (class(test)[1] != "try-error"){
 				res <- summary(res)
@@ -3039,6 +3064,7 @@ glm.subgroup.forest <- function(Dataset, formula, Covariates){
 					est.se <- res$coef[c(1,2)]
 				} else {
 					table <- res$coef[,c(1,2)]			
+					rownames(table) <- ifelse(nchar(rownames(table)) > nchar(maineffect), substr(rownames(table), 1, nchar(maineffect)), rownames(table))
 					est.se <- table[rownames(table)==maineffect]
 				}
 				est.se <- c(subgroup[i], sub.levels[j], est.se) 
@@ -3052,7 +3078,7 @@ glm.subgroup.forest <- function(Dataset, formula, Covariates){
 	SE <- as.numeric(est.se.table[,4])
 
 	meta.table <- metagen(EST, SE, sm="OR", studlab=est.se.table[,2], comb.fixed=F, comb.random=F, subgroup=est.se.table[,1]) 
- 	forest.meta(meta.table, comb.fixed=F, comb.random=F, hetstat=F, leftcols=c("studlab"), leftlabs=c("Subgroups"), print.subgroup.name=F)
+ 	forest(meta.table, comb.fixed=F, comb.random=F, hetstat=F, leftcols=c("studlab"), leftlabs=c("Subgroups"), print.subgroup.name=F)
 
 }
 
@@ -3116,6 +3142,8 @@ cox.subgroup.forest <- function(Dataset, formula, Covariates){
 					hr.ci <- res$conf.int[c(1,3,4)]
 				} else {
 					table <- res$conf.int[,c(1,3,4)]			
+					rownames(table) <- ifelse(nchar(rownames(table)) > nchar(maineffect), substr(rownames(table), 1, nchar(maineffect)), rownames(table))
+					#added for maineffect of factors such as "Treatment" -> "Treatment[T.A]
 					hr.ci <- table[rownames(table)==maineffect]
 				}
 				hr.ci <- c(subgroup[i], sub.levels[j], hr.ci) 
@@ -3128,7 +3156,7 @@ cox.subgroup.forest <- function(Dataset, formula, Covariates){
 	logHR <- log(as.numeric(hr.table[,3]))
 	logSE <- (log(as.numeric(hr.table[,5]))-logHR) / qnorm(0.975)
 	meta.table <- metagen(logHR, logSE, sm="HR", studlab=hr.table[,2], comb.fixed=F, comb.random=F, subgroup=hr.table[,1]) 
- 	forest.meta(meta.table, comb.fixed=F, comb.random=F, hetstat=F, leftcols=c("studlab"), leftlabs=c("Subgroups"), print.subgroup.name=F)
+ 	forest(meta.table, comb.fixed=F, comb.random=F, hetstat=F, leftcols=c("studlab"), leftlabs=c("Subgroups"), print.subgroup.name=F)
 
 }
 
@@ -3180,16 +3208,18 @@ crr.subgroup.forest <- function(Dataset, time, event, fcode, group){
 	hr.table <- NULL
 	n.subg <- length(subgroup)
 	nvar <- length(group)
-	command.cov.matrix <- paste("cov.matrix <- cbind(", group[1], "=SubTD$", group[1], sep="")
-	if (nvar >= 2){
-		for (i in 2:nvar) {
-			command.cov.matrix <- paste(command.cov.matrix, ", ", group[i], "=SubTD$", group[i], sep="")
-		}
-    	}
-    	command.cov.matrix <- paste(command.cov.matrix, ")", sep="")
 
 	for(i in 1:n.subg){
 		sub.levels <- levels(as.factor(Dataset[,which(colnames(Dataset)==subgroup[i])]))
+
+		tempgroup <- group[group!=subgroup[i]]
+		command.cov.matrix <- paste("cov.matrix <- cbind(", tempgroup[1], "=SubTD$", tempgroup[1], sep="")
+		if (nvar >= 3){
+			for (k in 2:length(tempgroup)) {
+				command.cov.matrix <- paste(command.cov.matrix, ", ", tempgroup[k], "=SubTD$", tempgroup[k], sep="")
+			}
+    		}
+		command.cov.matrix <- paste(command.cov.matrix, ")", sep="")
 		n.lev <- length(sub.levels)
 		for(j in 1:n.lev){			
 			SubTD <- Dataset[Dataset[,which(colnames(Dataset)==subgroup[i])]==sub.levels[j],]
@@ -3214,7 +3244,7 @@ crr.subgroup.forest <- function(Dataset, time, event, fcode, group){
 	logHR <- log(as.numeric(hr.table[,3]))
 	logSE <- (log(as.numeric(hr.table[,5]))-logHR) / qnorm(0.975)
 	meta.table <- metagen(logHR, logSE, sm="HR", studlab=hr.table[,2], comb.fixed=F, comb.random=F, subgroup=hr.table[,1]) 
- 	forest.meta(meta.table, comb.fixed=F, comb.random=F, hetstat=F, leftcols=c("studlab"), leftlabs=c("Subgroups"), print.subgroup.name=F)
+ 	forest(meta.table, comb.fixed=F, comb.random=F, hetstat=F, leftcols=c("studlab"), leftlabs=c("Subgroups"), print.subgroup.name=F)
 
 }
 
@@ -9888,7 +9918,380 @@ StatMedSwimPlot <- function(){
 	dialogSuffix(rows=4, columns=2)
 }
 
-							
+
+StatMedSankey <- function() {
+    Library("plotly")
+	
+    defaults <- list(FirstNode = NULL, SecondNode = NULL, AdditionalNode = 0, Excl = 0)
+    dialog.values <- getDialog("StatMedSankey", defaults)
+    initializeDialog(title = gettext(domain="R-RcmdrPlugin.EZR",
+        "Sankey diagram"))
+    env <- environment()
+    variablesFrame <- tkframe(top)
+    firstnodeBox <- variableListBox(variablesFrame, Variables(), 
+        title = gettext(domain="R-RcmdrPlugin.EZR","First node (pick one)"), 
+        listHeight = 8, initialSelection = varPosn(dialog.values$FirstNode, 
+            "all"))
+    secondnodeBox <- variableListBox(variablesFrame, Variables(), 
+        title = gettext(domain="R-RcmdrPlugin.EZR","Second node (pick one)"), 
+        listHeight = 8, initialSelection = varPosn(dialog.values$SecondNode, 
+            "all"))
+    optionsFrame <- tkframe(top)
+    checkBoxes(window = optionsFrame, frame = "add", boxes = c("add"), 
+        initialValues = c(dialog.values$AdditionalNode), labels = gettext(domain="R-RcmdrPlugin.EZR",
+            c("Additional nodes")), title = gettext(domain="R-RcmdrPlugin.EZR",
+            " "))
+    checkBoxes(window = optionsFrame, frame = "excl", boxes = c("excl"), 
+        initialValues = c(dialog.values$Excl), labels = gettext(domain="R-RcmdrPlugin.EZR",
+            c("Exclude samples with missing values")), title = gettext(domain="R-RcmdrPlugin.EZR",
+            " "))
+    onOK <- function() {
+        logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR",
+            "Sankey diagram"), "#####", sep = ""))
+        firstnode <- getSelection(firstnodeBox)
+        secondnode <- getSelection(secondnodeBox)
+        add <- tclvalue(addVariable)
+        excl <- tclvalue(exclVariable)
+        dataSet <- activeDataSet()
+        putDialog("StatMedSankey", list(FirstNode = firstnode, 
+            SecondNode = secondnode, AdditionalNode = add, Excl = excl))
+        if (length(firstnode) != 1) {
+            errorCondition(recall = StatMedSankey, message = gettext(domain="R-RcmdrPlugin.EZR",
+                "Pick one first node variable"))
+            return()
+        }
+        if (length(secondnode) != 1) {
+            errorCondition(recall = StatMedSankey, message = gettext(domain="R-RcmdrPlugin.EZR",
+                "Pick one second node variable"))
+            return()
+        }
+        doItAndPrint("node <- NULL")
+        doItAndPrint(paste("node[1] <- '", firstnode, "'", sep = ""))
+        doItAndPrint(paste("node[2] <- '", secondnode, "'", sep = ""))
+        if (add == 1) {
+            Selecting <- 1
+            i <- 3
+            while (Selecting == 1) {
+                Next <- paste(gettext(domain="R-RcmdrPlugin.EZR",
+                  "Node No."), i, sep = " ")
+                initializeDialog(subdialog, title = Next)
+                additionalnodeBox <- variableListBox(subdialog, 
+                  Variables(), title = Next, listHeight = 10)
+                onOKsub <- function() {
+                  selection <- getSelection(additionalnodeBox)
+                  closeDialog(subdialog)
+                  assign("selection", selection, envir = env)
+                }
+                subOKCancelHelp()
+                tkgrid(getFrame(additionalnodeBox), labelRcmdr(subdialog, 
+                  text = gettext(domain="R-RcmdrPlugin.EZR",
+                    "If finished, just click OK."), fg = "blue"), 
+                  sticky = "nw")
+                tkgrid(subButtonsFrame, sticky = "w")
+                dialogSuffix(subdialog, rows = 6, columns = 2, 
+                  focus = subdialog, onOK = onOKsub, force.wait = TRUE)
+                if (length(selection) == 0) {
+                  break
+                }
+                else {
+                  doItAndPrint(paste("node[", i, "] <- '", selection, 
+                    "'", sep = ""))
+                }
+                i <- i + 1
+            }
+        }
+        closeDialog()
+        doItAndPrint("NodeData <- NULL")
+        for (i in 1:length(node)) {
+            doItAndPrint(paste("data <- as.character(", dataSet, 
+                "$", node[i], ")", sep = ""))
+            doItAndPrint("NodeData <- cbind(NodeData, data)")
+        }
+        doItAndPrint("colnames(NodeData) <- node")
+        if (excl == 1) {
+            command <- paste("NodeData[complete.cases(NodeData[,1]", 
+                sep = "")
+            for (i in 2:length(node)) {
+                command <- paste(command, ", NodeData[,", i, 
+                  "]", sep = "")
+            }
+            command <- paste(command, "),]", sep = "")
+            doItAndPrint(paste("NodeData <- ", command, sep = ""))
+        }
+        doItAndPrint("NodeData[,1:length(node)] <- as.character(NodeData[,1:length(node)])")
+        doItAndPrint("links <- NULL")
+        doItAndPrint(paste("for(i in 1:(length(node)-1)){", "   LevelsBefore <- levels(as.factor(NodeData[,i]))", 
+            "   LevelsAfter <- levels(as.factor(NodeData[,i+1]))", 
+            "   for(j in 1:length(LevelsBefore)){", "      for(k in 1:length(LevelsAfter)){", 
+            "         n <- length(which(as.factor(NodeData[,i])==LevelsBefore[j] & as.factor(NodeData[,i+1])==LevelsAfter[k]))", 
+            "         if (n>0) links <- rbind(links, c(paste(LevelsBefore[j], '_', i, sep=''), paste(LevelsAfter[k], '_', i+1, sep=''), n))", 
+            "      }", "   }", "}", sep = "\n"))
+        if (excl == 0) {
+            doItAndPrint(paste("if(length(node)>2){", 
+ 		  "   for(i in 1:(length(node)-2)){", 
+                "      for(j in (i+2):(length(node))){", 
+		  "         LevelsBefore <- levels(as.factor(NodeData[,i]))", 
+                "         LevelsAfter <- levels(as.factor(NodeData[,j]))", 
+                "            for(k in 1:length(LevelsBefore)){", 
+                "               for(l in 1:length(LevelsAfter)){", 
+                "                  n <- 0", 
+		  "                  for(m in 1:length(NodeData[,1])){", 
+                "                     if(!is.na(NodeData[m,i]) & !is.na(NodeData[m,j])){", 
+                "                        if(NodeData[m,i]==LevelsBefore[k] & NodeData[m,j]==LevelsAfter[l] & sum(is.na(NodeData[m,(i+1):(j-1)]))==j-i-1) n <- n+1", 
+                "                     }", 
+		  "                  }", 
+		  "                  if (n>0) links <- rbind(links, c(paste(LevelsBefore[k], '_', i, sep=''), paste(LevelsAfter[l], '_', j, sep=''), n))", 
+                "               }", 
+		  "            }", 
+		  "      }", 
+		  "   }",
+		  "}", 
+                sep = "\n"))
+        }
+        doItAndPrint("links <- data.frame(links)")
+        doItAndPrint("colnames(links) <- c(\"source\", \"target\", \"value\")")
+        doItAndPrint("links$value <- as.numeric(links$value)")
+        doItAndPrint("nodevalues <- NULL")
+        doItAndPrint(paste("for(i in 1:length(node)){", "   temp <- as.character(NodeData[,i])", 
+            "   temp <-temp[!is.na(temp)]", "   nodevalues <- c(nodevalues, paste(temp, '_', i, sep='') %>% unique())", 
+            "}", sep = "\n"))
+        doItAndPrint("nodes <- data.frame(name=nodevalues %>% unique())")
+        doItAndPrint("links$IDsource <- match(links$source, nodes$name)-1")
+        doItAndPrint("links$IDtarget <- match(links$target, nodes$name)-1")
+        doItAndPrint(paste("for (i in 1:length(nodes$name)){", 
+			 "      temp.str <- strsplit(nodes$name[i], '_')",
+		       "      nodes$name[i] <- temp.str[[1]][1]",
+		       "      nodes$num[i] <- as.numeric(temp.str[[1]][2])",
+			 "}", sep = "\n"))
+
+		doItAndPrint(paste("sankey_fig <- plot_ly(",
+			 "      type = 'sankey',",
+			 "      arrangement = 'snap',",  #other choices: perpendicular, freeform, fixed
+			 "      orientation = 'h',",
+			 "      node = list(",
+			 "            label = nodes[,1],",
+			 "            x = 0.1 + (0.9-0.1)*(nodes[,2]-min(nodes[,2])) / (max(nodes[,2])-min(nodes[,2])),",
+			 "            y = rep(0.2, length(nodes[,1])),", #node.y also needed to specify node.x
+			 "#           color = rep('blue', length(nodes[,1])),",
+			 "            pad = 20,",
+			 "            thickness = 20,",
+			 "	        line = list(",
+			 "	              color = 'black',",
+			 "	              width = 0.5",
+			 "	        )",
+			 "      ),",
+			 "      link = list(",
+			 "            source = links[,4],",
+			 "            target = links[,5],",
+			 "            value =  links[,3]",
+			 "      )",
+			 ")", sep= "\n"))
+		doItAndPrint(paste("sankey_fig <- sankey_fig %>% plotly::layout(",
+			 "#    title = 'Sankey Diagram',",
+			 "      font = list(",
+			 "	       size = 20",
+			 "      ),",
+			 "      margin = list(",
+			 "          t = 50, #top",
+			 "          b = 50 #botom",
+			 "      )",
+			 ")", sep= "\n"))
+		doItAndPrint(paste("sankey_fig <- sankey_fig %>% plotly::add_annotations(",
+			 "      x = seq(0.08, 0.92, length.out=length(node)),",
+			 "      y = rep(0.99, length(node)),",
+			 "      yshift = rep(50, length(node)),",
+			 "      text = node,",
+			 "      font = list(",
+			 "	       size = 20",
+			 "      ),",
+			 "      bordercolor = 'black',",
+			 "      showarrow = FALSE",
+			 ")", sep= "\n"))
+			 doItAndPrint("sankey_fig")
+        tkfocus(CommanderWindow())
+    }
+    OKCancelHelp(helpSubject = "sankeyNetwork", model = TRUE, 
+        apply = "StatMedSankey", reset = "StatMedSankey")
+    tkgrid(getFrame(firstnodeBox), labelRcmdr(variablesFrame, 
+        text = "    "), getFrame(secondnodeBox), sticky = "nw")
+    tkgrid(variablesFrame, sticky = "nw")
+    tkgrid(add, labelRcmdr(optionsFrame, text = "  "), excl, sticky = "w")
+    tkgrid(optionsFrame, sticky = "nw")
+    tkgrid(buttonsFrame, sticky = "w")
+    dialogSuffix(rows = 7, columns = 1)
+}
+
+	
+StatMedConsort <- function(){
+    Library("consort")
+
+    initializeDialog(title = gettext(domain="R-RcmdrPlugin.EZR", "CONSORT diagram"))
+    env <- environment()
+
+    variablesFrame <- tkframe(top)
+    firstnodeBox <- variableListBox(variablesFrame, Variables(), 
+        title = gettext(domain="R-RcmdrPlugin.EZR", "First node (pick one)"), 
+        listHeight = 8)
+
+	firstlabelName <- tclVar(gettext(domain="R-RcmdrPlugin.EZR","Population"))
+	firstlavelNameEntry <- ttkentry(top, width="20", textvariable=firstlabelName)
+
+#	outcomeFrame <- tkframe(top)
+#	outcomeVariable <- tclVar("0")
+#	outcomeCheckBox <- tkcheckbutton(outcomeFrame, variable=outcomeVariable)
+	
+    onOK <- function() {
+        logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR", 
+            "Consort diagram"), "#####", sep = ""))
+        firstnode <- getSelection(firstnodeBox)
+		firstlabel <- trim.blanks(tclvalue(firstlabelName))
+#		outcome <- tclvalue(outcomeVariable)
+
+		if (firstlabel == ""){
+			firstlabel <- gettext(domain="R-RcmdrPlugin.EZR","Population")
+		}
+		dataSet <- activeDataSet()
+ 
+		if (length(firstnode) != 1) {
+            errorCondition(recall = StatMedConsort, message = gettext(domain="R-RcmdrPlugin.EZR", 
+                "Pick one first node variable"))
+            return()
+        }
+
+        doItAndPrint(paste("SampleID <- 1:length(", dataSet, "[,1])", sep = ""))
+
+		doItAndPrint("Node_Name <- NULL")			
+		doItAndPrint(paste("Node_Name[1] <- '", firstnode, "'", sep=""))
+		doItAndPrint("Label_Name <- NULL")			
+		doItAndPrint(paste("Label_Name[1] <- '", firstlabel, "'", sep=""))
+		doItAndPrint("Node_Type <- NULL")			
+		doItAndPrint(paste("Node_Type[1] <- 'Population'"))
+
+	closeDialog()
+		j <- 2
+		alloc <- 0
+        Selecting <- 1
+		
+        while (Selecting == 1) {
+			Next <- paste(gettext(domain="R-RcmdrPlugin.EZR", "Node No."), j, sep = " ")
+            initializeDialog(subdialog, title = Next)
+            additionalnodeBox <- variableListBox(subdialog, Variables(), title = Next, listHeight = 10)
+			additionallabelName <- tclVar("")
+			additionallavelNameEntry <- ttkentry(subdialog, width="20", textvariable=additionallabelName)
+			optionsFrame <- tkframe(subdialog)
+
+#			radioButtons(optionsFrame, name="type", buttons=c("allocation", "exclusion"), values=c("Allocation", "Exclusion"),
+#			initialValue="Allocation", labels=gettext(domain="R-RcmdrPlugin.EZR",c("Allocation", "Exclusion")), title=gettext(domain="R-RcmdrPlugin.EZR","Node type"))
+
+			if(Node_Type[j-1]=="Population" & alloc==0){			
+				radioButtons(optionsFrame, name="type", buttons=c("allocation", "exclusion"), values=c("Allocation", "Exclusion"),
+				initialValue="Allocation", labels=gettext(domain="R-RcmdrPlugin.EZR",c("Allocation", "Exclusion")), title=gettext(domain="R-RcmdrPlugin.EZR","Node type"))
+			}
+			if(Node_Type[j-1]=="Population" & alloc==1){			
+				radioButtons(optionsFrame, name="type", buttons=c("exclusion"), values=c("Exclusion"),
+				initialValue="Exclusion", labels=gettext(domain="R-RcmdrPlugin.EZR",c("Exclusion")), title=gettext(domain="R-RcmdrPlugin.EZR","Node type"))
+			}
+			if(Node_Type[j-1]=="Exclusion" & alloc==0){			
+				radioButtons(optionsFrame, name="type", buttons=c("allocation", "population"), values=c("Allocation", "Population"),
+				initialValue="Allocation", labels=gettext(domain="R-RcmdrPlugin.EZR",c("Allocation", "Current population")), title=gettext(domain="R-RcmdrPlugin.EZR","Node type"))
+			}
+			if(Node_Type[j-1]=="Exclusion" & alloc==1){			
+				radioButtons(optionsFrame, name="type", buttons=c("population"), values=c("Population"),
+				initialValue="Population", labels=gettext(domain="R-RcmdrPlugin.EZR",c("Current population")), title=gettext(domain="R-RcmdrPlugin.EZR","Node type"))
+			}
+			if(Node_Type[j-1]=="Allocation"){			
+				radioButtons(optionsFrame, name="type", buttons=c("exclusion", "population"), values=c("Exclusion", "Population"),
+				initialValue="Exclusion", labels=gettext(domain="R-RcmdrPlugin.EZR",c("Exclusion", "Current population")), title=gettext(domain="R-RcmdrPlugin.EZR","Node type"))
+			}
+
+            onOKsub <- function() {
+                  selection <- getSelection(additionalnodeBox)
+				  additional <- trim.blanks(tclvalue(additionallabelName))				  
+				  type <- tclvalue(typeVariable)	
+                  closeDialog(subdialog)
+				  assign("selection", selection, envir = env)
+				  assign("additional", additional, envir = env)
+				  assign("type", type, envir = env)
+			}
+            subOKCancelHelp()
+            tkgrid(getFrame(additionalnodeBox), labelRcmdr(subdialog, 
+                  text = gettext(domain="R-RcmdrPlugin.EZR", 
+                    "If finished, just click OK."), fg = "blue"), 
+                  sticky = "nw")
+			tkgrid(tklabel(subdialog, text=gettext(domain="R-RcmdrPlugin.EZR","Name of this node:")), additionallavelNameEntry, sticky="w")
+
+			tkgrid(typeFrame, labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Allocation: only once allowed")), sticky="nw")	
+			tkgrid(optionsFrame, sticky="w")
+            tkgrid(subButtonsFrame, sticky = "w")
+            dialogSuffix(subdialog, rows = 6, columns = 2, focus = subdialog, onOK = onOKsub, force.wait = TRUE)
+
+			if (length(selection) == 0) Selecting <- 0			  
+			if (length(selection) == 1) {
+				    doItAndPrint(paste("Node_Name[", j, "] <- '", selection, "'", sep=""))
+					doItAndPrint(paste("Label_Name[", j, "] <- '", additional, "'", sep=""))
+					doItAndPrint(paste("Node_Type[", j, "] <- '", type, "'", sep=""))			
+					Node_Name[j] <- selection
+					Label_Name[j] <- additional
+					Node_Type[j] <- type
+					if(type=="Allocation") alloc <- 1
+			}	
+			j <- j + 1
+        }    
+#	}
+
+	Node_Number <- length(Node_Name)
+	
+	doItAndPrint("Node_Number <- length(Node_Name)")
+	doItAndPrint("consort_df <- data.frame(SampleID)")
+	for(i in 1:Node_Number){ 
+			doItAndPrint(paste("consort_df <- cbind(consort_df, ", dataSet, "$", Node_Name[i], ")", sep=""))
+	}
+	doItAndPrint("colnames(consort_df) <- c('SampleID', Node_Name)")
+			
+    command <- "consort_plot(data=consort_df, order=list("  
+	command <- paste(command, Node_Name[1], "='", Label_Name[1], "'", sep="") 
+	for (i in 2:Node_Number){
+		command <- paste(command, ", ", Node_Name[i], "='", Label_Name[i], "'", sep="") 
+	}
+	command <- paste(command, "), ", sep="") 
+	excl_node <- which(Node_Type=="Exclusion")
+	if(length(excl_node)==0) command <- paste(command, "side_box=NULL,", sep="\n")
+#	if(length(excl_node)==0 & outcome==0) command <- paste(command, "side_box=NULL,", sep="\n")
+	command <- paste(command, "side_box=c('", sep="\n")
+	if(length(excl_node)>0){
+		command <- paste(command, Node_Name[excl_node[1]], "'", sep="")
+		if(length(excl_node)>1){
+			for(i in 2:length(excl_node)){
+				command <- paste(command, ", '", Node_Name[excl_node[i]], "'", sep="")				
+			}
+		}
+#		if(outcome==1 & Node_Type[Node_Number]!="Exclusion" & Node_Type[Node_Number-1]!="Exclusion") command <- paste(command, ", '", Node_Name[Node_Number], "'", sep="")
+		command <- paste(command, "),", sep="")		
+	}
+	alloc_node <- which(Node_Type=="Allocation")
+	if(length(alloc_node)==0) command <- paste(command, "allocation=NULL)", sep="\n") 
+	if(length(alloc_node)>0){
+		command <- paste(command, "allocation='", sep="\n")
+		command <- paste(command, Node_Name[alloc_node[1]], "')", sep="")
+	}
+	NewWindow()
+	doItAndPrint(command)
+	
+	tkfocus(CommanderWindow())
+    }
+    OKCancelHelp(helpSubject = "consort_plot", model = TRUE, 
+        apply = "StatMedConsort", reset = "StatMedConsort")
+		
+    tkgrid(getFrame(firstnodeBox), sticky = "nw")
+    tkgrid(variablesFrame, sticky = "nw")	
+	tkgrid(tklabel(top, text=gettext(domain="R-RcmdrPlugin.EZR","Name of this node:")), firstlavelNameEntry, sticky="w")
+#	tkgrid(labelRcmdr(outcomeFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Show final outcome")), outcomeCheckBox, sticky="w")
+#	tkgrid(outcomeFrame, sticky="w")
+	tkgrid(buttonsFrame, sticky = "w")
+    dialogSuffix(rows = 7, columns = 1)
+}
+
+		
 StatMedScatterPlot <- function () {
 #	require("car")
 	defaults <- list(initial.x = NULL, initial.y = NULL, initial.jitterx = 0, initial.jittery = 0, 
@@ -13350,7 +13753,7 @@ putDialog("StatMedPieChart", list(variable=variable, color=color, scale=tclvalue
     OKCancelHelp(helpSubject="pie", apply="StatMedPieChart", reset="StatMedPieChart")
     tkgrid(getFrame(variableBox), sticky="nw")
     tkgrid(color, sticky="w")
-    radioButtons(name = "scale", buttons = c("percent", "frequency", "none"), values=c("percent", "frequency", "none"), labels = gettextRcmdr(c("Percentages", "Frequency counts", "Neither")), title = gettextRcmdr("Include in Segment Labels"), initialValue = dialog.values$scale)
+    radioButtons(name = "scale", buttons = c("percent", "frequency", "none"), values=c("percent", "frequency", "none"), labels = gettext(domain="R-RcmdrPlugin.EZR",c("Percentages", "Frequency counts", "Neither")), title = gettext(domain="R-RcmdrPlugin.EZR","Include in Segment Labels"), initialValue = dialog.values$scale)
 	tkgrid(scaleFrame, sticky="w")
 	tkgrid(subsetFrame, sticky="w")
     tkgrid(buttonsFrame, sticky="w")
@@ -14004,7 +14407,8 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 		}
 		covs <- gsub(" ", "", covs)
 		NewWindow()
-		formula2 <- paste("glm(", formula, ", family=binomial(logit)", sep="")
+#		formula2 <- paste("glm(", formula, ", family=binomial(logit)", sep="")
+        formula2 <- paste("glm(", tclvalue(lhsVariable), " ~ ", sep="")
 		command <- paste("glm.subgroup.forest(TempTD, formula='", formula2, "', Covariates=", covs, ")", sep="")		
 		doItAndPrint(command)
 	}
@@ -17033,11 +17437,21 @@ putDialog("StatMedCurrentSurvival", list(StartPoint=StartPoint, follow.up=follow
 			tkgrid(subButtonsFrame, sticky="w")
 			dialogSuffix(subdialog, rows=6, columns=2, focus=subdialog, onOK=onOKsub, force.wait=TRUE)
 			if(length(selection)==0) {
+				if(cci==0 & i<=2) {
+					errorCondition(recall=StatMedCurrentSurvival, 
+					message=gettext(domain="R-RcmdrPlugin.EZR","Pick at least two event-on/off variables"))
+					return()								
+				}
+				if(cci==1 & i==1) {
+					errorCondition(recall=StatMedCurrentSurvival, 
+					message=gettext(domain="R-RcmdrPlugin.EZR","Pick at least one event-on/off variable"))
+					return()								
+				}
 				break
 			} else {
 				EventOnOff[i] <- selection
+				i <- i+1
 			}
-			i <- i+1
 	}		
 	closeDialog()
 	
@@ -19228,7 +19642,7 @@ putDialog("StatMedMeta", list(studyname=studyname, testpositive=testpositive, te
 	if (detail == 0){
 		doItAndPrint("plot(res)")
 	} else{
-		doItAndPrint(paste("forest.meta(res", group2, ")", sep=""))
+		doItAndPrint(paste("forest(res", group2, ")", sep=""))
 	}
 	if (funnel == 1) {
 #		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
@@ -19368,7 +19782,7 @@ putDialog("StatMedMetaHazard",list(input=input, studyname=studyname, hazard=haza
 		doItAndPrint("plot(res)")
 	}
 	else{
-		doItAndPrint(paste("forest.meta(res", group2, ")", sep=""))
+		doItAndPrint(paste("forest(res", group2, ")", sep=""))
 	}
 	if (funnel == 1) {
 #		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
@@ -19503,7 +19917,7 @@ putDialog("StatMedMetaCont", list(studyname=studyname, testmean=testmean, testnu
 		doItAndPrint("plot(res)")
 	}
 	else{
-		doItAndPrint(paste("forest.meta(res", group2, ")", sep=""))
+		doItAndPrint(paste("forest(res", group2, ")", sep=""))
 	}
 	if (funnel == 1) {
 #		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
@@ -19697,8 +20111,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.64", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","January 31, 2024"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.65", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","April 1, 2024"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -19812,7 +20226,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.64", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.65", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -19890,4 +20304,6 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'cci', 'swimmer_plot', 'swimmer_arrows', 'scale_fill_grey', 'swimmer_points', 
 'currentSurvival', 'swimplot', 'ggplot2', 'encodeVariable', 'encodeFrame', 'saveLog',
 'saveLogAs', 'ghVariable', 'forestVariable', 'maineffect', 'metagen', 
-'forest.meta', 'subgroup', ''))
+'forest', 'subgroup', 'addVariable', 'exclVariable', 'notraVariable', 
+'adjustVariable', 'sinkVariable', 'sinkFrame', 'node', 'add', 'excl', 'notra', 'adjust', 
+'sink', 'additional', 'type', ''))

@@ -15,6 +15,7 @@
 \alias{StatMedCloseCommander}
 \alias{StatMedCochranQ}
 \alias{StatMedCompute}
+\alias{StatMedConsort}
 \alias{StatMedCopyDataset}
 \alias{StatMedCorrelation}
 \alias{StatMedCountMissing}
@@ -106,6 +107,7 @@
 \alias{StatMedReorderFactor}
 \alias{StatMedRepANOVA}
 \alias{StatMedSG}
+\alias{StatMedSankey}
 \alias{StatMedSampleHazard}
 \alias{StatMedSampleHazardNonInf}
 \alias{StatMedSampleMeans}
