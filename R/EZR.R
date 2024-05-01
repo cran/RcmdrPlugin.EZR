@@ -47,7 +47,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.65", "\n")
+cat("   Version 1.66", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -9718,6 +9718,79 @@ putDialog("StatMedStripChart", list(group=groups, response=response, logy=logy, 
 }
 	
 	
+StatMedViolinPlot <- function(){
+Library("ggplot2")
+defaults <- list(group=NULL, response=NULL, logy=0, addboxplot=1, trim=1, subset = "")
+dialog.values <- getDialog("StatMedViolinPlot", defaults)
+currentFields$subset <- dialog.values$subset	
+currentModel <- TRUE
+	initializeDialog(title=gettext(domain="R-RcmdrPlugin.EZR","Violin plot"))
+    variablesFrame <- tkframe(top)
+    groupBox <- variableListBox(variablesFrame, Variables(), title=gettext(domain="R-RcmdrPlugin.EZR","Grouping variable(pick 0 or 1)"), listHeight=15, 
+	initialSelection=varPosn(dialog.values$group, "all"))
+	responseBox <- variableListBox(variablesFrame, Numeric(), title=gettext(domain="R-RcmdrPlugin.EZR","Response Variable (pick one)"), listHeight=15, initialSelection=varPosn(dialog.values$response, "numeric"))
+	checkBoxes(frame="logy", boxes=c("logy"),initialValues=dialog.values$logy,labels=gettext(domain="R-RcmdrPlugin.EZR",c("Log y-axis")))
+	checkBoxes(frame="addboxplot", boxes=c("addboxplot"),initialValues=dialog.values$addboxplot,labels=gettext(domain="R-RcmdrPlugin.EZR",c("Add box plot")))
+	checkBoxes(frame="trim", boxes=c("trim"),initialValues=dialog.values$trim,labels=gettext(domain="R-RcmdrPlugin.EZR",c("Trim at min/max")))
+    StatMedSubsetBox(model=TRUE)  
+	onOK <- function(){
+		logger(paste("#####", gettext(domain="R-RcmdrPlugin.EZR","Violin plot"), "#####", sep=""))
+		groups <- getSelection(groupBox)
+		response <- getSelection(responseBox)
+		logy <- tclvalue(logyVariable)
+		addboxplot <- tclvalue(addboxplotVariable)
+		trim <- tclvalue(trimVariable)
+		.activeDataSet <- ActiveDataSet()
+		subset <- tclvalue(subsetVariable)
+putDialog("StatMedViolinPlot", list(group=groups, response=response, logy=logy, addboxplot=addboxplot, trim=trim, subset = tclvalue(subsetVariable)))
+			if (trim.blanks(subset) == gettext(domain="R-RcmdrPlugin.EZR","<all valid cases>")) {
+				.subDataSet <- .activeDataSet
+			} else {
+				.subDataSet <- paste("subset(", .activeDataSet, ", ", subset, ")", sep="")
+			}
+		closeDialog()
+		if (0 == length(response)) {
+			errorCondition(recall=StatMedStripChart, message=gettext(domain="R-RcmdrPlugin.EZR","No response variable selected."))
+			return()
+		}
+#		if (.Platform$OS.type == 'windows'){doItAndPrint(paste("windows(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else if (MacOSXP()==TRUE) {doItAndPrint(paste("quartz(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))} else {doItAndPrint(paste("x11(", get("window.type", envir=.GlobalEnv), "); par(", get("par.option", envir=.GlobalEnv), ")", sep=""))}
+		NewWindow()
+		if (length(groups) == 0){
+			command <- paste("ggplot(", .subDataSet, ", aes(x=1, y=", response, ")) + theme_classic()", sep="")
+			if(trim==0) { 
+				command <- paste(command, " + geom_violin(scale='count', fill='grey', trim=FALSE)", sep="")
+			} else {	
+				command <- paste(command, " + geom_violin(scale='count', fill='grey', trim=TRUE)", sep="")
+			}
+			if(addboxplot==1) command <- paste(command, " + geom_boxplot(width=.1, fill='white')", sep="")
+			if(logy==1) command <- paste(command, " + coord_trans(y = 'log')", sep="")
+		} else {
+			command <- paste("ggplot(", .subDataSet, ", aes(x=as.factor(", groups, "), y=", response, ")) + theme_classic()", sep="")
+			if(trim==0) { 
+				command <- paste(command, " + geom_violin(scale='count', fill='grey', trim=FALSE)", sep="")
+			} else {	
+				command <- paste(command, " + geom_violin(scale='count', fill='grey', trim=TRUE)", sep="")
+			}
+			if(addboxplot==1) command <- paste(command, " + geom_boxplot(width=.1, fill='white')", sep="")
+			if(logy==1) command <- paste(command, " + coord_trans(y = 'log')", sep="")
+		}
+		doItAndPrint(command)
+		activateMenus()
+		tkfocus(CommanderWindow())
+	}
+	buttonsFrame <- tkframe(top)
+	OKCancelHelp(helpSubject="geom_violin", apply="StatMedViolinPlot", reset="StatMedViolinPlot")
+	tkgrid(getFrame(responseBox), labelRcmdr(variablesFrame, text="    "), getFrame(groupBox), sticky="nw")
+    tkgrid(variablesFrame, sticky="nw")
+	tkgrid(logy, sticky="w")
+	tkgrid(addboxplot, sticky="w")
+	tkgrid(trim, sticky="w")
+	tkgrid(subsetFrame, sticky="w")
+	tkgrid(buttonsFrame, columnspan=2, sticky="w")
+	dialogSuffix(rows=3, columns=2)
+}
+	
+
 StatMedOrderedChart <- function(){
 defaults <- list(response=NULL, group=NULL, type="line", trend="FALSE", lowlim="<auto>", uplim="<auto>", logy=0, subset="")
 dialog.values <- getDialog("StatMedOrderedChart", defaults)
@@ -10071,7 +10144,8 @@ StatMedSankey <- function() {
 			 "      node = list(",
 			 "            label = nodes[,1],",
 			 "            x = 0.1 + (0.9-0.1)*(nodes[,2]-min(nodes[,2])) / (max(nodes[,2])-min(nodes[,2])),",
-			 "            y = rep(0.2, length(nodes[,1])),", #node.y also needed to specify node.x
+			 "            y = seq(0.08, 0.92, length.out=length(nodes[,1])),", #node.y also needed to specify node.x
+#			 "            y = rep(0.2, length(nodes[,1])),", #node.y also needed to specify node.x
 			 "#           color = rep('blue', length(nodes[,1])),",
 			 "            pad = 20,",
 			 "            thickness = 20,",
@@ -10257,7 +10331,7 @@ StatMedConsort <- function(){
 	excl_node <- which(Node_Type=="Exclusion")
 	if(length(excl_node)==0) command <- paste(command, "side_box=NULL,", sep="\n")
 #	if(length(excl_node)==0 & outcome==0) command <- paste(command, "side_box=NULL,", sep="\n")
-	command <- paste(command, "side_box=c('", sep="\n")
+	if(length(excl_node)>0) command <- paste(command, "side_box=c('", sep="\n")
 	if(length(excl_node)>0){
 		command <- paste(command, Node_Name[excl_node[1]], "'", sep="")
 		if(length(excl_node)>1){
@@ -20111,8 +20185,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.65", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","April 1, 2024"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.66", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","April 30, 2024"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -20226,7 +20300,7 @@ EZRhelp <- function(){
 
 
 EZR <- function(){
-	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.65", "\n"))
+	cat(gettext(domain="R-RcmdrPlugin.EZR","EZR on R commander (programmed by Y.Kanda) Version 1.66", "\n"))
 }
 
 if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
@@ -20306,4 +20380,5 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'saveLogAs', 'ghVariable', 'forestVariable', 'maineffect', 'metagen', 
 'forest', 'subgroup', 'addVariable', 'exclVariable', 'notraVariable', 
 'adjustVariable', 'sinkVariable', 'sinkFrame', 'node', 'add', 'excl', 'notra', 'adjust', 
-'sink', 'additional', 'type', ''))
+'sink', 'additional', 'addboxplotVariable', 'trimVariable', 
+'addboxplot', 'trim', 'type', ''))

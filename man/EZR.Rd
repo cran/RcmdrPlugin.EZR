@@ -101,8 +101,8 @@ This package provides an R Commander plug-in EZR (Easy R), which adds a variety 
 \tabular{ll}{
 Package: \tab RcmdrPlugin.EZR\cr
 Type: \tab Package\cr
-Version: \tab 1.65\cr
-Date: \tab 2024-2-28\cr
+Version: \tab 1.66\cr
+Date: \tab 2024-4-30\cr
 License: \tab GPL (>= 2)\cr\cr
 }
 }
@@ -216,6 +216,7 @@ Line graph(Means)\cr
 Line graph(Repeated measures)\cr
 Boxplot\cr
 Dot chart\cr
+Violin plot\cr
 Ordered chart (Waterfall plot)\cr
 Swimmer plot\cr
 Sankey diagram\cr

@@ -143,6 +143,7 @@
 \alias{StatMedTwoWayTable}
 \alias{StatMedTrainTestSplit}
 \alias{StatMedVariableCheck}
+\alias{StatMedViolinPlot}
 \alias{StatMedWilSign}
 \alias{StatMedcloseCommander}
 \alias{StatMedcloseCommanderAndR}

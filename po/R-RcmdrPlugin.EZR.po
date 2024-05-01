@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Rcmdr 2.7-0 Japanese Translation\n"
 "POT-Creation-Date: 2019-01-08 16:30:00\n"
-"PO-Revision-Date: 2024-03-25 00:37+0900\n"
+"PO-Revision-Date: 2024-04-14 15:01+0900\n"
 "Language-Team: Rcmdr Japanese Translation <arakit@kansai-u.ac.jp>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -7853,4 +7853,13 @@ msgstr "イベント発生・消失変数を少なくとも1つ選択して下�
 
 msgid "Pick at least two event-on/off variables"
 msgstr "イベント発生・消失変数を少なくとも2つ選択して下さい。"
+
+msgid "Violin plot"
+msgstr "バイオリンプロット"
+
+msgid "Add box plot"
+msgstr "箱ひげ図を追加する"
+
+msgid "Trim at min/max"
+msgstr "最小・最大値でカットする"
 

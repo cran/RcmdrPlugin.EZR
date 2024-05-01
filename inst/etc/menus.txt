@@ -209,6 +209,7 @@ item	StatMedGraph	command	"Line graph(Means)"	StatMedPlotMeans	"activeDataSetP()
 item	StatMedGraph	command	"Line graph(Repeated measures)"	StatMedLinePlot	"activeDataSetP()"	""
 item	StatMedGraph	command	"Boxplot"	StatMedBoxPlot	"activeDataSetP()"	""
 item	StatMedGraph	command	"Dot chart"	StatMedStripChart	"activeDataSetP()"	""
+item	StatMedGraph	command	"Violin plot"	StatMedViolinPlot	"activeDataSetP()"	""
 item	StatMedGraph	command	"Ordered chart"	StatMedOrderedChart	"activeDataSetP()"	""
 item	StatMedGraph	command	"Swimmer plot"	StatMedSwimPlot	"activeDataSetP()"	"packageAvailable('swimplot')"
 item	StatMedGraph	command	"Sankey diagram"	StatMedSankey	"activeDataSetP()"	"packageAvailable('plotly')"
