@@ -47,7 +47,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.66", "\n")
+cat("   Version 1.67", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -2302,7 +2302,7 @@ StatMedTableOne  <- function(){
 		doItAndPrint(paste("matContTable <- print(ContTable, printToggle = FALSE, explain = ", explain, ", smd = ", smd, ")", sep=""))
 #		doItAndPrint("matContTable <- data.frame(matContTable)")
 #		doItAndPrint('if(colnames(matContTable)[length(colnames(matContTable))]=="test"){\nmatContTable<-matContTable[,1:length(colnames(matContTable))-1]\n}')
-		doItAndPrint('matContTable <- matContTable[,colnames(matContTable)!="test"]')
+		if (length(group)>0) doItAndPrint('matContTable <- matContTable[,colnames(matContTable)!="test"]')
 		#Add a dummy column to ContTable, because CatTable has a grouping column
 		if(length(cat)>0) doItAndPrint('matContTable <- cbind(level="", matContTable)')
 		if(language==0 & explain=="TRUE") {
@@ -2329,7 +2329,7 @@ StatMedTableOne  <- function(){
 		doItAndPrint(paste("matContnonnormalTable <- print(ContnonnormalTable, printToggle = FALSE, nonnormal = TRUE, explain = ", explain, ", minMax=", range, ", smd = ", smd, ")", sep=""))
 #		doItAndPrint("matContnonnormalTable <- data.frame(matContnonnormalTable)")
 #		doItAndPrint('if(colnames(matContnonnormalTable)[length(colnames(matContnonnormalTable))]=="test"){\nmatContnonnormalTable<-matContnonnormalTable[,1:length(colnames(matContnonnormalTable))-1]\n}')
-		doItAndPrint('matContnonnormalTable <- matContnonnormalTable[,colnames(matContnonnormalTable)!="test"]')
+		if(length(group)>0) doItAndPrint('matContnonnormalTable <- matContnonnormalTable[,colnames(matContnonnormalTable)!="test"]')
 		#Add a dummy column to ContTable, because CatTable has a grouping column
 		if(length(cat)>0) doItAndPrint('matContnonnormalTable <- cbind(level="", matContnonnormalTable)')
 		if(language==0 & explain=="TRUE") {
@@ -10677,7 +10677,7 @@ StatMedScatterPlotMatrix <- function () {
 			command <- paste("scatterplotMatrix(~", paste(variables, 
 							collapse = "+"), " | ", .groups, ", regLine=", line,
 							if (smooth == "TRUE") paste0(", smooth=list(span=", span/100, ", spread=", spread, ")") else ", smooth=FALSE",	
-							", diagonal=list(method='", diag, ")', by.groups=", 
+							", diagonal=list(method='", diag, "'), by.groups=", 
 					.linesByGroup, ", data=", .activeDataSet, subset, 
 					")", sep = "")													# Changted according to the updated car package	
 			logger(command)
@@ -20185,8 +20185,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.66", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","April 30, 2024"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.67", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","May 31, 2024"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
