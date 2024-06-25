@@ -1,4 +1,8 @@
-Changes to Version 1.66
+Changes to Version 1.68
+
+  o Added robust standard error estimation option in logistic regression for IPTW (robust standard error estimation is the default in coxph() with IPTW). 
+
+Changes to Version 1.67
 
   o Small bug fixes. 
 

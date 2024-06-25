@@ -47,7 +47,7 @@ currentFields <- NULL	#A variable to send diaglog memory to Formula
 #cat("\n")
 cat("-----------------------------------\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Starting EZR...", "\n"))
-cat("   Version 1.67", "\n")
+cat("   Version 1.68", "\n")
 cat(gettext(domain="R-RcmdrPlugin.EZR","Use the R commander window.", "\n"))
 cat("-----------------------------------\n")
 cat("\n")
@@ -12355,7 +12355,7 @@ putDialog("StatMedLinearRegression", list(x=x, y=y, wald=wald, actmodel=actmodel
 			logger("###variance inflation factors")
 		}
 		doItAndPrint("multireg.table <- NULL") 
-		doItAndPrint(paste("multireg.table <- cbind(res$coefficients[,1], confint(", modelValue, "),res$coefficients[,2:4])", sep=""))
+			doItAndPrint(paste("multireg.table <- cbind(res$coefficients[,1], confint(", modelValue, "),res$coefficients[,2:4])", sep=""))
 		doItAndPrint('colnames(multireg.table)[1] <- "Estimate"')
 		doItAndPrint('colnames(multireg.table) <- gettext(domain="R-RcmdrPlugin.EZR", colnames(multireg.table))')
 #		doItAndPrint("res$coefficients")
@@ -14329,7 +14329,7 @@ putDialog("StatMedPropTrend", list(response=response, group=group, subset=tclval
 
 
 StatMedLogisticRegression <- function(){
-defaults <- list(lhs = "", rhs = "", wald = 0,  roc = 0, diagnosis = 0, actmodel = 0, forest = 0, pscore = 0, iptw = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "")
+defaults <- list(lhs = "", rhs = "", wald = 0,  roc = 0, diagnosis = 0, actmodel = 0, forest = 0, pscore = 0, iptw = 0, robust = 0, stepwise1 = 0, stepwise2 = 0, stepwise3 = 0, subset = "")
 dialog.values <- getDialog("StatMedLogisticRegression", defaults)
 currentFields$lhs <- dialog.values$lhs			#Values in currentFields will be sent to modelFormula
 currentFields$rhs <- dialog.values$rhs
@@ -14358,7 +14358,7 @@ currentFields$subset <- dialog.values$subset
     model <- ttkentry(modelFrame, width="20", textvariable=modelName)
 	optionsFrame <- tkframe(top)
 	
-	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "forest", "pscore", "iptw", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$actmodel, dialog.values$roc, dialog.values$diagnosis, dialog.values$forest, dialog.values$pscore, dialog.values$iptw, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Forest plot of subgroup analyses", "Make propensity score variable", "Inverse probability of treatment weighting", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="checkboxFrame", boxes=c("wald", "actmodel", "roc", "diagnosis", "forest", "pscore", "iptw", "robust", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$wald, dialog.values$actmodel, dialog.values$roc, dialog.values$diagnosis, dialog.values$forest, dialog.values$pscore, dialog.values$iptw, dialog.values$robust, dialog.values$stepwise1, dialog.values$stepwise2, dialog.values$stepwise3),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Keep results as active model for further analyses", "Show ROC curve", "Show basic diagnostic plots", "Forest plot of subgroup analyses", "Make propensity score variable", "Inverse probability of treatment weighting", "Robust estimation of standard error", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 
 #	waldVariable <- tclVar("0")
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -14382,12 +14382,13 @@ currentFields$subset <- dialog.values$subset
 		forest <- tclvalue(forestVariable)
 		pscore <- tclvalue(pscoreVariable)
 		iptw <- tclvalue(iptwVariable)
+		robust <- tclvalue(robustVariable)
 		stepwise1 <- tclvalue(stepwise1Variable)
         stepwise2 <- tclvalue(stepwise2Variable)
 		stepwise3 <- tclvalue(stepwise3Variable)
 		subset <- tclvalue(subsetVariable)
 #input values into dialog memory	
-putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), wald = wald,  roc = roc, diagnosis = diagnosis, forest = forest, actmodel = actmodel, pscore = pscore, iptw = iptw, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset=tclvalue(subsetVariable)))
+putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = tclvalue(rhsVariable), wald = wald,  roc = roc, diagnosis = diagnosis, forest = forest, actmodel = actmodel, pscore = pscore, iptw = iptw, robust = robust, stepwise1 = stepwise1, stepwise2 = stepwise2, stepwise3 = stepwise3, subset=tclvalue(subsetVariable)))
         check.empty <- gsub(" ", "", tclvalue(lhsVariable))
         if ("" == check.empty) {
             errorCondition(recall=StatMedLogisticRegression, model=TRUE, message=gettext(domain="R-RcmdrPlugin.EZR","Left-hand side of model empty."))
@@ -14438,8 +14439,15 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
 			logger("###variance inflation factors")
 		}
 		doItAndPrint("odds <- NULL")
-		doItAndPrint(paste("odds <- data.frame(exp( summary(", modelValue, ")$coef[,1:2] %*% rbind(c(1,1,1), 1.96*c(0,-1,1))))", sep=""))
-		doItAndPrint(paste("odds <- cbind(odds, summary(", modelValue, ")$coefficients[,4])", sep=""))
+		if (robust==0) {
+			doItAndPrint(paste("odds <- data.frame(exp( summary(", modelValue, ")$coef[,1:2] %*% rbind(c(1,1,1), 1.96*c(0,-1,1))))", sep=""))
+			doItAndPrint(paste("odds <- cbind(odds, summary(", modelValue, ")$coefficients[,4])", sep=""))
+		} else {
+			Library("lmtest")
+			doItAndPrint(paste("robust_coef <- coeftest(", modelValue, ", vcov=sandwich)", sep=""))
+			doItAndPrint("odds <- data.frame(exp(robust_coef[,c(1,2)] %*% rbind(c(1,1,1), 1.96*c(0,-1,1))))")			
+			doItAndPrint("odds <- cbind(odds, robust_coef[,4])")			
+		}
 		doItAndPrint("odds <- signif(odds, digits=3)")
 		doItAndPrint('names(odds) <- gettext(domain="R-RcmdrPlugin.EZR",c("odds ratio", "Lower 95%CI", "Upper 95%CI", "p.value"))')
 		doItAndPrint("odds")
@@ -14567,6 +14575,8 @@ putDialog("StatMedLogisticRegression", list(lhs = tclvalue(lhsVariable), rhs = t
     tkgrid(outerOperatorsFrame, sticky="w")
     tkgrid(formulaFrame, sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Stratifing variable: + strata(#####)")), sticky="e")  
+  	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Weighting variable: , weights=#####")), sticky="e") 
+  	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","Robust estimation of standard error required for IPTW analysis")), sticky="e") 
 
  tkgrid(checkboxFrame, sticky="w")
 	tkgrid(optionsFrame, sticky="w", columnspan=2)
@@ -15055,7 +15065,7 @@ currentFields$subset <- dialog.values$subset
   model <- ttkentry(modelFrame, width="30", textvariable=modelName)
   	optionsFrame <- tkframe(top)
 	
-	checkBoxes(frame="checkboxFrame", boxes=c("wald", "prophaz", "martin", "basecurve", "actmodel", "forest", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$prophazVariable, dialog.values$martinVariable, dialog.values$basecurveVariable, dialog.values$actmodelVariable, dialog.values$forestVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Test proportional hazards assumption","Plot martingale residuals", "Show baseline survival curve", "Keep results as active model for further analyses", "Forest plot of subgroup analyses", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
+	checkBoxes(frame="checkboxFrame", boxes=c("wald", "prophaz", "martin", "basecurve", "actmodel", "forest", "stepwise1", "stepwise2", "stepwise3"), initialValues=c(dialog.values$waldVariable, dialog.values$prophazVariable, dialog.values$martinVariable, dialog.values$basecurveVariable, dialog.values$actmodelVariable, dialog.values$forestVariable, dialog.values$robustVariable, dialog.values$stepwise1Variabl, dialog.values$stepwise2Variabl, dialog.values$stepwise3Variabl),labels=gettext(domain="R-RcmdrPlugin.EZR",c("Wald test for overall p-value for factors with >2 levels", "Test proportional hazards assumption","Plot martingale residuals", "Show baseline survival curve", "Keep results as active model for further analyses", "Forest plot of subgroup analyses", "Stepwise selection based on AIC", "Stepwise selection based on BIC", "Stepwise selection based on p-value")))	
 
 #	waldVariable <- dialog.values$waldVariable
 #	waldCheckBox <- tkcheckbutton(optionsFrame, variable=waldVariable)
@@ -15294,7 +15304,8 @@ putDialog("StatMedCoxRegression", list(SurvivalTimeVariable = tclvalue(SurvivalT
   tkgrid(outerOperatorsFrame, sticky="w")
   tkgrid(formulaFrame, sticky="w")
   	tkgrid(labelRcmdr(top, text=paste("            ", gettext(domain="R-RcmdrPlugin.EZR","Stratifing variable: + strata(#####)"), sep="")), sticky="e") 
-	
+  	tkgrid(labelRcmdr(top, text=paste("            ", gettext(domain="R-RcmdrPlugin.EZR","Weighting variable: , weights=#####"), sep="")), sticky="e") 
+  	tkgrid(labelRcmdr(top, text=paste("            ", gettext(domain="R-RcmdrPlugin.EZR","Robust estimation of standard error applied for Cox with IPTW analysis"), sep="")), sticky="e") 
  tkgrid(checkboxFrame, sticky="w")
 	
 #	tkgrid(labelRcmdr(optionsFrame, text=gettext(domain="R-RcmdrPlugin.EZR","Wald test for overall p-value for factors with >2 levels")), waldCheckBox, sticky="w")
@@ -20185,8 +20196,8 @@ EZRVersion <- function(){
 	OKCancelHelp(helpSubject="Rcmdr")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR","  EZR on R commander (programmed by Y.Kanda) "), fg="blue"), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.67", sep="")), sticky="w")
-	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","May 31, 2024"), sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("      ", gettext(domain="R-RcmdrPlugin.EZR","Current version:"), " 1.68", sep="")), sticky="w")
+	tkgrid(labelRcmdr(top, text=paste("        ", gettext(domain="R-RcmdrPlugin.EZR","June 30, 2024"), sep="")), sticky="w")
 	tkgrid(labelRcmdr(top, text=gettext(domain="R-RcmdrPlugin.EZR"," "), fg="blue"), sticky="w")
 	tkgrid(buttonsFrame, sticky="w")
 	dialogSuffix(rows=6, columns=1)
@@ -20381,4 +20392,4 @@ if (getRversion() >= '2.15.1') globalVariables(c('top', 'buttonsFrame',
 'forest', 'subgroup', 'addVariable', 'exclVariable', 'notraVariable', 
 'adjustVariable', 'sinkVariable', 'sinkFrame', 'node', 'add', 'excl', 'notra', 'adjust', 
 'sink', 'additional', 'addboxplotVariable', 'trimVariable', 
-'addboxplot', 'trim', 'type', ''))
+'addboxplot', 'trim', 'robustVariable', 'type', ''))
